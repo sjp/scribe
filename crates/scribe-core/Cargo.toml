@@ -6,10 +6,23 @@ edition.workspace = true
 license.workspace = true
 repository.workspace = true
 
+[features]
+# Decoding of encoded images (PNG, JPEG, …) into pixel buffers. Off by
+# default so that callers who already have pixels do not pay for it.
+decode = ["dep:image"]
+
 [dependencies]
+image = { workspace = true, optional = true }
+ocrs = "0.12.2"
+rten = { version = "0.24.0", default-features = false, features = ["rten_format"] }
+rten-imageproc = "0.24.0"
 schemars.workspace = true
 serde = { workspace = true, features = ["derive"] }
 serde_json.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+image.workspace = true
 
 [lints]
 workspace = true
