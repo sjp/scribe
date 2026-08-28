@@ -12,6 +12,7 @@ repository.workspace = true
 decode = ["dep:image"]
 
 [dependencies]
+base64.workspace = true
 image = { workspace = true, optional = true }
 ocrs = "0.12.2"
 rten = { version = "0.24.0", default-features = false, features = ["rten_format"] }

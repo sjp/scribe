@@ -10,6 +10,14 @@ command line tool, a Rust library and a WebAssembly module.
 
 **Status: early development.** Nothing here is stable yet.
 
+## Development
+
+The recognition models are not part of this repository and are never
+downloaded by the library. `scripts/fetch-models.sh` puts a copy in `models/`
+for local use; the tests that need them read their paths from
+`SCRIBE_DETECTION_MODEL` and `SCRIBE_RECOGNITION_MODEL` and are skipped when
+those are unset.
+
 ## Licence
 
 Licensed under either of [Apache License, Version 2.0](LICENSE-APACHE) or
