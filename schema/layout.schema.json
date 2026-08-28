@@ -1,0 +1,238 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Layout",
+  "description": "Everything scribe knows about the text in one image.",
+  "type": "object",
+  "properties": {
+    "image": {
+      "description": "The raster the coordinates in this layout refer to.",
+      "$ref": "#/$defs/ImageInfo"
+    },
+    "lines": {
+      "description": "The lines of text, in reading order.",
+      "type": "array",
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/Line"
+      }
+    },
+    "version": {
+      "description": "The version of the model this document was written against.\n\nThe current one is `LAYOUT_VERSION`.",
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 0
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "image"
+  ],
+  "$defs": {
+    "Char": {
+      "description": "A single character within a word.",
+      "type": "object",
+      "properties": {
+        "bbox": {
+          "description": "The axis-aligned bounds of the character.",
+          "$ref": "#/$defs/Rect"
+        },
+        "confidence": {
+          "description": "How sure the recogniser is of this character, from 0 to 1, when it\nsays.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "format": "float",
+          "default": null
+        },
+        "text": {
+          "description": "The character itself, as one grapheme cluster.",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "text",
+        "bbox"
+      ]
+    },
+    "ImageInfo": {
+      "description": "The raster a layout describes.",
+      "type": "object",
+      "properties": {
+        "height": {
+          "description": "The height of the image in pixels.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "width": {
+          "description": "The width of the image in pixels.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "width",
+        "height"
+      ]
+    },
+    "Line": {
+      "description": "A line of recognised text.",
+      "type": "object",
+      "properties": {
+        "bbox": {
+          "description": "The axis-aligned bounds of the line.",
+          "$ref": "#/$defs/Rect"
+        },
+        "confidence": {
+          "description": "How sure the recogniser is of this line, from 0 to 1, when it says.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "format": "float",
+          "default": null
+        },
+        "rotated_box": {
+          "description": "The oriented bounds of the line.",
+          "$ref": "#/$defs/RotatedBox"
+        },
+        "text": {
+          "description": "The text of the line, ready to be used as-is by a renderer.",
+          "type": "string"
+        },
+        "words": {
+          "description": "The words of the line, in reading order.",
+          "type": "array",
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/Word"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "text",
+        "bbox",
+        "rotated_box"
+      ]
+    },
+    "Rect": {
+      "description": "An axis-aligned rectangle in image pixels, with the origin at the top left\nand y increasing downwards.",
+      "type": "object",
+      "properties": {
+        "height": {
+          "description": "The height, extending downwards.",
+          "type": "number",
+          "format": "float"
+        },
+        "width": {
+          "description": "The width, extending to the right.",
+          "type": "number",
+          "format": "float"
+        },
+        "x": {
+          "description": "The x coordinate of the left edge.",
+          "type": "number",
+          "format": "float"
+        },
+        "y": {
+          "description": "The y coordinate of the top edge.",
+          "type": "number",
+          "format": "float"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "width",
+        "height"
+      ]
+    },
+    "RotatedBox": {
+      "description": "An oriented rectangle in image pixels: a box of `width` by `height` centred\non `(cx, cy)` and turned by `angle_deg`.\n\nThe angle is measured from the positive x axis to the box's width axis and\nis positive clockwise as seen on screen, which is what SVG's `rotate()`\ndoes in the same y-down coordinate system.",
+      "type": "object",
+      "properties": {
+        "angle_deg": {
+          "description": "The rotation in degrees, clockwise-positive, normalised to\n`(-180, 180]`.",
+          "type": "number",
+          "format": "float"
+        },
+        "cx": {
+          "description": "The x coordinate of the centre.",
+          "type": "number",
+          "format": "float"
+        },
+        "cy": {
+          "description": "The y coordinate of the centre.",
+          "type": "number",
+          "format": "float"
+        },
+        "height": {
+          "description": "The extent along the box's height axis.",
+          "type": "number",
+          "format": "float"
+        },
+        "width": {
+          "description": "The extent along the box's width axis.",
+          "type": "number",
+          "format": "float"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "cx",
+        "cy",
+        "width",
+        "height",
+        "angle_deg"
+      ]
+    },
+    "Word": {
+      "description": "A word within a line.",
+      "type": "object",
+      "properties": {
+        "bbox": {
+          "description": "The axis-aligned bounds of the word.",
+          "$ref": "#/$defs/Rect"
+        },
+        "chars": {
+          "description": "The characters of the word, in reading order.\n\nRenderers position words by default; this is here for the ones that\nwant finer control, and may be empty when the recogniser offers\nnothing per character.",
+          "type": "array",
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/Char"
+          }
+        },
+        "confidence": {
+          "description": "How sure the recogniser is of this word, from 0 to 1, when it says.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "format": "float",
+          "default": null
+        },
+        "rotated_box": {
+          "description": "The oriented bounds of the word.",
+          "$ref": "#/$defs/RotatedBox"
+        },
+        "text": {
+          "description": "The text of the word.",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "text",
+        "bbox",
+        "rotated_box"
+      ]
+    }
+  }
+}
