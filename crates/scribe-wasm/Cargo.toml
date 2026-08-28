@@ -1,0 +1,17 @@
+[package]
+name = "scribe-wasm"
+description = "WebAssembly bindings for scribe"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+scribe-core.workspace = true
+wasm-bindgen.workspace = true
+
+[lints]
+workspace = true

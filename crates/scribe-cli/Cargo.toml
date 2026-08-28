@@ -1,0 +1,19 @@
+[package]
+name = "scribe-cli"
+description = "Command line interface for scribe"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[[bin]]
+name = "scribe"
+path = "src/main.rs"
+
+[dependencies]
+scribe-core.workspace = true
+anyhow.workspace = true
+clap.workspace = true
+
+[lints]
+workspace = true
