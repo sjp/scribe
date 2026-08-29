@@ -30,6 +30,8 @@ image = { version = "0.25.10", default-features = false, features = [
     "tiff",
     "webp",
 ] }
+insta = "1.48.0"
+roxmltree = "0.21.1"
 schemars = "1.2.2"
 serde = { version = "1.0.229", features = ["derive"] }
 # Field order is kept so that a document written through `serde_json::Value`

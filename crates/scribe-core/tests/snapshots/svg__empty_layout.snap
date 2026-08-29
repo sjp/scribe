@@ -1,0 +1,13 @@
+---
+source: crates/scribe-core/tests/svg.rs
+expression: "linked(&Layout::empty(SIZE.0, SIZE.1), Options::new())"
+---
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="284" height="96" viewBox="0 0 284 96" role="img">
+  <style>
+    .scribe-text { user-select: text; -webkit-user-select: text; white-space: pre; }
+    .scribe-text::selection, .scribe-text ::selection { fill: #000; background: rgba(0, 90, 255, 0.35); }
+  </style>
+  <image href="hello.png" width="284" height="96"/>
+  <g class="scribe-text" font-family="sans-serif" fill="transparent"/>
+</svg>

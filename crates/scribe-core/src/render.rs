@@ -36,8 +36,10 @@
 //! ```
 
 mod json;
+mod svg;
 
 pub use json::JsonRenderer;
+pub use svg::SvgRenderer;
 
 use std::collections::BTreeMap;
 use std::fmt;
@@ -227,10 +229,14 @@ pub struct OptionSpec {
     pub default: OptionValue,
     /// A sentence describing it, fit to show in a help listing.
     pub help: &'static str,
+    /// The words it accepts, when it accepts only a few of them; empty when
+    /// any value of its kind will do.
+    pub choices: &'static [&'static str],
 }
 
 impl OptionSpec {
-    /// Describes an option of the given name, kind, default and help text.
+    /// Describes an option of the given name, kind, default and help text,
+    /// taking any value of that kind.
     pub fn new(
         name: &'static str,
         kind: OptionKind,
@@ -242,7 +248,18 @@ impl OptionSpec {
             kind,
             default,
             help,
+            choices: &[],
         }
+    }
+
+    /// The same option, narrowed to the given words.
+    ///
+    /// A caller offering the option can list them, and one setting it to
+    /// anything else is told what it could have said instead.
+    #[must_use]
+    pub fn with_choices(mut self, choices: &'static [&'static str]) -> Self {
+        self.choices = choices;
+        self
     }
 }
 
@@ -325,6 +342,17 @@ impl Options {
                     expected: spec.kind,
                     actual: value.clone(),
                 })?;
+            if let OptionValue::Str(text) = &value
+                && !spec.choices.is_empty()
+                && !spec.choices.contains(&text.as_str())
+            {
+                return Err(RenderError::InvalidChoice {
+                    renderer: renderer.to_string(),
+                    name: spec.name,
+                    choices: spec.choices,
+                    actual: text.clone(),
+                });
+            }
             values.insert(spec.name, value);
         }
         Ok(ResolvedOptions { values })
@@ -449,6 +477,35 @@ pub enum RenderError {
         actual: OptionValue,
     },
 
+    /// An option that takes one of a few words was set to another.
+    #[error(
+        "the {renderer} renderer's `{name}` option takes one of {}, but was given {:?}",
+        list(choices),
+        actual
+    )]
+    InvalidChoice {
+        /// The renderer the options were meant for.
+        renderer: String,
+        /// The option that was set.
+        name: &'static str,
+        /// The words it takes.
+        choices: &'static [&'static str],
+        /// The word it was given.
+        actual: String,
+    },
+
+    /// The renderer was asked for an output needing something about the
+    /// source image that the caller did not supply.
+    #[error("the {renderer} renderer was asked to {intent}, but {missing}")]
+    MissingImage {
+        /// The renderer that could not go on.
+        renderer: String,
+        /// What it was asked to do, such as `embed the source image`.
+        intent: &'static str,
+        /// What was lacking, such as `no path or URL for it is known`.
+        missing: &'static str,
+    },
+
     /// The renderer had everything it needed but could not produce a
     /// document.
     #[error("the {renderer} renderer could not write its output")]
@@ -467,6 +524,15 @@ impl RenderError {
         Self::Write {
             renderer: renderer.to_string(),
             source: source.into(),
+        }
+    }
+
+    /// A renderer's need for part of the source image that it was not given.
+    pub fn missing_image(renderer: &str, intent: &'static str, missing: &'static str) -> Self {
+        Self::MissingImage {
+            renderer: renderer.to_string(),
+            intent,
+            missing,
         }
     }
 }
@@ -566,6 +632,7 @@ impl fmt::Debug for Registry {
 pub fn registry() -> Registry {
     let mut registry = Registry::new();
     registry.register(Box::new(JsonRenderer));
+    registry.register(Box::new(SvgRenderer));
     registry
 }
 
@@ -714,6 +781,42 @@ mod tests {
     }
 
     #[test]
+    fn an_option_narrowed_to_a_few_words_takes_only_those() {
+        let specs = [OptionSpec::new(
+            "gait",
+            OptionKind::Str,
+            OptionValue::Str("walk".to_string()),
+            "How to get there.",
+        )
+        .with_choices(&["walk", "run"])];
+        let resolve = |value| {
+            Options::new()
+                .with("gait", value)
+                .resolve("courier", &specs)
+        };
+
+        assert_eq!(resolve("run").unwrap().str("gait"), "run");
+        assert_eq!(
+            Options::new()
+                .resolve("courier", &specs)
+                .unwrap()
+                .str("gait"),
+            "walk"
+        );
+
+        let error = resolve("fly").unwrap_err();
+        assert!(matches!(
+            &error,
+            RenderError::InvalidChoice { name: "gait", actual, .. } if actual == "fly"
+        ));
+        assert_eq!(
+            error.to_string(),
+            "the courier renderer's `gait` option takes one of `walk`, `run`, \
+             but was given \"fly\""
+        );
+    }
+
+    #[test]
     fn a_renderer_with_no_options_says_so() {
         struct Bare;
 
@@ -764,10 +867,11 @@ mod tests {
     }
 
     #[test]
-    fn the_built_in_registry_holds_the_json_renderer() {
+    fn the_built_in_registry_holds_every_built_in_renderer() {
         let registry = registry();
-        assert_eq!(registry.names(), ["json"]);
+        assert_eq!(registry.names(), ["json", "svg"]);
         assert_eq!(registry.get("json").map(Renderer::name), Some("json"));
+        assert_eq!(registry.get("svg").map(Renderer::name), Some("svg"));
         assert!(registry.get("nothing").is_none());
     }
 
@@ -775,7 +879,7 @@ mod tests {
     fn a_registry_takes_renderers_of_its_own() {
         let mut registry = registry();
         assert!(registry.register(Box::new(Everything)).is_none());
-        assert_eq!(registry.names(), ["everything", "json"]);
+        assert_eq!(registry.names(), ["everything", "json", "svg"]);
 
         // Registering the same name again replaces what was there, so a
         // caller can put its own renderer in place of a built-in.
@@ -784,10 +888,10 @@ mod tests {
             replaced.map(|renderer| renderer.name().to_string()),
             Some("everything".to_string())
         );
-        assert_eq!(registry.names(), ["everything", "json"]);
+        assert_eq!(registry.names(), ["everything", "json", "svg"]);
         assert_eq!(
             format!("{registry:?}"),
-            r#"Registry(["everything", "json"])"#
+            r#"Registry(["everything", "json", "svg"])"#
         );
     }
 
