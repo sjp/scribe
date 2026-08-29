@@ -1,0 +1,40 @@
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic
+Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+### Added
+
+- The `Layout` model: a versioned, JSON-serialisable description of the text
+  found in an image, at line, word and character granularity, with an
+  axis-aligned and an oriented box for each. A JSON Schema is generated from it
+  and checked in at `schema/layout.schema.json`.
+- Recognition over [ocrs](https://github.com/robertknight/ocrs), taking model
+  bytes and a pixel buffer rather than paths and files, so it runs anywhere the
+  library does. Models are never downloaded.
+- A renderer abstraction and a registry, with every renderer publishing the
+  options it takes so that a command line or a JavaScript caller can offer them
+  without knowing what they mean.
+- The `json` renderer, writing the layout itself.
+- The `svg` renderer, writing the image with a selectable text layer over it:
+  transparent, visible or drawn with the boxes it came from; the image
+  embedded, linked or left out; and the fit of the layer to the glyphs beneath
+  it settled by font size mode, baseline mode, per-character placement, length
+  adjustment and separator elements.
+- The `template` renderer, writing whatever a Jinja template describes, with
+  `html-overlay`, `hocr`, `alto`, `markdown` and `text` built in and callers'
+  own templates and values accepted.
+- The `scribe` command line tool: `ocr`, `render`, `formats`, `templates` and
+  `schema`, over one image or many, with the layout kept beside the output.
+- WebAssembly bindings packaged for the browser and for Node, with TypeScript
+  declarations for the layout model, the renderer options and the rendered
+  document.
+- Fixture images and golden tests covering every built-in renderer.
+- User and developer documentation under `docs/`.
+
+[Unreleased]: https://github.com/sjp/scribe

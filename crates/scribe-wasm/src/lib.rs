@@ -8,6 +8,23 @@
 //! What comes back is a layout: a plain object that survives
 //! `JSON.stringify`, can be kept, and can be handed to [`render`] later
 //! without the models being present at all.
+//!
+//! ```js
+//! import init, { Engine, render } from './pkg/web/scribe.js';
+//!
+//! await init();
+//! const engine = new Engine(detectionModel, recognitionModel);
+//! const layout = engine.analyzePixels(width, height, 4, pixels);
+//! engine.free();
+//!
+//! // The text layer alone, to lay over an <img> already in the page.
+//! const overlay = render(layout, 'svg', { image_mode: 'none' }).text;
+//! ```
+//!
+//! The package is built by `scripts/build-wasm.sh`, once for the browser and
+//! once for Node. TypeScript declarations for the layout model, the options
+//! every renderer takes and the document a render produces are written
+//! alongside it.
 
 mod convert;
 mod types;

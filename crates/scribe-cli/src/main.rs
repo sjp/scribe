@@ -4,6 +4,19 @@
 //! keeps it searchable and selectable. Every file, terminal and process
 //! concern lives in this crate; `scribe-core` does the work and touches
 //! nothing outside itself.
+//!
+//! The binary is called `scribe` and does five things: `ocr` reads images and
+//! renders the result, `render` renders layouts read earlier without loading
+//! any model, and `formats`, `templates` and `schema` say what this build can
+//! produce. Recognition needs the two trained models, which are never
+//! downloaded: they are named by `--detection-model` and
+//! `--recognition-model`, or by `SCRIBE_DETECTION_MODEL` and
+//! `SCRIBE_RECOGNITION_MODEL`.
+//!
+//! ```sh
+//! scribe ocr page.png --out page.svg --layout-json page.layout.json
+//! scribe render page.layout.json --format template --opt template=hocr
+//! ```
 
 mod cli;
 mod error;
