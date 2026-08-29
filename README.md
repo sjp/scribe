@@ -18,6 +18,16 @@ for local use; the tests that need them read their paths from
 `SCRIBE_DETECTION_MODEL` and `SCRIBE_RECOGNITION_MODEL` and are skipped when
 those are unset.
 
+`scripts/build-wasm.sh` builds the WebAssembly package with
+[wasm-pack](https://rustwasm.github.io/wasm-pack/), once for the browser and
+once for Node, under `crates/scribe-wasm/pkg`. The Node build is what
+
+```sh
+node --test 'crates/scribe-wasm/tests/node/**/*.test.mjs'
+```
+
+runs against.
+
 ## Licence
 
 Licensed under either of [Apache License, Version 2.0](LICENSE-APACHE) or

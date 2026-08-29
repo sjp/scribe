@@ -27,7 +27,7 @@ jobs:
       - run: cargo test --workspace
 
   wasm:
-    name: WebAssembly build
+    name: WebAssembly build and bindings
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -40,3 +40,16 @@ jobs:
       - run: cargo check -p scribe-core -p scribe-wasm --target wasm32-unknown-unknown
 
       - run: cargo check -p scribe-core --features decode --target wasm32-unknown-unknown
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Install wasm-pack
+        run: curl -sSfL https://rustwasm.github.io/wasm-pack/installer/init.sh | sh
+
+      - run: scripts/build-wasm.sh
+
+      # The models are not in this repository, so the test that needs them
+      # reports itself skipped here and is run locally instead.
+      - run: node --test 'crates/scribe-wasm/tests/node/**/*.test.mjs'

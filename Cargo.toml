@@ -36,12 +36,14 @@ image = { version = "0.25.10", default-features = false, features = [
     "webp",
 ] }
 insta = "1.48.0"
+js-sys = "0.3.104"
 log = "0.4.34"
 minijinja = "2.24.0"
 predicates = "3.1.4"
 roxmltree = "0.21.1"
 schemars = "1.2.2"
 serde = { version = "1.0.229", features = ["derive"] }
+serde-wasm-bindgen = "0.6.5"
 # Field order is kept so that a document written through `serde_json::Value`
 # reads the same way as one serialised straight from the types it describes.
 serde_json = { version = "1.0.151", features = ["preserve_order"] }
