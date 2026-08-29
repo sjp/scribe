@@ -18,6 +18,10 @@ const DETECTION_VARIABLE: &str = "SCRIBE_DETECTION_MODEL";
 /// Set this to the path of the text recognition model.
 const RECOGNITION_VARIABLE: &str = "SCRIBE_RECOGNITION_MODEL";
 
+/// The fixtures the whole project shares, by the name each one's image and
+/// layout are called after.
+const FIXTURES: &[&str] = &["hello", "paragraph", "rotated", "sparse", "blank"];
+
 /// The status a mistake in the request leaves with.
 const USAGE: i32 = 2;
 
@@ -225,6 +229,58 @@ fn a_shorthand_the_format_does_not_take_names_the_flag_that_set_it() {
         .stderr(predicate::str::contains(
             "`--debug` sets the `text_mode` option, which the `json` format does not take",
         ));
+}
+
+#[test]
+fn every_fixture_layout_renders_into_a_directory() {
+    let directory = work_directory("render-every-fixture");
+    let mut scribe = scribe();
+    scribe
+        .args(["render", "--no-image", "--out-dir"])
+        .arg(&directory);
+    for stem in FIXTURES {
+        scribe.arg(fixture(&format!("{stem}.layout.json")));
+    }
+    scribe.assert().success().stdout("");
+
+    let mut written: Vec<String> = std::fs::read_dir(&directory)
+        .expect("the directory was made")
+        .map(|entry| entry.expect("the directory can be read").file_name())
+        .map(|name| name.to_string_lossy().into_owned())
+        .collect();
+    written.sort();
+    let mut expected: Vec<String> = FIXTURES.iter().map(|stem| format!("{stem}.svg")).collect();
+    expected.sort();
+    assert_eq!(written, expected, "one output per layout, named after it");
+
+    for stem in FIXTURES {
+        let path = directory.join(format!("{stem}.svg"));
+        let svg = std::fs::read_to_string(&path)
+            .unwrap_or_else(|error| panic!("{} cannot be read: {error}", path.display()));
+        let document = roxmltree::Document::parse(&svg).unwrap_or_else(|error| {
+            panic!("{} should be well-formed XML: {error}", path.display())
+        });
+        assert_eq!(document.root_element().tag_name().name(), "svg");
+    }
+}
+
+#[test]
+fn several_layouts_need_somewhere_to_put_their_outputs() {
+    scribe()
+        .args(["render", "one.layout.json", "two.layout.json"])
+        .assert()
+        .code(USAGE)
+        .stderr(predicate::str::contains("needs --out-dir"));
+}
+
+#[test]
+fn one_image_cannot_stand_for_several_layouts() {
+    scribe()
+        .args(["render", "one.layout.json", "two.layout.json"])
+        .args(["--out-dir", "out", "--image", "one.png"])
+        .assert()
+        .code(USAGE)
+        .stderr(predicate::str::contains("--image names one image"));
 }
 
 #[test]

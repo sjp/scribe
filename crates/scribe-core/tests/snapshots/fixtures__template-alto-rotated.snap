@@ -1,0 +1,34 @@
+---
+source: crates/scribe-core/tests/fixtures.rs
+expression: output
+---
+<?xml version="1.0" encoding="UTF-8"?>
+<alto xmlns="http://www.loc.gov/standards/alto/ns-v4#">
+  <Description>
+    <MeasurementUnit>pixel</MeasurementUnit>
+    <sourceImageInformation>
+      <fileName>rotated.png</fileName>
+    </sourceImageInformation>
+  </Description>
+  <Layout>
+    <Page ID="page_1" PHYSICAL_IMG_NR="1" WIDTH="420" HEIGHT="320">
+      <PrintSpace HPOS="0" VPOS="0" WIDTH="420" HEIGHT="320">
+        <TextBlock ID="block_1" HPOS="0" VPOS="0" WIDTH="420" HEIGHT="320">
+          <TextLine ID="line_1" HPOS="38" VPOS="66" WIDTH="143" HEIGHT="59">
+            <String ID="word_1_1" HPOS="38" VPOS="66" WIDTH="85" HEIGHT="51" CONTENT="Tilted" />
+            <String ID="word_1_2" HPOS="131" VPOS="91" WIDTH="50" HEIGHT="34" CONTENT="line" />
+          </TextLine>
+          <TextLine ID="line_2" HPOS="368" VPOS="150" WIDTH="24" HEIGHT="26">
+            <String ID="word_2_1" HPOS="368" VPOS="150" WIDTH="24" HEIGHT="26" CONTENT="S" />
+          </TextLine>
+          <TextLine ID="line_3" HPOS="368" VPOS="174" WIDTH="25" HEIGHT="20">
+            <String ID="word_3_1" HPOS="368" VPOS="174" WIDTH="25" HEIGHT="20" CONTENT="2" />
+          </TextLine>
+          <TextLine ID="line_4" HPOS="362" VPOS="195" WIDTH="25" HEIGHT="91">
+            <String ID="word_4_1" HPOS="362" VPOS="195" WIDTH="25" HEIGHT="91" CONTENT="i" />
+          </TextLine>
+        </TextBlock>
+      </PrintSpace>
+    </Page>
+  </Layout>
+</alto>

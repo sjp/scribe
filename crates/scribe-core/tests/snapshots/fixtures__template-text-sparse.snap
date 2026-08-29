@@ -1,0 +1,6 @@
+---
+source: crates/scribe-core/tests/fixtures.rs
+expression: output
+---
+North gate
+South pier

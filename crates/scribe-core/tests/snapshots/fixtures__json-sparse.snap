@@ -1,0 +1,307 @@
+---
+source: crates/scribe-core/tests/fixtures.rs
+expression: output
+---
+{
+  "version": 1,
+  "image": {
+    "width": 480,
+    "height": 360
+  },
+  "lines": [
+    {
+      "text": "North gate",
+      "bbox": {
+        "x": 29.0,
+        "y": 33.0,
+        "width": 118.0,
+        "height": 23.0
+      },
+      "rotated_box": {
+        "cx": 88.02186584472656,
+        "cy": 44.840919494628906,
+        "width": 118.17240905761719,
+        "height": 22.7840518951416,
+        "angle_deg": -0.53546142578125
+      },
+      "words": [
+        {
+          "text": "North",
+          "bbox": {
+            "x": 29.0,
+            "y": 34.0,
+            "width": 62.0,
+            "height": 19.0
+          },
+          "rotated_box": {
+            "cx": 60.0,
+            "cy": 43.5,
+            "width": 62.0,
+            "height": 19.0,
+            "angle_deg": -0.0
+          },
+          "chars": [
+            {
+              "text": "N",
+              "bbox": {
+                "x": 29.0,
+                "y": 34.0,
+                "width": 17.0,
+                "height": 18.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "o",
+              "bbox": {
+                "x": 46.0,
+                "y": 34.0,
+                "width": 14.0,
+                "height": 18.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "r",
+              "bbox": {
+                "x": 60.0,
+                "y": 34.0,
+                "width": 9.0,
+                "height": 18.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "t",
+              "bbox": {
+                "x": 69.0,
+                "y": 34.0,
+                "width": 9.0,
+                "height": 18.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "h",
+              "bbox": {
+                "x": 78.0,
+                "y": 34.0,
+                "width": 13.0,
+                "height": 19.0
+              },
+              "confidence": null
+            }
+          ],
+          "confidence": null
+        },
+        {
+          "text": "gate",
+          "bbox": {
+            "x": 100.0,
+            "y": 33.0,
+            "width": 47.0,
+            "height": 23.0
+          },
+          "rotated_box": {
+            "cx": 123.50188446044922,
+            "cy": 44.54339599609375,
+            "width": 47.95469665527344,
+            "height": 21.97923469543457,
+            "angle_deg": -2.48956298828125
+          },
+          "chars": [
+            {
+              "text": "g",
+              "bbox": {
+                "x": 100.0,
+                "y": 35.0,
+                "width": 13.0,
+                "height": 21.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "a",
+              "bbox": {
+                "x": 113.0,
+                "y": 34.0,
+                "width": 14.0,
+                "height": 21.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "t",
+              "bbox": {
+                "x": 127.0,
+                "y": 34.0,
+                "width": 9.0,
+                "height": 20.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "e",
+              "bbox": {
+                "x": 136.0,
+                "y": 33.0,
+                "width": 11.0,
+                "height": 20.0
+              },
+              "confidence": null
+            }
+          ],
+          "confidence": null
+        }
+      ],
+      "confidence": null
+    },
+    {
+      "text": "South pier",
+      "bbox": {
+        "x": 301.0,
+        "y": 310.0,
+        "width": 114.0,
+        "height": 25.0
+      },
+      "rotated_box": {
+        "cx": 358.0582580566406,
+        "cy": 323.20843505859375,
+        "width": 114.42516326904297,
+        "height": 24.865219116210938,
+        "angle_deg": -1.231964111328125
+      },
+      "words": [
+        {
+          "text": "South",
+          "bbox": {
+            "x": 301.0,
+            "y": 312.0,
+            "width": 64.0,
+            "height": 19.0
+          },
+          "rotated_box": {
+            "cx": 333.0,
+            "cy": 321.5,
+            "width": 64.0,
+            "height": 19.0,
+            "angle_deg": -0.0
+          },
+          "chars": [
+            {
+              "text": "S",
+              "bbox": {
+                "x": 301.0,
+                "y": 312.0,
+                "width": 16.0,
+                "height": 19.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "o",
+              "bbox": {
+                "x": 317.0,
+                "y": 312.0,
+                "width": 13.0,
+                "height": 19.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "u",
+              "bbox": {
+                "x": 330.0,
+                "y": 312.0,
+                "width": 14.0,
+                "height": 19.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "t",
+              "bbox": {
+                "x": 344.0,
+                "y": 312.0,
+                "width": 8.0,
+                "height": 19.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "h",
+              "bbox": {
+                "x": 352.0,
+                "y": 312.0,
+                "width": 13.0,
+                "height": 19.0
+              },
+              "confidence": null
+            }
+          ],
+          "confidence": null
+        },
+        {
+          "text": "pier",
+          "bbox": {
+            "x": 373.0,
+            "y": 310.0,
+            "width": 42.0,
+            "height": 25.0
+          },
+          "rotated_box": {
+            "cx": 394.0,
+            "cy": 322.5,
+            "width": 42.0,
+            "height": 25.0,
+            "angle_deg": -0.0
+          },
+          "chars": [
+            {
+              "text": "p",
+              "bbox": {
+                "x": 373.0,
+                "y": 311.0,
+                "width": 15.0,
+                "height": 24.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "i",
+              "bbox": {
+                "x": 388.0,
+                "y": 311.0,
+                "width": 6.0,
+                "height": 23.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "e",
+              "bbox": {
+                "x": 394.0,
+                "y": 310.0,
+                "width": 14.0,
+                "height": 24.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "r",
+              "bbox": {
+                "x": 408.0,
+                "y": 310.0,
+                "width": 7.0,
+                "height": 23.0
+              },
+              "confidence": null
+            }
+          ],
+          "confidence": null
+        }
+      ],
+      "confidence": null
+    }
+  ]
+}

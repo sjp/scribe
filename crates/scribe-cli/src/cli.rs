@@ -64,7 +64,7 @@ pub enum Command {
     /// Read the text in one or more images and render it.
     Ocr(OcrCommand),
 
-    /// Render a layout that was read earlier, without running recognition.
+    /// Render layouts that were read earlier, without running recognition.
     Render(RenderCommand),
 
     /// List the output formats and the options each one takes.
@@ -109,28 +109,33 @@ pub struct OcrCommand {
     pub render: RenderArgs,
 }
 
-/// Render a layout read earlier.
+/// Render layouts read earlier.
 #[derive(Debug, Args)]
 #[command(after_help = "\
 Options belonging to a format are set with `--opt name=value`, which may be \
 given more than once and wins over the flags that stand for particular \
 options. Run `scribe formats` to see what each format takes.")]
 pub struct RenderCommand {
-    /// The layout to render, as `--format json` writes it; `-` reads it from
-    /// standard input.
-    #[arg(value_name = "LAYOUT")]
-    pub layout: PathBuf,
+    /// The layouts to render, as `--format json` writes them; `-` reads one
+    /// from standard input.
+    #[arg(value_name = "LAYOUT", required = true)]
+    pub layouts: Vec<PathBuf>,
 
-    /// The image the layout was read from, for a format that embeds or links
-    /// to it.
+    /// The image the layouts were read from, for a format that embeds or
+    /// links to it; one layout only.
     #[arg(long, value_name = "PATH")]
     pub image: Option<PathBuf>,
 
-    /// Where to write the output; standard output when unset.
-    #[arg(short, long, value_name = "PATH")]
+    /// Write the output here instead of to standard output; one layout only.
+    #[arg(short, long, value_name = "PATH", conflicts_with = "out_dir")]
     pub out: Option<PathBuf>,
 
-    /// What the result looks like.
+    /// Write one output per layout into this directory, each named after its
+    /// layout.
+    #[arg(long, value_name = "DIR")]
+    pub out_dir: Option<PathBuf>,
+
+    /// What the results look like.
     #[command(flatten)]
     pub render: RenderArgs,
 }

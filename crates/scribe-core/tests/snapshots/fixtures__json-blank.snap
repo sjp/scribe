@@ -1,0 +1,12 @@
+---
+source: crates/scribe-core/tests/fixtures.rs
+expression: output
+---
+{
+  "version": 1,
+  "image": {
+    "width": 220,
+    "height": 140
+  },
+  "lines": []
+}

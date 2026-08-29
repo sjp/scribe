@@ -1,0 +1,55 @@
+---
+source: crates/scribe-core/tests/fixtures.rs
+expression: output
+---
+<?xml version="1.0" encoding="UTF-8"?>
+<alto xmlns="http://www.loc.gov/standards/alto/ns-v4#">
+  <Description>
+    <MeasurementUnit>pixel</MeasurementUnit>
+    <sourceImageInformation>
+      <fileName>paragraph.png</fileName>
+    </sourceImageInformation>
+  </Description>
+  <Layout>
+    <Page ID="page_1" PHYSICAL_IMG_NR="1" WIDTH="480" HEIGHT="280">
+      <PrintSpace HPOS="0" VPOS="0" WIDTH="480" HEIGHT="280">
+        <TextBlock ID="block_1" HPOS="0" VPOS="0" WIDTH="480" HEIGHT="280">
+          <TextLine ID="line_1" HPOS="33" VPOS="29" WIDTH="263" HEIGHT="35">
+            <String ID="word_1_1" HPOS="33" VPOS="29" WIDTH="118" HEIGHT="35" CONTENT="Reading" />
+            <String ID="word_1_2" HPOS="162" VPOS="31" WIDTH="134" HEIGHT="25" CONTENT="Machines" />
+          </TextLine>
+          <TextLine ID="line_2" HPOS="31" VPOS="93" WIDTH="255" HEIGHT="22">
+            <String ID="word_2_1" HPOS="31" VPOS="94" WIDTH="37" HEIGHT="17" CONTENT="The" />
+            <String ID="word_2_2" HPOS="75" VPOS="93" WIDTH="50" HEIGHT="22" CONTENT="quick" />
+            <String ID="word_2_3" HPOS="131" VPOS="93" WIDTH="58" HEIGHT="17" CONTENT="brown" />
+            <String ID="word_2_4" HPOS="196" VPOS="93" WIDTH="27" HEIGHT="18" CONTENT="fox" />
+            <String ID="word_2_5" HPOS="229" VPOS="93" WIDTH="57" HEIGHT="21" CONTENT="jumps" />
+          </TextLine>
+          <TextLine ID="line_3" HPOS="32" VPOS="129" WIDTH="263" HEIGHT="20">
+            <String ID="word_3_1" HPOS="32" VPOS="133" WIDTH="43" HEIGHT="14" CONTENT="over" />
+            <String ID="word_3_2" HPOS="81" VPOS="129" WIDTH="31" HEIGHT="18" CONTENT="the" />
+            <String ID="word_3_3" HPOS="118" VPOS="129" WIDTH="38" HEIGHT="20" CONTENT="lazy" />
+            <String ID="word_3_4" HPOS="167" VPOS="130" WIDTH="35" HEIGHT="19" CONTENT="dog," />
+            <String ID="word_3_5" HPOS="210" VPOS="129" WIDTH="34" HEIGHT="18" CONTENT="and" />
+            <String ID="word_3_6" HPOS="257" VPOS="130" WIDTH="38" HEIGHT="17" CONTENT="does" />
+          </TextLine>
+          <TextLine ID="line_4" HPOS="31" VPOS="164" WIDTH="232" HEIGHT="24">
+            <String ID="word_4_1" HPOS="31" VPOS="165" WIDTH="14" HEIGHT="19" CONTENT="it" />
+            <String ID="word_4_2" HPOS="52" VPOS="164" WIDTH="52" HEIGHT="24" CONTENT="again" />
+            <String ID="word_4_3" HPOS="110" VPOS="167" WIDTH="22" HEIGHT="16" CONTENT="on" />
+            <String ID="word_4_4" HPOS="140" VPOS="164" WIDTH="30" HEIGHT="19" CONTENT="the" />
+            <String ID="word_4_5" HPOS="176" VPOS="168" WIDTH="42" HEIGHT="15" CONTENT="next" />
+            <String ID="word_4_6" HPOS="225" VPOS="166" WIDTH="38" HEIGHT="17" CONTENT="line." />
+          </TextLine>
+          <TextLine ID="line_5" HPOS="31" VPOS="228" WIDTH="161" HEIGHT="17">
+            <String ID="word_5_1" HPOS="31" VPOS="229" WIDTH="44" HEIGHT="12" CONTENT="Printed" />
+            <String ID="word_5_2" HPOS="78" VPOS="228" WIDTH="12" HEIGHT="13" CONTENT="in" />
+            <String ID="word_5_3" HPOS="95" VPOS="229" WIDTH="29" HEIGHT="12" CONTENT="1996" />
+            <String ID="word_5_4" HPOS="128" VPOS="230" WIDTH="12" HEIGHT="11" CONTENT="at" />
+            <String ID="word_5_5" HPOS="144" VPOS="229" WIDTH="48" HEIGHT="16" CONTENT="Leyden." />
+          </TextLine>
+        </TextBlock>
+      </PrintSpace>
+    </Page>
+  </Layout>
+</alto>

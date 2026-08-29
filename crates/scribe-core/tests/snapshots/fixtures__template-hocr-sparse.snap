@@ -1,0 +1,26 @@
+---
+source: crates/scribe-core/tests/fixtures.rs
+expression: output
+---
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+  <head>
+    <title></title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="ocr-system" content="scribe" />
+    <meta name="ocr-capabilities" content="ocr_page ocr_line ocrx_word" />
+  </head>
+  <body>
+    <div class="ocr_page" id="page_1" title="bbox 0 0 480 360; image &quot;sparse.jpg&quot;">
+      <span class="ocr_line" id="line_1" title="bbox 29 33 147 56">
+        <span class="ocrx_word" id="word_1_1" title="bbox 29 34 91 53">North</span>
+        <span class="ocrx_word" id="word_1_2" title="bbox 100 33 147 56">gate</span>
+      </span>
+      <span class="ocr_line" id="line_2" title="bbox 301 310 415 335">
+        <span class="ocrx_word" id="word_2_1" title="bbox 301 312 365 331">South</span>
+        <span class="ocrx_word" id="word_2_2" title="bbox 373 310 415 335">pier</span>
+      </span>
+    </div>
+  </body>
+</html>

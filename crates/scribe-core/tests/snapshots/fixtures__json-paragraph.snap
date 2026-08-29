@@ -1,0 +1,1574 @@
+---
+source: crates/scribe-core/tests/fixtures.rs
+expression: output
+---
+{
+  "version": 1,
+  "image": {
+    "width": 480,
+    "height": 280
+  },
+  "lines": [
+    {
+      "text": "Reading Machines",
+      "bbox": {
+        "x": 33.0,
+        "y": 29.0,
+        "width": 263.0,
+        "height": 35.0
+      },
+      "rotated_box": {
+        "cx": 164.5,
+        "cy": 46.5,
+        "width": 263.0,
+        "height": 35.0,
+        "angle_deg": -0.0
+      },
+      "words": [
+        {
+          "text": "Reading",
+          "bbox": {
+            "x": 33.0,
+            "y": 29.0,
+            "width": 118.0,
+            "height": 35.0
+          },
+          "rotated_box": {
+            "cx": 92.0,
+            "cy": 46.5,
+            "width": 118.0,
+            "height": 35.0,
+            "angle_deg": -0.0
+          },
+          "chars": [
+            {
+              "text": "R",
+              "bbox": {
+                "x": 33.0,
+                "y": 29.0,
+                "width": 21.0,
+                "height": 35.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "e",
+              "bbox": {
+                "x": 54.0,
+                "y": 29.0,
+                "width": 18.0,
+                "height": 35.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "a",
+              "bbox": {
+                "x": 72.0,
+                "y": 29.0,
+                "width": 26.0,
+                "height": 35.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "d",
+              "bbox": {
+                "x": 98.0,
+                "y": 29.0,
+                "width": 9.0,
+                "height": 35.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "i",
+              "bbox": {
+                "x": 107.0,
+                "y": 29.0,
+                "width": 9.0,
+                "height": 35.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "n",
+              "bbox": {
+                "x": 116.0,
+                "y": 29.0,
+                "width": 20.0,
+                "height": 35.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "g",
+              "bbox": {
+                "x": 136.0,
+                "y": 29.0,
+                "width": 15.0,
+                "height": 35.0
+              },
+              "confidence": null
+            }
+          ],
+          "confidence": null
+        },
+        {
+          "text": "Machines",
+          "bbox": {
+            "x": 162.0,
+            "y": 31.0,
+            "width": 134.0,
+            "height": 25.0
+          },
+          "rotated_box": {
+            "cx": 229.0,
+            "cy": 43.5,
+            "width": 134.0,
+            "height": 25.0,
+            "angle_deg": -0.0
+          },
+          "chars": [
+            {
+              "text": "M",
+              "bbox": {
+                "x": 162.0,
+                "y": 31.0,
+                "width": 26.0,
+                "height": 25.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "a",
+              "bbox": {
+                "x": 188.0,
+                "y": 31.0,
+                "width": 18.0,
+                "height": 25.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "c",
+              "bbox": {
+                "x": 206.0,
+                "y": 31.0,
+                "width": 15.0,
+                "height": 25.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "h",
+              "bbox": {
+                "x": 221.0,
+                "y": 31.0,
+                "width": 18.0,
+                "height": 25.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "i",
+              "bbox": {
+                "x": 239.0,
+                "y": 31.0,
+                "width": 8.0,
+                "height": 25.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "n",
+              "bbox": {
+                "x": 247.0,
+                "y": 31.0,
+                "width": 20.0,
+                "height": 25.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "e",
+              "bbox": {
+                "x": 267.0,
+                "y": 31.0,
+                "width": 18.0,
+                "height": 25.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "s",
+              "bbox": {
+                "x": 285.0,
+                "y": 31.0,
+                "width": 11.0,
+                "height": 25.0
+              },
+              "confidence": null
+            }
+          ],
+          "confidence": null
+        }
+      ],
+      "confidence": null
+    },
+    {
+      "text": "The quick brown fox jumps",
+      "bbox": {
+        "x": 31.0,
+        "y": 93.0,
+        "width": 255.0,
+        "height": 22.0
+      },
+      "rotated_box": {
+        "cx": 158.49998474121094,
+        "cy": 104.0,
+        "width": 254.99998474121094,
+        "height": 21.999998092651367,
+        "angle_deg": 0.0
+      },
+      "words": [
+        {
+          "text": "The",
+          "bbox": {
+            "x": 31.0,
+            "y": 94.0,
+            "width": 37.0,
+            "height": 17.0
+          },
+          "rotated_box": {
+            "cx": 49.5,
+            "cy": 102.5,
+            "width": 37.0,
+            "height": 17.0,
+            "angle_deg": -0.0
+          },
+          "chars": [
+            {
+              "text": "T",
+              "bbox": {
+                "x": 31.0,
+                "y": 94.0,
+                "width": 14.0,
+                "height": 17.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "h",
+              "bbox": {
+                "x": 45.0,
+                "y": 94.0,
+                "width": 13.0,
+                "height": 17.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "e",
+              "bbox": {
+                "x": 58.0,
+                "y": 94.0,
+                "width": 10.0,
+                "height": 17.0
+              },
+              "confidence": null
+            }
+          ],
+          "confidence": null
+        },
+        {
+          "text": "quick",
+          "bbox": {
+            "x": 75.0,
+            "y": 93.0,
+            "width": 50.0,
+            "height": 22.0
+          },
+          "rotated_box": {
+            "cx": 99.99465942382812,
+            "cy": 104.15498352050781,
+            "width": 50.72846984863281,
+            "height": 21.401073455810547,
+            "angle_deg": 1.9749341011047363
+          },
+          "chars": [
+            {
+              "text": "q",
+              "bbox": {
+                "x": 75.0,
+                "y": 93.0,
+                "width": 12.0,
+                "height": 21.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "u",
+              "bbox": {
+                "x": 87.0,
+                "y": 94.0,
+                "width": 11.0,
+                "height": 20.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "i",
+              "bbox": {
+                "x": 98.0,
+                "y": 94.0,
+                "width": 6.0,
+                "height": 20.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "c",
+              "bbox": {
+                "x": 104.0,
+                "y": 94.0,
+                "width": 10.0,
+                "height": 21.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "k",
+              "bbox": {
+                "x": 114.0,
+                "y": 95.0,
+                "width": 11.0,
+                "height": 20.0
+              },
+              "confidence": null
+            }
+          ],
+          "confidence": null
+        },
+        {
+          "text": "brown",
+          "bbox": {
+            "x": 131.0,
+            "y": 93.0,
+            "width": 58.0,
+            "height": 17.0
+          },
+          "rotated_box": {
+            "cx": 160.0,
+            "cy": 101.5,
+            "width": 58.0,
+            "height": 17.0,
+            "angle_deg": -0.0
+          },
+          "chars": [
+            {
+              "text": "b",
+              "bbox": {
+                "x": 131.0,
+                "y": 93.0,
+                "width": 12.0,
+                "height": 17.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "r",
+              "bbox": {
+                "x": 143.0,
+                "y": 93.0,
+                "width": 8.0,
+                "height": 17.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "o",
+              "bbox": {
+                "x": 151.0,
+                "y": 93.0,
+                "width": 12.0,
+                "height": 17.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "w",
+              "bbox": {
+                "x": 163.0,
+                "y": 93.0,
+                "width": 14.0,
+                "height": 17.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "n",
+              "bbox": {
+                "x": 177.0,
+                "y": 93.0,
+                "width": 12.0,
+                "height": 17.0
+              },
+              "confidence": null
+            }
+          ],
+          "confidence": null
+        },
+        {
+          "text": "fox",
+          "bbox": {
+            "x": 196.0,
+            "y": 93.0,
+            "width": 27.0,
+            "height": 18.0
+          },
+          "rotated_box": {
+            "cx": 209.5,
+            "cy": 102.0,
+            "width": 27.0,
+            "height": 18.0,
+            "angle_deg": -0.0
+          },
+          "chars": [
+            {
+              "text": "f",
+              "bbox": {
+                "x": 196.0,
+                "y": 93.0,
+                "width": 7.0,
+                "height": 18.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "o",
+              "bbox": {
+                "x": 203.0,
+                "y": 93.0,
+                "width": 10.0,
+                "height": 18.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "x",
+              "bbox": {
+                "x": 213.0,
+                "y": 93.0,
+                "width": 10.0,
+                "height": 18.0
+              },
+              "confidence": null
+            }
+          ],
+          "confidence": null
+        },
+        {
+          "text": "jumps",
+          "bbox": {
+            "x": 229.0,
+            "y": 93.0,
+            "width": 57.0,
+            "height": 21.0
+          },
+          "rotated_box": {
+            "cx": 257.5,
+            "cy": 103.5,
+            "width": 57.0,
+            "height": 21.0,
+            "angle_deg": -0.0
+          },
+          "chars": [
+            {
+              "text": "j",
+              "bbox": {
+                "x": 229.0,
+                "y": 93.0,
+                "width": 7.0,
+                "height": 21.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "u",
+              "bbox": {
+                "x": 236.0,
+                "y": 93.0,
+                "width": 12.0,
+                "height": 21.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "m",
+              "bbox": {
+                "x": 248.0,
+                "y": 93.0,
+                "width": 18.0,
+                "height": 21.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "p",
+              "bbox": {
+                "x": 266.0,
+                "y": 93.0,
+                "width": 12.0,
+                "height": 21.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "s",
+              "bbox": {
+                "x": 278.0,
+                "y": 93.0,
+                "width": 8.0,
+                "height": 21.0
+              },
+              "confidence": null
+            }
+          ],
+          "confidence": null
+        }
+      ],
+      "confidence": null
+    },
+    {
+      "text": "over the lazy dog, and does",
+      "bbox": {
+        "x": 32.0,
+        "y": 129.0,
+        "width": 263.0,
+        "height": 20.0
+      },
+      "rotated_box": {
+        "cx": 163.5,
+        "cy": 139.0,
+        "width": 263.0,
+        "height": 20.0,
+        "angle_deg": -0.0
+      },
+      "words": [
+        {
+          "text": "over",
+          "bbox": {
+            "x": 32.0,
+            "y": 133.0,
+            "width": 43.0,
+            "height": 14.0
+          },
+          "rotated_box": {
+            "cx": 53.5,
+            "cy": 140.0,
+            "width": 43.0,
+            "height": 14.0,
+            "angle_deg": -0.0
+          },
+          "chars": [
+            {
+              "text": "o",
+              "bbox": {
+                "x": 32.0,
+                "y": 133.0,
+                "width": 14.0,
+                "height": 14.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "v",
+              "bbox": {
+                "x": 46.0,
+                "y": 133.0,
+                "width": 10.0,
+                "height": 14.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "e",
+              "bbox": {
+                "x": 56.0,
+                "y": 133.0,
+                "width": 12.0,
+                "height": 14.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "r",
+              "bbox": {
+                "x": 68.0,
+                "y": 133.0,
+                "width": 7.0,
+                "height": 14.0
+              },
+              "confidence": null
+            }
+          ],
+          "confidence": null
+        },
+        {
+          "text": "the",
+          "bbox": {
+            "x": 81.0,
+            "y": 129.0,
+            "width": 31.0,
+            "height": 18.0
+          },
+          "rotated_box": {
+            "cx": 96.5,
+            "cy": 138.0,
+            "width": 31.0,
+            "height": 18.0,
+            "angle_deg": -0.0
+          },
+          "chars": [
+            {
+              "text": "t",
+              "bbox": {
+                "x": 81.0,
+                "y": 129.0,
+                "width": 8.0,
+                "height": 17.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "h",
+              "bbox": {
+                "x": 89.0,
+                "y": 129.0,
+                "width": 12.0,
+                "height": 17.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "e",
+              "bbox": {
+                "x": 101.0,
+                "y": 130.0,
+                "width": 11.0,
+                "height": 17.0
+              },
+              "confidence": null
+            }
+          ],
+          "confidence": null
+        },
+        {
+          "text": "lazy",
+          "bbox": {
+            "x": 118.0,
+            "y": 129.0,
+            "width": 38.0,
+            "height": 20.0
+          },
+          "rotated_box": {
+            "cx": 137.0,
+            "cy": 139.0,
+            "width": 38.0,
+            "height": 20.0,
+            "angle_deg": -0.0
+          },
+          "chars": [
+            {
+              "text": "l",
+              "bbox": {
+                "x": 118.0,
+                "y": 129.0,
+                "width": 7.0,
+                "height": 18.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "a",
+              "bbox": {
+                "x": 125.0,
+                "y": 129.0,
+                "width": 12.0,
+                "height": 19.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "z",
+              "bbox": {
+                "x": 137.0,
+                "y": 130.0,
+                "width": 9.0,
+                "height": 19.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "y",
+              "bbox": {
+                "x": 146.0,
+                "y": 130.0,
+                "width": 10.0,
+                "height": 19.0
+              },
+              "confidence": null
+            }
+          ],
+          "confidence": null
+        },
+        {
+          "text": "dog,",
+          "bbox": {
+            "x": 167.0,
+            "y": 130.0,
+            "width": 35.0,
+            "height": 19.0
+          },
+          "rotated_box": {
+            "cx": 184.5,
+            "cy": 139.5,
+            "width": 35.0,
+            "height": 19.0,
+            "angle_deg": -0.0
+          },
+          "chars": [
+            {
+              "text": "d",
+              "bbox": {
+                "x": 167.0,
+                "y": 130.0,
+                "width": 8.0,
+                "height": 19.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "o",
+              "bbox": {
+                "x": 175.0,
+                "y": 130.0,
+                "width": 11.0,
+                "height": 19.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "g",
+              "bbox": {
+                "x": 186.0,
+                "y": 130.0,
+                "width": 12.0,
+                "height": 19.0
+              },
+              "confidence": null
+            },
+            {
+              "text": ",",
+              "bbox": {
+                "x": 198.0,
+                "y": 130.0,
+                "width": 4.0,
+                "height": 19.0
+              },
+              "confidence": null
+            }
+          ],
+          "confidence": null
+        },
+        {
+          "text": "and",
+          "bbox": {
+            "x": 210.0,
+            "y": 129.0,
+            "width": 34.0,
+            "height": 18.0
+          },
+          "rotated_box": {
+            "cx": 227.0,
+            "cy": 138.0,
+            "width": 34.0,
+            "height": 18.0,
+            "angle_deg": -0.0
+          },
+          "chars": [
+            {
+              "text": "a",
+              "bbox": {
+                "x": 210.0,
+                "y": 130.0,
+                "width": 12.0,
+                "height": 17.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "n",
+              "bbox": {
+                "x": 222.0,
+                "y": 129.0,
+                "width": 17.0,
+                "height": 17.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "d",
+              "bbox": {
+                "x": 239.0,
+                "y": 129.0,
+                "width": 5.0,
+                "height": 16.0
+              },
+              "confidence": null
+            }
+          ],
+          "confidence": null
+        },
+        {
+          "text": "does",
+          "bbox": {
+            "x": 257.0,
+            "y": 130.0,
+            "width": 38.0,
+            "height": 17.0
+          },
+          "rotated_box": {
+            "cx": 276.0,
+            "cy": 138.5,
+            "width": 38.0,
+            "height": 17.0,
+            "angle_deg": -0.0
+          },
+          "chars": [
+            {
+              "text": "d",
+              "bbox": {
+                "x": 257.0,
+                "y": 130.0,
+                "width": 7.0,
+                "height": 17.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "o",
+              "bbox": {
+                "x": 264.0,
+                "y": 130.0,
+                "width": 12.0,
+                "height": 17.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "e",
+              "bbox": {
+                "x": 276.0,
+                "y": 130.0,
+                "width": 12.0,
+                "height": 17.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "s",
+              "bbox": {
+                "x": 288.0,
+                "y": 130.0,
+                "width": 7.0,
+                "height": 17.0
+              },
+              "confidence": null
+            }
+          ],
+          "confidence": null
+        }
+      ],
+      "confidence": null
+    },
+    {
+      "text": "it again on the next line.",
+      "bbox": {
+        "x": 31.0,
+        "y": 164.0,
+        "width": 232.0,
+        "height": 24.0
+      },
+      "rotated_box": {
+        "cx": 147.0,
+        "cy": 176.0,
+        "width": 232.0,
+        "height": 24.0,
+        "angle_deg": -0.0
+      },
+      "words": [
+        {
+          "text": "it",
+          "bbox": {
+            "x": 31.0,
+            "y": 165.0,
+            "width": 14.0,
+            "height": 19.0
+          },
+          "rotated_box": {
+            "cx": 38.0,
+            "cy": 174.5,
+            "width": 14.0,
+            "height": 19.0,
+            "angle_deg": -0.0
+          },
+          "chars": [
+            {
+              "text": "i",
+              "bbox": {
+                "x": 31.0,
+                "y": 165.0,
+                "width": 7.0,
+                "height": 17.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "t",
+              "bbox": {
+                "x": 38.0,
+                "y": 166.0,
+                "width": 7.0,
+                "height": 18.0
+              },
+              "confidence": null
+            }
+          ],
+          "confidence": null
+        },
+        {
+          "text": "again",
+          "bbox": {
+            "x": 52.0,
+            "y": 164.0,
+            "width": 52.0,
+            "height": 24.0
+          },
+          "rotated_box": {
+            "cx": 77.99755096435547,
+            "cy": 176.0856475830078,
+            "width": 52.664222717285156,
+            "height": 23.30477523803711,
+            "angle_deg": 1.6365770101547241
+          },
+          "chars": [
+            {
+              "text": "a",
+              "bbox": {
+                "x": 52.0,
+                "y": 164.0,
+                "width": 11.0,
+                "height": 23.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "g",
+              "bbox": {
+                "x": 63.0,
+                "y": 165.0,
+                "width": 13.0,
+                "height": 22.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "a",
+              "bbox": {
+                "x": 76.0,
+                "y": 165.0,
+                "width": 11.0,
+                "height": 22.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "i",
+              "bbox": {
+                "x": 87.0,
+                "y": 165.0,
+                "width": 6.0,
+                "height": 23.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "n",
+              "bbox": {
+                "x": 93.0,
+                "y": 166.0,
+                "width": 11.0,
+                "height": 22.0
+              },
+              "confidence": null
+            }
+          ],
+          "confidence": null
+        },
+        {
+          "text": "on",
+          "bbox": {
+            "x": 110.0,
+            "y": 167.0,
+            "width": 22.0,
+            "height": 16.0
+          },
+          "rotated_box": {
+            "cx": 121.0,
+            "cy": 175.0,
+            "width": 22.0,
+            "height": 16.0,
+            "angle_deg": -0.0
+          },
+          "chars": [
+            {
+              "text": "o",
+              "bbox": {
+                "x": 110.0,
+                "y": 168.0,
+                "width": 13.0,
+                "height": 15.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "n",
+              "bbox": {
+                "x": 123.0,
+                "y": 167.0,
+                "width": 9.0,
+                "height": 15.0
+              },
+              "confidence": null
+            }
+          ],
+          "confidence": null
+        },
+        {
+          "text": "the",
+          "bbox": {
+            "x": 140.0,
+            "y": 164.0,
+            "width": 30.0,
+            "height": 19.0
+          },
+          "rotated_box": {
+            "cx": 154.99310302734375,
+            "cy": 173.417236328125,
+            "width": 31.474239349365234,
+            "height": 17.937824249267578,
+            "angle_deg": -4.763641357421875
+          },
+          "chars": [
+            {
+              "text": "t",
+              "bbox": {
+                "x": 140.0,
+                "y": 166.0,
+                "width": 8.0,
+                "height": 17.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "h",
+              "bbox": {
+                "x": 148.0,
+                "y": 165.0,
+                "width": 12.0,
+                "height": 17.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "e",
+              "bbox": {
+                "x": 160.0,
+                "y": 164.0,
+                "width": 10.0,
+                "height": 17.0
+              },
+              "confidence": null
+            }
+          ],
+          "confidence": null
+        },
+        {
+          "text": "next",
+          "bbox": {
+            "x": 176.0,
+            "y": 168.0,
+            "width": 42.0,
+            "height": 15.0
+          },
+          "rotated_box": {
+            "cx": 197.0,
+            "cy": 175.5,
+            "width": 42.0,
+            "height": 15.0,
+            "angle_deg": -0.0
+          },
+          "chars": [
+            {
+              "text": "n",
+              "bbox": {
+                "x": 176.0,
+                "y": 168.0,
+                "width": 14.0,
+                "height": 15.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "e",
+              "bbox": {
+                "x": 190.0,
+                "y": 168.0,
+                "width": 11.0,
+                "height": 15.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "x",
+              "bbox": {
+                "x": 201.0,
+                "y": 168.0,
+                "width": 11.0,
+                "height": 15.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "t",
+              "bbox": {
+                "x": 212.0,
+                "y": 168.0,
+                "width": 6.0,
+                "height": 15.0
+              },
+              "confidence": null
+            }
+          ],
+          "confidence": null
+        },
+        {
+          "text": "line.",
+          "bbox": {
+            "x": 225.0,
+            "y": 166.0,
+            "width": 38.0,
+            "height": 17.0
+          },
+          "rotated_box": {
+            "cx": 244.0,
+            "cy": 174.5,
+            "width": 38.0,
+            "height": 17.0,
+            "angle_deg": -0.0
+          },
+          "chars": [
+            {
+              "text": "l",
+              "bbox": {
+                "x": 225.0,
+                "y": 166.0,
+                "width": 4.0,
+                "height": 17.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "i",
+              "bbox": {
+                "x": 229.0,
+                "y": 166.0,
+                "width": 7.0,
+                "height": 17.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "n",
+              "bbox": {
+                "x": 236.0,
+                "y": 166.0,
+                "width": 12.0,
+                "height": 17.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "e",
+              "bbox": {
+                "x": 248.0,
+                "y": 166.0,
+                "width": 11.0,
+                "height": 17.0
+              },
+              "confidence": null
+            },
+            {
+              "text": ".",
+              "bbox": {
+                "x": 259.0,
+                "y": 166.0,
+                "width": 4.0,
+                "height": 17.0
+              },
+              "confidence": null
+            }
+          ],
+          "confidence": null
+        }
+      ],
+      "confidence": null
+    },
+    {
+      "text": "Printed in 1996 at Leyden.",
+      "bbox": {
+        "x": 31.0,
+        "y": 228.0,
+        "width": 161.0,
+        "height": 17.0
+      },
+      "rotated_box": {
+        "cx": 111.50459289550781,
+        "cy": 236.5000457763672,
+        "width": 161.1400146484375,
+        "height": 16.47637176513672,
+        "angle_deg": 0.5256345868110657
+      },
+      "words": [
+        {
+          "text": "Printed",
+          "bbox": {
+            "x": 31.0,
+            "y": 229.0,
+            "width": 44.0,
+            "height": 12.0
+          },
+          "rotated_box": {
+            "cx": 53.0,
+            "cy": 235.0,
+            "width": 44.0,
+            "height": 12.0,
+            "angle_deg": -0.0
+          },
+          "chars": [
+            {
+              "text": "P",
+              "bbox": {
+                "x": 31.0,
+                "y": 229.0,
+                "width": 9.0,
+                "height": 12.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "r",
+              "bbox": {
+                "x": 40.0,
+                "y": 229.0,
+                "width": 4.0,
+                "height": 12.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "i",
+              "bbox": {
+                "x": 44.0,
+                "y": 229.0,
+                "width": 4.0,
+                "height": 12.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "n",
+              "bbox": {
+                "x": 48.0,
+                "y": 229.0,
+                "width": 8.0,
+                "height": 12.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "t",
+              "bbox": {
+                "x": 56.0,
+                "y": 229.0,
+                "width": 4.0,
+                "height": 12.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "e",
+              "bbox": {
+                "x": 60.0,
+                "y": 229.0,
+                "width": 11.0,
+                "height": 12.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "d",
+              "bbox": {
+                "x": 71.0,
+                "y": 229.0,
+                "width": 4.0,
+                "height": 12.0
+              },
+              "confidence": null
+            }
+          ],
+          "confidence": null
+        },
+        {
+          "text": "in",
+          "bbox": {
+            "x": 78.0,
+            "y": 228.0,
+            "width": 12.0,
+            "height": 13.0
+          },
+          "rotated_box": {
+            "cx": 84.0,
+            "cy": 234.5,
+            "width": 12.0,
+            "height": 13.0,
+            "angle_deg": -0.0
+          },
+          "chars": [
+            {
+              "text": "i",
+              "bbox": {
+                "x": 78.0,
+                "y": 228.0,
+                "width": 5.0,
+                "height": 12.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "n",
+              "bbox": {
+                "x": 83.0,
+                "y": 229.0,
+                "width": 7.0,
+                "height": 12.0
+              },
+              "confidence": null
+            }
+          ],
+          "confidence": null
+        },
+        {
+          "text": "1996",
+          "bbox": {
+            "x": 95.0,
+            "y": 229.0,
+            "width": 29.0,
+            "height": 12.0
+          },
+          "rotated_box": {
+            "cx": 109.5,
+            "cy": 235.0,
+            "width": 29.0,
+            "height": 12.0,
+            "angle_deg": -0.0
+          },
+          "chars": [
+            {
+              "text": "1",
+              "bbox": {
+                "x": 95.0,
+                "y": 229.0,
+                "width": 7.0,
+                "height": 12.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "9",
+              "bbox": {
+                "x": 102.0,
+                "y": 229.0,
+                "width": 8.0,
+                "height": 12.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "9",
+              "bbox": {
+                "x": 110.0,
+                "y": 229.0,
+                "width": 7.0,
+                "height": 12.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "6",
+              "bbox": {
+                "x": 117.0,
+                "y": 229.0,
+                "width": 7.0,
+                "height": 12.0
+              },
+              "confidence": null
+            }
+          ],
+          "confidence": null
+        },
+        {
+          "text": "at",
+          "bbox": {
+            "x": 128.0,
+            "y": 230.0,
+            "width": 12.0,
+            "height": 11.0
+          },
+          "rotated_box": {
+            "cx": 134.0,
+            "cy": 235.5,
+            "width": 12.0,
+            "height": 11.0,
+            "angle_deg": -0.0
+          },
+          "chars": [
+            {
+              "text": "a",
+              "bbox": {
+                "x": 128.0,
+                "y": 230.0,
+                "width": 8.0,
+                "height": 11.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "t",
+              "bbox": {
+                "x": 136.0,
+                "y": 230.0,
+                "width": 4.0,
+                "height": 11.0
+              },
+              "confidence": null
+            }
+          ],
+          "confidence": null
+        },
+        {
+          "text": "Leyden.",
+          "bbox": {
+            "x": 144.0,
+            "y": 229.0,
+            "width": 48.0,
+            "height": 16.0
+          },
+          "rotated_box": {
+            "cx": 168.0,
+            "cy": 237.0,
+            "width": 48.0,
+            "height": 16.0,
+            "angle_deg": -0.0
+          },
+          "chars": [
+            {
+              "text": "L",
+              "bbox": {
+                "x": 144.0,
+                "y": 229.0,
+                "width": 7.0,
+                "height": 16.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "e",
+              "bbox": {
+                "x": 151.0,
+                "y": 229.0,
+                "width": 7.0,
+                "height": 16.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "y",
+              "bbox": {
+                "x": 158.0,
+                "y": 229.0,
+                "width": 11.0,
+                "height": 16.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "d",
+              "bbox": {
+                "x": 169.0,
+                "y": 229.0,
+                "width": 4.0,
+                "height": 16.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "e",
+              "bbox": {
+                "x": 173.0,
+                "y": 229.0,
+                "width": 7.0,
+                "height": 16.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "n",
+              "bbox": {
+                "x": 180.0,
+                "y": 229.0,
+                "width": 8.0,
+                "height": 16.0
+              },
+              "confidence": null
+            },
+            {
+              "text": ".",
+              "bbox": {
+                "x": 188.0,
+                "y": 229.0,
+                "width": 4.0,
+                "height": 16.0
+              },
+              "confidence": null
+            }
+          ],
+          "confidence": null
+        }
+      ],
+      "confidence": null
+    }
+  ]
+}

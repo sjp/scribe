@@ -134,7 +134,12 @@ fn one_image(
         started.elapsed()
     );
 
-    let destination = destination(output, path, &document);
+    let destination = destination(
+        output.out_dir.as_deref(),
+        output.out.as_deref(),
+        &io::stem(path),
+        &document,
+    );
     destination.write(&document.bytes)?;
     log::debug!("{name}: wrote {}", destination.shown());
 
@@ -157,47 +162,70 @@ fn one_image(
     Ok(())
 }
 
-/// Renders a layout that was read earlier, without loading any model.
+/// Renders layouts that were read earlier, without loading any model.
 fn render(command: RenderCommand) -> Result<()> {
     let RenderCommand {
-        layout: path,
+        layouts,
         image,
         out,
+        out_dir,
         render,
     } = command;
+
+    if layouts.len() > 1 {
+        if out_dir.is_none() {
+            return Err(usage(
+                "rendering several layouts needs --out-dir, since -o names one file",
+            ));
+        }
+        if image.is_some() {
+            return Err(usage(
+                "--image names one image, so it goes with one layout; the layouts of several images are rendered one at a time",
+            ));
+        }
+    }
 
     let registry = registry();
     let renderer = choose(&registry, render.format())?;
     let options = options(renderer, &render)?;
-
-    let json = io::read_text(&path)?;
-    let layout = Layout::from_json(&json)
-        .with_context(|| format!("{} is not a layout document", io::shown(&path)))?;
-
+    if let Some(directory) = &out_dir {
+        io::make_directory(directory)?;
+    }
     let encoded = image.as_deref().map(io::read).transpose()?;
-    let source = ImageSource {
-        width: layout.image.width,
-        height: layout.image.height,
-        mime: encoded.as_deref().and_then(mime_of),
-        bytes: encoded.as_deref(),
-        href: href(&render, image.as_deref()),
-    };
 
-    let started = Instant::now();
-    let document = renderer.render(&layout, &source, &options)?;
-    log::info!(
-        "rendered {} bytes of {} in {:.1?}",
-        document.bytes.len(),
-        document.mime,
-        started.elapsed()
-    );
+    for path in &layouts {
+        let name = io::shown(path);
+        let json = io::read_text(path)?;
+        let layout =
+            Layout::from_json(&json).with_context(|| format!("{name} is not a layout document"))?;
 
-    let destination = match out {
-        Some(path) if io::is_stream(&path) => Destination::Stdout,
-        Some(path) => Destination::File(path),
-        None => Destination::Stdout,
-    };
-    destination.write(&document.bytes)
+        let source = ImageSource {
+            width: layout.image.width,
+            height: layout.image.height,
+            mime: encoded.as_deref().and_then(mime_of),
+            bytes: encoded.as_deref(),
+            href: href(&render, image.as_deref()),
+        };
+
+        let started = Instant::now();
+        let document = renderer.render(&layout, &source, &options)?;
+        log::info!(
+            "{name}: rendered {} bytes of {} in {:.1?}",
+            document.bytes.len(),
+            document.mime,
+            started.elapsed()
+        );
+
+        let destination = destination(
+            out_dir.as_deref(),
+            out.as_deref(),
+            &io::layout_stem(path),
+            &document,
+        );
+        destination.write(&document.bytes)?;
+        log::debug!("{name}: wrote {}", destination.shown());
+    }
+    Ok(())
 }
 
 /// Lists every renderer this build knows and the options each one takes.
@@ -320,15 +348,21 @@ fn mime_of(encoded: &[u8]) -> Option<&'static str> {
         .map(|format| ImageFormat::to_mime_type(&format))
 }
 
-/// Where one rendered document goes.
-fn destination(output: &OutputArgs, input: &Path, document: &RenderOutput) -> Destination {
-    if let Some(directory) = &output.out_dir {
-        let name = format!("{}.{}", io::stem(input), document.extension);
-        return Destination::File(directory.join(name));
+/// Where one rendered document goes: into the directory outputs are gathered
+/// in, under the name its input had, or wherever a single output was asked
+/// for.
+fn destination(
+    out_dir: Option<&Path>,
+    out: Option<&Path>,
+    stem: &str,
+    document: &RenderOutput,
+) -> Destination {
+    if let Some(directory) = out_dir {
+        return Destination::File(directory.join(format!("{stem}.{}", document.extension)));
     }
-    match &output.out {
+    match out {
         Some(path) if io::is_stream(path) => Destination::Stdout,
-        Some(path) => Destination::File(path.clone()),
+        Some(path) => Destination::File(path.to_path_buf()),
         None => Destination::Stdout,
     }
 }

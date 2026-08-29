@@ -22,6 +22,9 @@ const UNNAMED: &str = "image";
 /// shares with that output.
 const LAYOUT_SUFFIX: &str = "layout.json";
 
+/// What that name leaves on the end of the layout's own stem.
+const LAYOUT_STEM_SUFFIX: &str = ".layout";
+
 /// Whether a path means standard input or standard output rather than a file.
 pub fn is_stream(path: &Path) -> bool {
     path.as_os_str() == STREAM
@@ -45,6 +48,19 @@ pub fn stem(path: &Path) -> Cow<'_, str> {
         Some(stem) => stem.to_string_lossy(),
         None => Cow::Borrowed(UNNAMED),
     }
+}
+
+/// The name an output takes from a layout document.
+///
+/// A layout written beside an output is named after the stem it shares with
+/// that output, so the `.layout` comes off again here: rendering
+/// `page.layout.json` writes `page.svg` rather than `page.layout.svg`, and
+/// the result lands beside the image both of them came from.
+pub fn layout_stem(path: &Path) -> String {
+    let stem = stem(path);
+    stem.strip_suffix(LAYOUT_STEM_SUFFIX)
+        .unwrap_or(&stem)
+        .to_string()
 }
 
 /// Reads a file, or all of standard input for `-`.

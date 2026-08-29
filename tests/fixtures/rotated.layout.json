@@ -1,0 +1,310 @@
+{
+  "version": 1,
+  "image": {
+    "width": 420,
+    "height": 320
+  },
+  "lines": [
+    {
+      "text": "Tilted line",
+      "bbox": {
+        "x": 38.0,
+        "y": 66.0,
+        "width": 143.0,
+        "height": 59.0
+      },
+      "rotated_box": {
+        "cx": 109.14485,
+        "cy": 96.94148,
+        "width": 152.96211,
+        "height": 38.14906,
+        "angle_deg": 13.840695
+      },
+      "words": [
+        {
+          "text": "Tilted",
+          "bbox": {
+            "x": 38.0,
+            "y": 66.0,
+            "width": 85.0,
+            "height": 51.0
+          },
+          "rotated_box": {
+            "cx": 80.77809,
+            "cy": 90.294945,
+            "width": 94.291084,
+            "height": 38.001255,
+            "angle_deg": 12.9946165
+          },
+          "chars": [
+            {
+              "text": "T",
+              "bbox": {
+                "x": 38.0,
+                "y": 66.0,
+                "width": 22.0,
+                "height": 31.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "i",
+              "bbox": {
+                "x": 60.0,
+                "y": 70.0,
+                "width": 11.0,
+                "height": 30.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "l",
+              "bbox": {
+                "x": 71.0,
+                "y": 73.0,
+                "width": 8.0,
+                "height": 29.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "t",
+              "bbox": {
+                "x": 79.0,
+                "y": 75.0,
+                "width": 11.0,
+                "height": 30.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "e",
+              "bbox": {
+                "x": 90.0,
+                "y": 78.0,
+                "width": 22.0,
+                "height": 33.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "d",
+              "bbox": {
+                "x": 112.0,
+                "y": 84.0,
+                "width": 11.0,
+                "height": 33.0
+              },
+              "confidence": null
+            }
+          ],
+          "confidence": null
+        },
+        {
+          "text": "line",
+          "bbox": {
+            "x": 131.0,
+            "y": 91.0,
+            "width": 50.0,
+            "height": 34.0
+          },
+          "rotated_box": {
+            "cx": 155.99077,
+            "cy": 108.166145,
+            "width": 51.809002,
+            "height": 32.283554,
+            "angle_deg": 3.1798303
+          },
+          "chars": [
+            {
+              "text": "l",
+              "bbox": {
+                "x": 131.0,
+                "y": 91.0,
+                "width": 7.0,
+                "height": 30.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "i",
+              "bbox": {
+                "x": 138.0,
+                "y": 92.0,
+                "width": 12.0,
+                "height": 30.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "n",
+              "bbox": {
+                "x": 150.0,
+                "y": 93.0,
+                "width": 18.0,
+                "height": 31.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "e",
+              "bbox": {
+                "x": 168.0,
+                "y": 95.0,
+                "width": 13.0,
+                "height": 30.0
+              },
+              "confidence": null
+            }
+          ],
+          "confidence": null
+        }
+      ],
+      "confidence": null
+    },
+    {
+      "text": "S",
+      "bbox": {
+        "x": 368.0,
+        "y": 150.0,
+        "width": 24.0,
+        "height": 26.0
+      },
+      "rotated_box": {
+        "cx": 380.0,
+        "cy": 163.0,
+        "width": 24.0,
+        "height": 26.0,
+        "angle_deg": -0.0
+      },
+      "words": [
+        {
+          "text": "S",
+          "bbox": {
+            "x": 368.0,
+            "y": 150.0,
+            "width": 24.0,
+            "height": 26.0
+          },
+          "rotated_box": {
+            "cx": 380.0,
+            "cy": 163.0,
+            "width": 24.0,
+            "height": 26.0,
+            "angle_deg": -0.0
+          },
+          "chars": [
+            {
+              "text": "S",
+              "bbox": {
+                "x": 368.0,
+                "y": 150.0,
+                "width": 24.0,
+                "height": 26.0
+              },
+              "confidence": null
+            }
+          ],
+          "confidence": null
+        }
+      ],
+      "confidence": null
+    },
+    {
+      "text": "2",
+      "bbox": {
+        "x": 368.0,
+        "y": 174.0,
+        "width": 25.0,
+        "height": 20.0
+      },
+      "rotated_box": {
+        "cx": 380.5,
+        "cy": 184.0,
+        "width": 25.0,
+        "height": 20.0,
+        "angle_deg": -0.0
+      },
+      "words": [
+        {
+          "text": "2",
+          "bbox": {
+            "x": 368.0,
+            "y": 174.0,
+            "width": 25.0,
+            "height": 20.0
+          },
+          "rotated_box": {
+            "cx": 380.5,
+            "cy": 184.0,
+            "width": 25.0,
+            "height": 20.0,
+            "angle_deg": -0.0
+          },
+          "chars": [
+            {
+              "text": "2",
+              "bbox": {
+                "x": 368.0,
+                "y": 174.0,
+                "width": 25.0,
+                "height": 20.0
+              },
+              "confidence": null
+            }
+          ],
+          "confidence": null
+        }
+      ],
+      "confidence": null
+    },
+    {
+      "text": "i",
+      "bbox": {
+        "x": 362.0,
+        "y": 195.0,
+        "width": 25.0,
+        "height": 91.0
+      },
+      "rotated_box": {
+        "cx": 374.5,
+        "cy": 240.5,
+        "width": 25.0,
+        "height": 91.0,
+        "angle_deg": -0.0
+      },
+      "words": [
+        {
+          "text": "i",
+          "bbox": {
+            "x": 362.0,
+            "y": 195.0,
+            "width": 25.0,
+            "height": 91.0
+          },
+          "rotated_box": {
+            "cx": 374.5,
+            "cy": 240.5,
+            "width": 25.0,
+            "height": 91.0,
+            "angle_deg": -0.0
+          },
+          "chars": [
+            {
+              "text": "i",
+              "bbox": {
+                "x": 362.0,
+                "y": 195.0,
+                "width": 25.0,
+                "height": 91.0
+              },
+              "confidence": null
+            }
+          ],
+          "confidence": null
+        }
+      ],
+      "confidence": null
+    }
+  ]
+}

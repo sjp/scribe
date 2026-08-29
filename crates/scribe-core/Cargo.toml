@@ -24,6 +24,7 @@ serde_json.workspace = true
 thiserror.workspace = true
 
 [dev-dependencies]
+ab_glyph.workspace = true
 image.workspace = true
 insta.workspace = true
 roxmltree.workspace = true

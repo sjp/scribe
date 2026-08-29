@@ -1,0 +1,52 @@
+---
+source: crates/scribe-core/tests/fixtures.rs
+expression: output
+---
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+  <head>
+    <title></title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="ocr-system" content="scribe" />
+    <meta name="ocr-capabilities" content="ocr_page ocr_line ocrx_word" />
+  </head>
+  <body>
+    <div class="ocr_page" id="page_1" title="bbox 0 0 480 280; image &quot;paragraph.png&quot;">
+      <span class="ocr_line" id="line_1" title="bbox 33 29 296 64">
+        <span class="ocrx_word" id="word_1_1" title="bbox 33 29 151 64">Reading</span>
+        <span class="ocrx_word" id="word_1_2" title="bbox 162 31 296 56">Machines</span>
+      </span>
+      <span class="ocr_line" id="line_2" title="bbox 31 93 286 115">
+        <span class="ocrx_word" id="word_2_1" title="bbox 31 94 68 111">The</span>
+        <span class="ocrx_word" id="word_2_2" title="bbox 75 93 125 115">quick</span>
+        <span class="ocrx_word" id="word_2_3" title="bbox 131 93 189 110">brown</span>
+        <span class="ocrx_word" id="word_2_4" title="bbox 196 93 223 111">fox</span>
+        <span class="ocrx_word" id="word_2_5" title="bbox 229 93 286 114">jumps</span>
+      </span>
+      <span class="ocr_line" id="line_3" title="bbox 32 129 295 149">
+        <span class="ocrx_word" id="word_3_1" title="bbox 32 133 75 147">over</span>
+        <span class="ocrx_word" id="word_3_2" title="bbox 81 129 112 147">the</span>
+        <span class="ocrx_word" id="word_3_3" title="bbox 118 129 156 149">lazy</span>
+        <span class="ocrx_word" id="word_3_4" title="bbox 167 130 202 149">dog,</span>
+        <span class="ocrx_word" id="word_3_5" title="bbox 210 129 244 147">and</span>
+        <span class="ocrx_word" id="word_3_6" title="bbox 257 130 295 147">does</span>
+      </span>
+      <span class="ocr_line" id="line_4" title="bbox 31 164 263 188">
+        <span class="ocrx_word" id="word_4_1" title="bbox 31 165 45 184">it</span>
+        <span class="ocrx_word" id="word_4_2" title="bbox 52 164 104 188">again</span>
+        <span class="ocrx_word" id="word_4_3" title="bbox 110 167 132 183">on</span>
+        <span class="ocrx_word" id="word_4_4" title="bbox 140 164 170 183">the</span>
+        <span class="ocrx_word" id="word_4_5" title="bbox 176 168 218 183">next</span>
+        <span class="ocrx_word" id="word_4_6" title="bbox 225 166 263 183">line.</span>
+      </span>
+      <span class="ocr_line" id="line_5" title="bbox 31 228 192 245">
+        <span class="ocrx_word" id="word_5_1" title="bbox 31 229 75 241">Printed</span>
+        <span class="ocrx_word" id="word_5_2" title="bbox 78 228 90 241">in</span>
+        <span class="ocrx_word" id="word_5_3" title="bbox 95 229 124 241">1996</span>
+        <span class="ocrx_word" id="word_5_4" title="bbox 128 230 140 241">at</span>
+        <span class="ocrx_word" id="word_5_5" title="bbox 144 229 192 245">Leyden.</span>
+      </span>
+    </div>
+  </body>
+</html>

@@ -11,6 +11,7 @@ repository = "https://github.com/sjp/scribe"
 [workspace.dependencies]
 scribe-core = { version = "0.1.0", path = "crates/scribe-core" }
 
+ab_glyph = "0.2.32"
 anyhow = "1.0.104"
 assert_cmd = "2.2.2"
 base64 = "0.23.1"

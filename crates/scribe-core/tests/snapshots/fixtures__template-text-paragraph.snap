@@ -1,0 +1,9 @@
+---
+source: crates/scribe-core/tests/fixtures.rs
+expression: output
+---
+Reading Machines
+The quick brown fox jumps
+over the lazy dog, and does
+it again on the next line.
+Printed in 1996 at Leyden.

@@ -1,0 +1,21 @@
+---
+source: crates/scribe-core/tests/fixtures.rs
+expression: output
+---
+<?xml version="1.0" encoding="UTF-8"?>
+<alto xmlns="http://www.loc.gov/standards/alto/ns-v4#">
+  <Description>
+    <MeasurementUnit>pixel</MeasurementUnit>
+    <sourceImageInformation>
+      <fileName>blank.png</fileName>
+    </sourceImageInformation>
+  </Description>
+  <Layout>
+    <Page ID="page_1" PHYSICAL_IMG_NR="1" WIDTH="220" HEIGHT="140">
+      <PrintSpace HPOS="0" VPOS="0" WIDTH="220" HEIGHT="140">
+        <TextBlock ID="block_1" HPOS="0" VPOS="0" WIDTH="220" HEIGHT="140">
+        </TextBlock>
+      </PrintSpace>
+    </Page>
+  </Layout>
+</alto>

@@ -1,0 +1,29 @@
+---
+source: crates/scribe-core/tests/fixtures.rs
+expression: output
+---
+<?xml version="1.0" encoding="UTF-8"?>
+<alto xmlns="http://www.loc.gov/standards/alto/ns-v4#">
+  <Description>
+    <MeasurementUnit>pixel</MeasurementUnit>
+    <sourceImageInformation>
+      <fileName>sparse.jpg</fileName>
+    </sourceImageInformation>
+  </Description>
+  <Layout>
+    <Page ID="page_1" PHYSICAL_IMG_NR="1" WIDTH="480" HEIGHT="360">
+      <PrintSpace HPOS="0" VPOS="0" WIDTH="480" HEIGHT="360">
+        <TextBlock ID="block_1" HPOS="0" VPOS="0" WIDTH="480" HEIGHT="360">
+          <TextLine ID="line_1" HPOS="29" VPOS="33" WIDTH="118" HEIGHT="23">
+            <String ID="word_1_1" HPOS="29" VPOS="34" WIDTH="62" HEIGHT="19" CONTENT="North" />
+            <String ID="word_1_2" HPOS="100" VPOS="33" WIDTH="47" HEIGHT="23" CONTENT="gate" />
+          </TextLine>
+          <TextLine ID="line_2" HPOS="301" VPOS="310" WIDTH="114" HEIGHT="25">
+            <String ID="word_2_1" HPOS="301" VPOS="312" WIDTH="64" HEIGHT="19" CONTENT="South" />
+            <String ID="word_2_2" HPOS="373" VPOS="310" WIDTH="42" HEIGHT="25" CONTENT="pier" />
+          </TextLine>
+        </TextBlock>
+      </PrintSpace>
+    </Page>
+  </Layout>
+</alto>
