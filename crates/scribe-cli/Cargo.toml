@@ -11,9 +11,17 @@ name = "scribe"
 path = "src/main.rs"
 
 [dependencies]
-scribe-core.workspace = true
+scribe-core = { workspace = true, features = ["decode"] }
 anyhow.workspace = true
 clap.workspace = true
+env_logger.workspace = true
+image.workspace = true
+log.workspace = true
+serde_json.workspace = true
+
+[dev-dependencies]
+assert_cmd.workspace = true
+predicates.workspace = true
 
 [lints]
 workspace = true

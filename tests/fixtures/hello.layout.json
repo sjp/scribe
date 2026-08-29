@@ -1,0 +1,166 @@
+{
+  "version": 1,
+  "image": {
+    "width": 284,
+    "height": 96
+  },
+  "lines": [
+    {
+      "text": "Hello World",
+      "bbox": {
+        "x": 26.0,
+        "y": 27.0,
+        "width": 231.0,
+        "height": 36.0
+      },
+      "rotated_box": {
+        "cx": 141.5069122314453,
+        "cy": 44.61753845214844,
+        "width": 231.1671142578125,
+        "height": 35.919551849365234,
+        "angle_deg": 0.2864765226840973
+      },
+      "words": [
+        {
+          "text": "Hello",
+          "bbox": {
+            "x": 26.0,
+            "y": 29.0,
+            "width": 103.0,
+            "height": 33.0
+          },
+          "rotated_box": {
+            "cx": 77.5,
+            "cy": 45.5,
+            "width": 103.0,
+            "height": 33.0,
+            "angle_deg": -0.0
+          },
+          "chars": [
+            {
+              "text": "H",
+              "bbox": {
+                "x": 26.0,
+                "y": 29.0,
+                "width": 34.0,
+                "height": 33.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "e",
+              "bbox": {
+                "x": 60.0,
+                "y": 29.0,
+                "width": 23.0,
+                "height": 33.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "l",
+              "bbox": {
+                "x": 83.0,
+                "y": 29.0,
+                "width": 12.0,
+                "height": 33.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "l",
+              "bbox": {
+                "x": 95.0,
+                "y": 29.0,
+                "width": 13.0,
+                "height": 33.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "o",
+              "bbox": {
+                "x": 108.0,
+                "y": 29.0,
+                "width": 21.0,
+                "height": 33.0
+              },
+              "confidence": null
+            }
+          ],
+          "confidence": null
+        },
+        {
+          "text": "World",
+          "bbox": {
+            "x": 145.0,
+            "y": 27.0,
+            "width": 112.0,
+            "height": 36.0
+          },
+          "rotated_box": {
+            "cx": 201.00257873535156,
+            "cy": 44.790157318115234,
+            "width": 112.43588256835938,
+            "height": 35.799739837646484,
+            "angle_deg": 0.7073193788528442
+          },
+          "chars": [
+            {
+              "text": "W",
+              "bbox": {
+                "x": 145.0,
+                "y": 27.0,
+                "width": 39.0,
+                "height": 35.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "o",
+              "bbox": {
+                "x": 184.0,
+                "y": 27.0,
+                "width": 26.0,
+                "height": 35.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "r",
+              "bbox": {
+                "x": 210.0,
+                "y": 28.0,
+                "width": 16.0,
+                "height": 34.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "l",
+              "bbox": {
+                "x": 226.0,
+                "y": 28.0,
+                "width": 23.0,
+                "height": 35.0
+              },
+              "confidence": null
+            },
+            {
+              "text": "d",
+              "bbox": {
+                "x": 249.0,
+                "y": 28.0,
+                "width": 8.0,
+                "height": 35.0
+              },
+              "confidence": null
+            }
+          ],
+          "confidence": null
+        }
+      ],
+      "confidence": null
+    }
+  ]
+}
