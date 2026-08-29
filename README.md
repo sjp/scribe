@@ -106,11 +106,15 @@ That is the text layer alone, with `--no-image`; by default the picture is
 carried in the document beneath it and the output is one self-contained file.
 
 Three formats ship with scribe: `svg`, `json`, and `template` — the last
-rendering a Jinja template, of which five come built in (`html-overlay`,
-`hocr`, `alto`, `markdown`, `text`) and any number can be written. Nothing is
-hard-coded that could be an option: embedding or linking the image, visible or
-invisible text, the font, the class names, the ids, the number of decimals.
-See [output formats](docs/formats.md).
+rendering a Jinja template, of which twelve come built in and any number can be
+written. Seven of them are ways of giving an image in a web page text that can
+be found, selected, read aloud and indexed: a text layer over it in HTML or
+SVG, a transcript only a screen reader reaches, a `<figure>` with the whole
+text beneath it, everything at once, the layout itself in a `<script>`, and
+JSON-LD for a crawler. The rest are `hocr`, `alto`, `markdown`, `text` and
+`alt-text`. Nothing is hard-coded that could be an option: embedding or
+linking the image, visible or invisible text, the font, the class names, the
+ids, the number of decimals. See [output formats](docs/formats.md).
 
 ## In a browser
 

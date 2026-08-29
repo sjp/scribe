@@ -1,0 +1,14 @@
+---
+source: crates/scribe-core/tests/template.rs
+expression: "render(\"sr-only-transcript\", Options::new())"
+---
+<div class="scribe-transcript">
+  <style>
+    .scribe-sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; border: 0; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: normal }
+  </style>
+  <img src="page.png" width="284" height="140" alt="An image of text, transcribed after it." aria-describedby="scribe-transcript" />
+  <div class="scribe-sr-only" id="scribe-transcript">
+    <p>Hello World</p>
+    <p>Tilted &amp; &lt;set&gt;</p>
+  </div>
+</div>

@@ -150,7 +150,9 @@ neither selected nor found.
 
 Rendering `template` with `template: 'html-overlay'` gives the same thing as
 positioned HTML spans instead of SVG, which some browsers handle more
-predictably; [the templates](templates.md#html-overlay) describe it.
+predictably, and `template: 'svg-overlay'` writes this same layer with the
+`<img>` and the positioning around it already in place; [the
+templates](templates.md#html-overlay) describe them.
 
 ## From a layout alone
 

@@ -4,9 +4,14 @@
 //! anticipate the format a particular archive, index or page needs. A
 //! template is the way out: a Jinja document with the layout, the source
 //! image and the caller's own values in scope, rendered to text. The
-//! templates that ship with scribe — an HTML overlay, hOCR, ALTO, Markdown
-//! and plain text — are written against that same context, so each one is
-//! also a worked example of writing another.
+//! templates that ship with scribe — text layers to lay over an image,
+//! transcripts for a screen reader, metadata for a crawler, hOCR, ALTO,
+//! Markdown and plain text — are written against that same context, so each
+//! one is also a worked example of writing another.
+//!
+//! A template building a page around an image can ask for the SVG renderer's
+//! own text layer rather than writing a second one: `svg` is a function here
+//! as well as a renderer, taking the same options by the same names.
 //!
 //! Templates are read strictly: naming something that is not there is an
 //! error rather than an empty string, and the error says where in the
@@ -20,12 +25,12 @@ use std::sync::{Arc, OnceLock};
 
 use base64::Engine as _;
 use base64::engine::general_purpose::STANDARD as BASE64;
-use minijinja::value::{Enumerator, Object, Value, ViaDeserialize};
+use minijinja::value::{Enumerator, Kwargs, Object, Value, ValueKind, ViaDeserialize};
 use minijinja::{AutoEscape, Environment, Error, ErrorKind, Output, State, UndefinedBehavior};
 
 use super::{
     Layout, OptionKind, OptionSpec, OptionValue, Options, RenderError, RenderOutput, Renderer,
-    number, parse_bool,
+    SvgRenderer, number, parse_bool,
 };
 use crate::image_source::ImageSource;
 use crate::layout::RotatedBox;
@@ -82,6 +87,42 @@ const BUILT_INS: &[BuiltIn] = &[
         extension: "html",
     },
     BuiltIn {
+        name: "svg-overlay",
+        source: include_str!("../../../../templates/svg-overlay.jinja"),
+        mime: "text/html",
+        extension: "html",
+    },
+    BuiltIn {
+        name: "html-figure",
+        source: include_str!("../../../../templates/html-figure.jinja"),
+        mime: "text/html",
+        extension: "html",
+    },
+    BuiltIn {
+        name: "sr-only-transcript",
+        source: include_str!("../../../../templates/sr-only-transcript.jinja"),
+        mime: "text/html",
+        extension: "html",
+    },
+    BuiltIn {
+        name: "figure-transcript",
+        source: include_str!("../../../../templates/figure-transcript.jinja"),
+        mime: "text/html",
+        extension: "html",
+    },
+    BuiltIn {
+        name: "json-ld",
+        source: include_str!("../../../../templates/json-ld.jinja"),
+        mime: "text/html",
+        extension: "html",
+    },
+    BuiltIn {
+        name: "layout-json",
+        source: include_str!("../../../../templates/layout-json.jinja"),
+        mime: "text/html",
+        extension: "html",
+    },
+    BuiltIn {
         name: "hocr",
         source: include_str!("../../../../templates/hocr.jinja"),
         mime: "text/html",
@@ -105,13 +146,32 @@ const BUILT_INS: &[BuiltIn] = &[
         mime: DEFAULT_MIME,
         extension: DEFAULT_EXTENSION,
     },
+    BuiltIn {
+        name: "alt-text",
+        source: include_str!("../../../../templates/alt-text.jinja"),
+        mime: DEFAULT_MIME,
+        extension: DEFAULT_EXTENSION,
+    },
 ];
 
 /// The same names as [`BUILT_INS`], as the `template` option offers them.
 ///
 /// An option's choices outlive the call that describes them, so they cannot
 /// be gathered from [`BUILT_INS`] at the time they are asked for.
-const BUILT_IN_NAMES: &[&str] = &["html-overlay", "hocr", "alto", "markdown", "text"];
+const BUILT_IN_NAMES: &[&str] = &[
+    "html-overlay",
+    "svg-overlay",
+    "html-figure",
+    "sr-only-transcript",
+    "figure-transcript",
+    "json-ld",
+    "layout-json",
+    "hocr",
+    "alto",
+    "markdown",
+    "text",
+    "alt-text",
+];
 
 /// The ways a template may escape the values it writes, the first being the
 /// default.
@@ -141,7 +201,7 @@ impl Renderer for TemplateRenderer {
                 "template",
                 OptionKind::Str,
                 OptionValue::Str(BUILT_IN_NAMES[0].to_string()),
-                "Which template to render: `html-overlay`, `hocr`, `alto`, `markdown` or `text`; ignored when `template_source` is set.",
+                "Which of the built-in templates to render, of the ones listed beside this; ignored when `template_source` is set.",
             )
             .with_choices(BUILT_IN_NAMES),
             OptionSpec::new(
@@ -211,6 +271,7 @@ impl Renderer for TemplateRenderer {
             &mut environment,
             escaping(own.str("autoescape"), &mime),
             &image,
+            layout,
         );
         environment
             .add_template(name, source)
@@ -307,7 +368,12 @@ fn escaping(choice: &str, mime: &str) -> AutoEscape {
 
 /// Sets up the templating engine: how it reads templates, how it writes
 /// values, and everything a template can call.
-fn prepare(environment: &mut Environment<'_>, escape: AutoEscape, image: &Arc<Image>) {
+fn prepare(
+    environment: &mut Environment<'_>,
+    escape: AutoEscape,
+    image: &Arc<Image>,
+    layout: &Layout,
+) {
     environment.set_undefined_behavior(UndefinedBehavior::Strict);
     environment.set_debug(true);
     environment.set_keep_trailing_newline(true);
@@ -333,8 +399,117 @@ fn prepare(environment: &mut Environment<'_>, escape: AutoEscape, image: &Arc<Im
     environment.add_filter("base64", base64);
     environment.add_function("base64", base64);
 
+    let data_uri = Arc::clone(image);
+    environment.add_function("data_uri", move || optional(data_uri.data_uri()));
+
+    // The layer is written from a layout of this function's own: it can be
+    // asked for at any point in a template, by which time the borrowed one is
+    // gone. The context beside it already holds a copy of the layout, so this
+    // is the second rather than the first.
+    let layout = Arc::new(layout.clone());
     let image = Arc::clone(image);
-    environment.add_function("data_uri", move || optional(image.data_uri()));
+    let layer = move |options: Option<Value>, overrides: Kwargs| {
+        svg_layer(&layout, &image, options.as_ref(), &overrides)
+    };
+    environment.add_filter("svg", layer.clone());
+    environment.add_function("svg", layer);
+}
+
+/// The layout as an SVG document, for a template laying a text layer over an
+/// image it is placing itself.
+///
+/// The options are the SVG renderer's own, given as a mapping, as keywords,
+/// or as both with the keywords winning, so that a template can pass the
+/// caller's values straight through and still settle what it must. The XML
+/// declaration is left out unless it is asked for, since the document is
+/// going inside another one.
+///
+/// The result is marked as needing no escaping: it is markup, and escaping it
+/// would put the text of the document into the page instead of the layer.
+///
+/// # Errors
+///
+/// Returns an error if a value is not one an option can take, or if the SVG
+/// renderer refuses the options, which it does by name.
+fn svg_layer(
+    layout: &Layout,
+    image: &Image,
+    options: Option<&Value>,
+    overrides: &Kwargs,
+) -> Result<Value, Error> {
+    let mut settings = Options::new().with("xml_declaration", false);
+    if let Some(options) = options {
+        read_options(options, &mut settings)?;
+    }
+    for name in overrides.args() {
+        let value: Value = overrides.get(name)?;
+        settings.set(name, option_value(&value)?);
+    }
+    let output = SvgRenderer
+        .render(layout, &image.source(), &settings)
+        .map_err(|error| {
+            Error::new(ErrorKind::InvalidOperation, error.to_string()).with_source(error)
+        })?;
+    let document = output.as_str().ok_or_else(|| {
+        Error::new(
+            ErrorKind::InvalidOperation,
+            "the svg renderer wrote something that is not text",
+        )
+    })?;
+    Ok(Value::from_safe_string(document.to_string()))
+}
+
+/// Reads a mapping of names to values as options for a renderer.
+///
+/// # Errors
+///
+/// Returns an error if the value is not a mapping, or if one of its values is
+/// not one an option can take.
+fn read_options(mapping: &Value, into: &mut Options) -> Result<(), Error> {
+    if mapping.is_none() || mapping.is_undefined() {
+        return Ok(());
+    }
+    if mapping.kind() != ValueKind::Map {
+        return Err(Error::new(
+            ErrorKind::InvalidOperation,
+            format!("{mapping} is not a mapping of options"),
+        ));
+    }
+    for name in mapping.try_iter()? {
+        let value = mapping.get_item(&name)?;
+        let name = name.as_str().ok_or_else(|| {
+            Error::new(
+                ErrorKind::InvalidOperation,
+                format!("{name} is not the name of an option"),
+            )
+        })?;
+        into.set(name, option_value(&value)?);
+    }
+    Ok(())
+}
+
+/// One value a template gave for a renderer's option, as that renderer reads
+/// them.
+///
+/// # Errors
+///
+/// Returns an error if the value is not text, a number or a boolean, which
+/// are all an option can be.
+fn option_value(value: &Value) -> Result<OptionValue, Error> {
+    if let Some(text) = value.as_str() {
+        return Ok(OptionValue::Str(text.to_string()));
+    }
+    match value.kind() {
+        ValueKind::Bool => Ok(OptionValue::Bool(value.is_true())),
+        ValueKind::Number => match value.as_i64() {
+            Some(whole) => Ok(OptionValue::Int(whole)),
+            None => f64::try_from(value.clone()).map(OptionValue::Float),
+        },
+        _ => Err(Error::new(
+            ErrorKind::InvalidOperation,
+            format!("{value} is not a value an option can take"),
+        )),
+    }
 }
 
 /// Writes one value into the output, escaped when the document is marked up
@@ -592,13 +767,18 @@ impl Image {
     /// for.
     fn data_uri(&self) -> Option<&str> {
         self.data_uri
-            .get_or_init(|| {
-                let mut source = ImageSource::new(self.width, self.height);
-                source.mime = self.mime.as_deref();
-                source.bytes = self.bytes.as_deref();
-                source.data_uri()
-            })
+            .get_or_init(|| self.source().data_uri())
             .as_deref()
+    }
+
+    /// The same image as a renderer takes it, borrowed from what this one
+    /// holds.
+    fn source(&self) -> ImageSource<'_> {
+        let mut source = ImageSource::new(self.width, self.height);
+        source.mime = self.mime.as_deref();
+        source.href = self.href.as_deref();
+        source.bytes = self.bytes.as_deref();
+        source
     }
 
     /// The value of one of [`IMAGE_FIELDS`].
@@ -697,10 +877,17 @@ mod tests {
     fn a_built_in_names_the_type_of_what_it_writes() {
         for (template, mime, extension) in [
             ("html-overlay", "text/html", "html"),
+            ("svg-overlay", "text/html", "html"),
+            ("html-figure", "text/html", "html"),
+            ("sr-only-transcript", "text/html", "html"),
+            ("figure-transcript", "text/html", "html"),
+            ("json-ld", "text/html", "html"),
+            ("layout-json", "text/html", "html"),
             ("hocr", "text/html", "hocr"),
             ("alto", "application/xml", "xml"),
             ("markdown", "text/markdown", "md"),
             ("text", "text/plain", "txt"),
+            ("alt-text", "text/plain", "txt"),
         ] {
             let output = render(Options::new().with("template", template)).unwrap();
             assert_eq!(
@@ -727,20 +914,19 @@ mod tests {
     }
 
     #[test]
-    fn the_help_for_the_template_option_names_every_template() {
+    fn the_template_option_offers_every_template() {
         let specs = TemplateRenderer.describe_options();
         let spec = specs
             .iter()
             .find(|spec| spec.name == "template")
             .expect("the renderer takes a `template` option");
-        for name in list_templates() {
-            assert!(
-                spec.help.contains(name),
-                "the help should mention {name}: {}",
-                spec.help
-            );
-        }
+        // The names are what a caller is shown beside the option, so the
+        // help does not spell them a second time.
         assert_eq!(spec.choices, BUILT_IN_NAMES);
+        assert_eq!(
+            spec.default,
+            OptionValue::Str(BUILT_IN_NAMES[0].to_string())
+        );
     }
 
     #[test]
@@ -984,5 +1170,59 @@ mod tests {
     #[test]
     fn text_can_be_encoded_as_base64() {
         assert_eq!(rendered(r#"{{ "hello" | base64 }}"#), "aGVsbG8=");
+    }
+
+    #[test]
+    fn a_template_can_ask_the_svg_renderer_for_a_text_layer() {
+        // The document is going inside another one, so it begins at the
+        // element rather than at an XML declaration, and it is written as
+        // markup rather than escaped into the page as text.
+        let layer = render(
+            Options::new()
+                .with("template_source", "{{ svg(image_mode=\"none\") }}")
+                .with("mime", "text/html"),
+        )
+        .unwrap();
+        let layer = layer.as_str().expect("a template writes text");
+        assert!(layer.starts_with("<svg "), "{layer}");
+        assert!(layer.contains(">hi</tspan>"), "{layer}");
+        assert!(!layer.contains("&lt;"), "{layer}");
+    }
+
+    #[test]
+    fn the_options_of_a_text_layer_can_be_given_either_way() {
+        // A mapping is what a template passes the caller's own values
+        // through as; keywords are what it settles for itself, and they win.
+        let both = rendered(
+            r#"{{ svg({"image_mode": "none", "text_mode": "visible"}, text_mode="invisible", ids=true) }}"#,
+        );
+        assert!(both.contains(r#"fill="transparent""#), "{both}");
+        assert!(both.contains(r#"id="line-0""#), "{both}");
+        assert_eq!(
+            both,
+            rendered(r#"{{ {"image_mode": "none", "ids": true} | svg }}"#)
+        );
+    }
+
+    #[test]
+    fn the_xml_declaration_of_a_text_layer_can_be_asked_for() {
+        let layer = rendered(r#"{{ svg(image_mode="none", xml_declaration=true) }}"#);
+        assert!(layer.starts_with("<?xml "), "{layer}");
+    }
+
+    #[test]
+    fn a_text_layer_refuses_an_option_the_svg_renderer_does_not_take() {
+        let error =
+            render(Options::new().with("template_source", r#"{{ svg(nonsense=1) }}"#)).unwrap_err();
+        let message = error.to_string();
+        assert!(message.contains("`nonsense`"), "{message}");
+        assert!(message.contains("the svg renderer"), "{message}");
+    }
+
+    #[test]
+    fn the_options_of_a_text_layer_have_to_be_a_mapping() {
+        let error =
+            render(Options::new().with("template_source", "{{ svg(\"none\") }}")).unwrap_err();
+        assert!(error.to_string().contains("mapping"), "{error}");
     }
 }

@@ -1,0 +1,69 @@
+{#-
+  Every mechanism at once, since no single one reaches every reader: a
+  `<figure>` holding the image with the whole text in its `alt`, a
+  transparent text layer over it that can be found and selected, and a
+  transcript after it that only a screen reader reaches. This is the one to
+  reach for when the page is not yours to know.
+
+  Takes `var.overlay`, `spans` or `svg`, for whether the layer is positioned
+  HTML or the SVG renderer's own; `var.id`, the id of the transcript;
+  `var.class_prefix`, what every class name starts with; `var.text_fill` and
+  `var.selection_background`, the colours selected text is drawn in;
+  `var.char_positions`, to place every character on its own pixels; and
+  `var.font_size_mode`, `box_height` or `cap_height`, with
+  `var.cap_height_ratio`, to read a box as the height of a capital letter.
+
+  It says what `html-overlay`, `svg-overlay` and `sr-only-transcript` say,
+  under the same option names, so that what is learnt about one carries over.
+-#}
+{%- set source = image.data_uri or image.href -%}
+{%- set prefix = vars.class_prefix | default("scribe-") -%}
+{%- set id = vars.id | default("scribe-transcript") -%}
+{%- set as_svg = (vars.overlay | default("spans")) == "svg" -%}
+{%- set per_char = vars.char_positions | default(false) | flag -%}
+{%- set size_mode = vars.font_size_mode | default("box_height") -%}
+{%- set cap_ratio = vars.cap_height_ratio | default(0.7) | number -%}
+{%- set text_fill = vars.text_fill | default("#000") -%}
+{%- set selection = vars.selection_background | default("rgba(0, 90, 255, 0.35)") -%}
+{#- How much of an em the height of a box stands for. -#}
+{%- set box_em = cap_ratio if size_mode == "cap_height" and cap_ratio > 0 else 1 -%}
+<figure class="{{ prefix }}figure">
+  <style>
+    .{{ prefix }}overlay { position: relative; display: inline-block; line-height: 0 }
+    .{{ prefix }}overlay img { display: block; max-width: 100% }
+    .{{ prefix }}overlay svg { position: absolute; left: 0; top: 0; width: 100%; height: 100% }
+    .{{ prefix }}overlay span { position: absolute; color: transparent; white-space: pre; line-height: 1; transform-origin: center }
+    .{{ prefix }}overlay span::selection { color: {{ text_fill }}; background: {{ selection }} }
+    .{{ prefix }}sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; border: 0; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: normal }
+  </style>
+  <div class="{{ prefix }}overlay">
+{%- if source %}
+    <img src="{{ source }}" width="{{ image.width }}" height="{{ image.height }}" alt="{{ text | replace("\n", " ") }}" aria-describedby="{{ id }}" />
+{%- endif %}
+{%- if as_svg %}
+    {{ svg({"char_positions": per_char, "font_size_mode": size_mode, "cap_height_ratio": cap_ratio, "text_fill": text_fill, "selection_background": selection, "class_prefix": prefix}, image_mode="none") | indent(4) | safe }}
+{%- else %}
+{%- for line in layout.lines %}
+{%- for word in line.words or [line] %}
+{%- set box = word.rotated_box %}
+{%- set left = box.cx - box.width / 2 %}
+{%- set top = box.cy - box.height / 2 %}
+{#- Characters are placed in the picture's own frame, so a word holding them
+    is left unturned and each of them carries the turn already in its box. -#}
+{%- set chars = word.chars | default([]) if per_char else [] %}
+    <span style="left: {{ left | round(2) }}px; top: {{ top | round(2) }}px; width: {{ box.width | round(2) }}px; height: {{ box.height | round(2) }}px; font-size: {{ (box.height / box_em) | round(2) }}px{% if not chars %}; transform: rotate({{ box.angle_deg | round(2) }}deg){% endif %}">
+      {#- Nothing may part one character from the next, or copying the word
+          out would part them too. -#}
+      {%- if chars %}{% for char in chars %}<span style="left: {{ (char.bbox.x - left) | round(2) }}px; top: {{ (char.bbox.y - top) | round(2) }}px; width: {{ char.bbox.width | round(2) }}px; height: {{ char.bbox.height | round(2) }}px">{{ char.text }}</span>{% endfor %}
+      {%- else %}{{ word.text }}
+      {%- endif %}</span>
+{%- endfor %}
+{%- endfor %}
+{%- endif %}
+  </div>
+  <div class="{{ prefix }}sr-only" id="{{ id }}">
+{%- for line in layout.lines %}
+    <p>{{ line.text }}</p>
+{%- endfor %}
+  </div>
+</figure>

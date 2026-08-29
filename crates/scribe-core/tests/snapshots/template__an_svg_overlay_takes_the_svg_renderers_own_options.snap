@@ -1,0 +1,22 @@
+---
+source: crates/scribe-core/tests/template.rs
+expression: "render(\"svg-overlay\",\nOptions::new().with(\"var.text_mode\",\n\"visible\").with(\"var.class_prefix\", \"ocr-\"))"
+---
+<div class="ocr-overlay">
+  <style>
+    .ocr-overlay { position: relative; display: inline-block; line-height: 0 }
+    .ocr-overlay img { display: block; max-width: 100% }
+    .ocr-overlay svg { position: absolute; left: 0; top: 0; width: 100%; height: 100% }
+  </style>
+  <img src="page.png" width="284" height="140" alt="" />
+  <svg xmlns="http://www.w3.org/2000/svg" width="284" height="140" viewBox="0 0 284 140" role="img" aria-label="Hello World Tilted &amp; &lt;set&gt;">
+    <style>
+      .ocr-text { user-select: text; -webkit-user-select: text; white-space: pre; }
+      .ocr-text::selection, .ocr-text ::selection { fill: #000; background: rgba(0, 90, 255, 0.35); }
+    </style>
+    <g class="ocr-text" font-family="sans-serif" fill="#000">
+      <text class="ocr-line"><tspan class="ocr-word" x="28" y="56.6" font-size="32" textLength="98" lengthAdjust="spacingAndGlyphs">Hello</tspan> <tspan class="ocr-word" x="143" y="56.6" font-size="32" textLength="113" lengthAdjust="spacingAndGlyphs">World</tspan></text>
+      <text class="ocr-line" transform="rotate(8 140 100)"><tspan class="ocr-word" x="30" y="106" font-size="20" textLength="90" lengthAdjust="spacingAndGlyphs">Tilted</tspan> <tspan class="ocr-word" x="128" y="106" font-size="20" textLength="12" lengthAdjust="spacingAndGlyphs">&amp;</tspan> <tspan class="ocr-word" x="150" y="106" font-size="20" textLength="100" lengthAdjust="spacingAndGlyphs">&lt;set&gt;</tspan></text>
+    </g>
+  </svg>
+</div>

@@ -2,7 +2,7 @@
 
 The `template` format renders a [layout](layout.md) through a
 [Jinja](https://docs.rs/minijinja/) template, so any text format is reachable
-without writing Rust. Five templates ship with scribe, and each one is also a
+without writing Rust. Twelve templates ship with scribe, and each one is also a
 worked example of the context a template of your own is given.
 
 ```sh
@@ -129,11 +129,28 @@ Each of these is both a filter and a function, so `{{ x | round(2) }}` and
 | `rotate_transform(box, precision=2)` | An oriented box's rotation as `rotate(angle cx cy)`, which is what both SVG and CSS take. |
 | `points(box, precision=2)` | An oriented box's four corners as the `x,y` pairs an SVG `<polygon>` takes, clockwise from the corner that is the top left before rotation. |
 | `data_uri()` | The source image as a `data:` URI, or none. |
+| `svg(options, **overrides)` | The layout as an SVG document, written by the [`svg` renderer](formats.md#svg) with its own options, ready to be put inside the page the template is writing. |
+
+`svg` takes the renderer's options as a mapping, as keywords, or as both with
+the keywords winning, so a template can pass the caller's own values straight
+through and still settle what it must. The XML declaration is left out unless
+it is asked for, since the document is going inside another one, and the
+result is markup rather than text to be escaped into the page.
+
+```jinja
+{{ svg(vars, image_mode="none") }}
+{{ svg({"char_positions": true}, image_mode="none", text_mode="visible") }}
+```
 
 Everything minijinja itself provides — `default`, `join`, `map`, `length`,
 `loop.index`, macros, `{% set %}` — is available too.
 
 ## The built-in templates
+
+The first seven are ways of giving an image in a web page text that can be
+found, selected, read aloud and indexed. No single one of them reaches every
+reader, which is what `html-figure` is for; the rest are the formats other
+tools read.
 
 ### `html-overlay`
 
@@ -165,6 +182,152 @@ the height of a capital letter.
 
 The `<img>` is left out when neither the image's bytes nor an href were given,
 which leaves a bare text layer to position over an image already in the page.
+
+### `svg-overlay`
+
+The same idea as `html-overlay` with the layer written by the [`svg`
+renderer](formats.md#svg) instead of by positioned spans, so that a turned
+line turns with its box and a word is fitted to the pixels it was read from.
+Its `var.` options are the SVG renderer's own — every one of them, by the same
+name — save that the image is never carried in the layer, since the page's own
+`<img>` is underneath it.
+
+```html
+<div class="scribe-overlay">
+  <style>
+    .scribe-overlay { position: relative; display: inline-block; line-height: 0 }
+    .scribe-overlay img { display: block; max-width: 100% }
+    .scribe-overlay svg { position: absolute; left: 0; top: 0; width: 100%; height: 100% }
+  </style>
+  <img src="hello.png" width="284" height="96" alt="" />
+  <svg xmlns="http://www.w3.org/2000/svg" width="284" height="96" viewBox="0 0 284 96" role="img" aria-label="Hello World">
+    …
+  </svg>
+</div>
+```
+
+The image carries no `alt`: the layer over it is what a screen reader
+announces, and announcing the same text twice helps nobody.
+
+### `html-figure`
+
+Every mechanism at once, since no single one reaches every reader: a
+`<figure>` holding the image with the whole text in its `alt`, a transparent
+text layer over it that can be found and selected, and a transcript after it
+that only a screen reader reaches. This is the one to reach for when the page
+is not yours to know.
+
+Takes `var.overlay`, `spans` (the default) or `svg`, for whether the layer is
+positioned HTML or the SVG renderer's own; `var.id`, the id of the transcript;
+and the options of the templates it says the same as — `var.class_prefix`,
+`var.text_fill`, `var.selection_background`, `var.char_positions`,
+`var.font_size_mode` and `var.cap_height_ratio`.
+
+```html
+<figure class="scribe-figure">
+  <style>…</style>
+  <div class="scribe-overlay">
+    <img src="hello.png" width="284" height="96" alt="Hello World" aria-describedby="scribe-transcript" />
+    <span style="left: 26px; top: 29px; width: 105px; height: 33px; font-size: 33px; transform: rotate(0deg)">Hello</span>
+    <span style="left: 146px; top: 28px; width: 111px; height: 35px; font-size: 35px; transform: rotate(0deg)">World</span>
+  </div>
+  <div class="scribe-sr-only" id="scribe-transcript">
+    <p>Hello World</p>
+  </div>
+</figure>
+```
+
+### `sr-only-transcript`
+
+The image, and after it everything it says in an element that only a screen
+reader reaches, tied to the image by `aria-describedby`. The page looks
+exactly as it did, and a reader of a long document hears its lines in order
+instead of a single breathless `alt`.
+
+Takes `var.id`, the id the transcript carries and the image points at;
+`var.class_prefix`, what every class name starts with; and `var.alt`, the
+short label the image itself carries, the transcript being the long one.
+
+```html
+<div class="scribe-transcript">
+  <style>
+    .scribe-sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; border: 0; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: normal }
+  </style>
+  <img src="hello.png" width="284" height="96" alt="An image of text, transcribed after it." aria-describedby="scribe-transcript" />
+  <div class="scribe-sr-only" id="scribe-transcript">
+    <p>Hello World</p>
+  </div>
+</div>
+```
+
+As with `html-overlay`, the `<img>` is left out when neither the image's bytes
+nor an href were given, which leaves a bare transcript to place beside an
+image already in the page.
+
+### `figure-transcript`
+
+A `<figure>` holding the image and, beneath it, everything it says. Nothing is
+positioned over anything, so nothing can drift out of place; the text is
+simply there, to be found, selected, read aloud and indexed.
+
+Takes `var.mode`, `caption` (the default) or `details`, for whether the
+transcript is a caption everyone sees or a `<details>` the reader opens;
+`var.summary`, what a `<details>` is labelled with; `var.class_prefix`; and
+`var.alt`.
+
+```html
+<figure class="scribe-figure">
+  <img src="hello.png" width="284" height="96" alt="An image of text, transcribed after it." />
+  <figcaption class="scribe-transcript">
+    <p>Hello World</p>
+  </figcaption>
+</figure>
+```
+
+### `json-ld`
+
+A schema.org `ImageObject` carrying what the image says, for the crawlers and
+indexes that read JSON-LD. Nothing on the page changes and nothing is shown:
+this is the one mechanism written for readers that never look at pixels.
+
+Takes `var.caption`, a caption for the image, written only when it is given;
+and `var.wrap`, true by default, for whether the document is written inside
+the `<script>` element a page carries it in. `var.wrap=false` writes the bare
+JSON, and wants `mime` and `extension` set with it.
+
+```html
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ImageObject",
+  "contentUrl": "hello.png",
+  "width": 284,
+  "height": 96,
+  "text": "Hello World"
+}
+</script>
+```
+
+### `layout-json`
+
+The whole layout in the page, as the `json` renderer writes it, for the page's
+own code to read. A script or an extension can build any of these mechanisms
+from it lazily, or feed the site's own search, without asking a server for
+anything.
+
+Takes `var.id`, the id the script carries and the image points at;
+`var.image`, true by default, for whether the image is written before it; and
+`var.class_prefix`, what the class name and the `data-` attribute start with.
+
+```html
+<div class="scribe-layout">
+  <img src="hello.png" width="284" height="96" alt="Hello World" data-scribe-layout="scribe-layout" />
+  <script type="application/json" id="scribe-layout">{"version":1,"image":{"width":284,"height":96},"lines":[…]}</script>
+</div>
+```
+
+The layout goes through `json`, whose escaping of `<`, `>` and `&` is what
+keeps text read from an image from ending the element early.
 
 ### `hocr`
 
@@ -223,6 +386,21 @@ Reading Machines
 The quick brown fox jumps
 over the lazy dog, and does
 ```
+
+### `alt-text`
+
+Everything the image says as one line, ready for an `alt` attribute: newlines
+and runs of spaces become single spaces, since an attribute has no lines to
+break. Takes `var.max_chars`, the most characters to write, `0` by default for
+all of them; a longer text is cut at a word boundary and ends in an ellipsis.
+
+```text
+Reading Machines The quick brown fox jumps over the lazy dog, and does
+```
+
+The text is written as it was read, not escaped, since where it is going is
+not the template's to know: a caller placing it in markup asks for
+`autoescape=html`.
 
 ## A template of your own
 

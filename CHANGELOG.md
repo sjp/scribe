@@ -27,8 +27,13 @@ Versioning](https://semver.org/spec/v2.0.0.html).
   it settled by font size mode, baseline mode, per-character placement, length
   adjustment and separator elements.
 - The `template` renderer, writing whatever a Jinja template describes, with
-  `html-overlay`, `hocr`, `alto`, `markdown` and `text` built in and callers'
-  own templates and values accepted.
+  callers' own templates and values accepted and twelve built in: text layers
+  to lay over an image, written as positioned HTML or as SVG; transcripts an
+  image points at for a screen reader; a `<figure>` carrying the whole text
+  beneath the picture; all of those at once; the layout itself in a
+  `<script>`; JSON-LD for a crawler; and `hocr`, `alto`, `markdown`, `text`
+  and `alt-text`. A template can ask the SVG renderer for its text layer
+  rather than writing a second one.
 - The `scribe` command line tool: `ocr`, `render`, `formats`, `templates` and
   `schema`, over one image or many, with the layout kept beside the output.
 - WebAssembly bindings packaged for the browser and for Node, with TypeScript

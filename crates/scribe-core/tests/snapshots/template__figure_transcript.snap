@@ -1,0 +1,11 @@
+---
+source: crates/scribe-core/tests/template.rs
+expression: "render(\"figure-transcript\", Options::new())"
+---
+<figure class="scribe-figure">
+  <img src="page.png" width="284" height="140" alt="An image of text, transcribed after it." />
+  <figcaption class="scribe-transcript">
+    <p>Hello World</p>
+    <p>Tilted &amp; &lt;set&gt;</p>
+  </figcaption>
+</figure>

@@ -1,0 +1,14 @@
+---
+source: crates/scribe-core/tests/template.rs
+expression: "render(\"json-ld\", Options::new())"
+---
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ImageObject",
+  "contentUrl": "page.png",
+  "width": 284,
+  "height": 140,
+  "text": "Hello World\nTilted \u0026 \u003cset\u003e"
+}
+</script>

@@ -1,0 +1,5 @@
+---
+source: crates/scribe-core/tests/template.rs
+expression: "render(\"alt-text\", Options::new())"
+---
+Hello World Tilted & <set>

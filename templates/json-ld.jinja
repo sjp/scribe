@@ -1,0 +1,34 @@
+{#-
+  A schema.org `ImageObject` carrying what the image says, for the crawlers
+  and indexes that read JSON-LD. Nothing on the page changes and nothing is
+  shown: this is the one mechanism written for readers that never look at
+  pixels.
+
+  Takes `var.caption`, a caption for the image, written only when it is
+  given; and `var.wrap`, whether the document is written inside the
+  `<script>` element a page carries it in. `var.wrap=false` writes the bare
+  JSON, which wants `mime` and `extension` set with it.
+
+  Every value goes through `json`, whose escaping of `<`, `>` and `&` is what
+  keeps text read from an image from ending the element early.
+-#}
+{%- set wrap = vars.wrap | default(true) | flag -%}
+{%- if wrap -%}
+<script type="application/ld+json">
+{% endif -%}
+{
+  "@context": "https://schema.org",
+  "@type": "ImageObject",
+{%- if image.href %}
+  "contentUrl": {{ image.href | json }},
+{%- endif %}
+  "width": {{ image.width }},
+  "height": {{ image.height }},
+{%- if vars.caption is defined %}
+  "caption": {{ vars.caption | json }},
+{%- endif %}
+  "text": {{ text | json }}
+}
+{%- if wrap %}
+</script>
+{%- endif %}

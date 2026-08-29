@@ -1,0 +1,14 @@
+---
+source: crates/scribe-core/tests/fixtures.rs
+expression: output
+---
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ImageObject",
+  "contentUrl": "blank.png",
+  "width": 220,
+  "height": 140,
+  "text": ""
+}
+</script>

@@ -1,0 +1,26 @@
+---
+source: crates/scribe-core/tests/template.rs
+expression: "render(\"html-figure\", Options::new())"
+---
+<figure class="scribe-figure">
+  <style>
+    .scribe-overlay { position: relative; display: inline-block; line-height: 0 }
+    .scribe-overlay img { display: block; max-width: 100% }
+    .scribe-overlay svg { position: absolute; left: 0; top: 0; width: 100%; height: 100% }
+    .scribe-overlay span { position: absolute; color: transparent; white-space: pre; line-height: 1; transform-origin: center }
+    .scribe-overlay span::selection { color: #000; background: rgba(0, 90, 255, 0.35) }
+    .scribe-sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; border: 0; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: normal }
+  </style>
+  <div class="scribe-overlay">
+    <img src="page.png" width="284" height="140" alt="Hello World Tilted &amp; &lt;set&gt;" aria-describedby="scribe-transcript" />
+    <span style="left: 28px; top: 31px; width: 98px; height: 32px; font-size: 32px; transform: rotate(0deg)">Hello</span>
+    <span style="left: 143px; top: 31px; width: 113px; height: 32px; font-size: 32px; transform: rotate(0deg)">World</span>
+    <span style="left: 30.63px; top: 80.95px; width: 90px; height: 20px; font-size: 20px; transform: rotate(8deg)">Tilted</span>
+    <span style="left: 128.06px; top: 89.16px; width: 12px; height: 20px; font-size: 20px; transform: rotate(8deg)">&amp;</span>
+    <span style="left: 149.42px; top: 98.35px; width: 100px; height: 20px; font-size: 20px; transform: rotate(8deg)">&lt;set&gt;</span>
+  </div>
+  <div class="scribe-sr-only" id="scribe-transcript">
+    <p>Hello World</p>
+    <p>Tilted &amp; &lt;set&gt;</p>
+  </div>
+</figure>

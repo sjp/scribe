@@ -179,8 +179,8 @@ read back.
 
 ## `template`
 
-The layout through a Jinja template: one of the five that ship with scribe, or
-one of your own. This is how to write a format scribe has never heard of —
+The layout through a Jinja template: one of the twelve that ship with scribe,
+or one of your own. This is how to write a format scribe has never heard of —
 hOCR for a PDF builder, ALTO for an archive, HTML for a page, CSV for a
 spreadsheet — without writing any Rust.
 
@@ -189,10 +189,13 @@ scribe ocr page.png --format template --opt template=hocr
 scribe ocr page.png --template-file my-format.jinja --opt var.title="Page 1"
 ```
 
-The built-in templates are `html-overlay`, `hocr`, `alto`, `markdown` and
-`text`; `scribe templates` lists them. Options named `var.<name>` are not this
-format's own — they reach the template as `vars.<name>`, so a template can
-take parameters that scribe knows nothing about. [Writing
+The built-in templates are `html-overlay`, `svg-overlay`, `html-figure`,
+`sr-only-transcript`, `figure-transcript`, `json-ld`, `layout-json`, `hocr`,
+`alto`, `markdown`, `text` and `alt-text`; `scribe templates` lists them. The
+first seven are the ways of giving an image in a web page text that can be
+found, selected, read aloud and indexed. Options named `var.<name>` are not
+this format's own — they reach the template as `vars.<name>`, so a template
+can take parameters that scribe knows nothing about. [Writing
 templates](templates.md) describes the context a template is given, the
 filters it can call and what each built-in one does.
 
@@ -204,7 +207,7 @@ the output is HTML or XML and leaving them alone when it is not.
 <!-- options: template -->
 | Option | Takes | Default | What it does |
 | --- | --- | --- | --- |
-| `template` | `html-overlay`, `hocr`, `alto`, `markdown`, `text` | `html-overlay` | Which template to render: `html-overlay`, `hocr`, `alto`, `markdown` or `text`; ignored when `template_source` is set. |
+| `template` | `html-overlay`, `svg-overlay`, `html-figure`, `sr-only-transcript`, `figure-transcript`, `json-ld`, `layout-json`, `hocr`, `alto`, `markdown`, `text`, `alt-text` | `html-overlay` | Which of the built-in templates to render, of the ones listed beside this; ignored when `template_source` is set. |
 | `template_source` | text | empty | A template of your own, in Jinja syntax, rendered instead of a built-in one. |
 | `mime` | text | empty | The media type of the output; the chosen template's own when empty. |
 | `extension` | text | empty | The file extension of the output, without a dot; the chosen template's own when empty. |

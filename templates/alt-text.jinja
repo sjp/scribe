@@ -1,0 +1,32 @@
+{#-
+  Everything the image says as one line of text, ready for an `alt`
+  attribute: newlines and runs of spaces become single spaces, since an
+  attribute has no lines to break.
+
+  Takes `var.max_chars`, the most characters to write, `0` for all of them. A
+  longer text is cut at a word boundary and ends in an ellipsis, so that a
+  reader hears a sentence rather than half a word.
+
+  The text is written as it was read, not escaped, since where it is going is
+  not this template's to know: a caller placing it in markup asks for
+  `autoescape=html`.
+-#}
+{%- set flat = text | split | join(" ") -%}
+{%- set limit = vars.max_chars | default(0) | number -%}
+{%- if limit > 0 and (flat | length) > limit -%}
+{#- The ellipsis is a character of the text too, so it is counted. -#}
+{%- set kept = namespace(text="", full=false) -%}
+{%- for word in flat | split -%}
+{%- if not kept.full -%}
+{%- set candidate = kept.text ~ (" " if kept.text else "") ~ word -%}
+{%- if (candidate | length) <= limit - 1 -%}
+{%- set kept.text = candidate -%}
+{%- else -%}
+{%- set kept.full = true -%}
+{%- endif -%}
+{%- endif -%}
+{%- endfor -%}
+{{ kept.text }}…
+{%- else -%}
+{{ flat }}
+{%- endif -%}

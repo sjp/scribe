@@ -1,0 +1,27 @@
+{#-
+  The image with an SVG text layer over it: the same shape as `html-overlay`,
+  with the layer written by the SVG renderer rather than by positioned spans,
+  so that a turned line turns with its box and a word is fitted to the pixels
+  it was read from.
+
+  Its `var.` options are the SVG renderer's own — whatever `scribe formats`
+  lists under `svg` — save that the image is never carried in the layer,
+  since the page's own `<img>` is underneath it. `var.class_prefix` names the
+  classes in the layer and around it alike.
+
+  The image carries no `alt`: the layer over it is what a screen reader
+  announces, and announcing the same text twice helps nobody.
+-#}
+{%- set source = image.data_uri or image.href -%}
+{%- set prefix = vars.class_prefix | default("scribe-") -%}
+<div class="{{ prefix }}overlay">
+  <style>
+    .{{ prefix }}overlay { position: relative; display: inline-block; line-height: 0 }
+    .{{ prefix }}overlay img { display: block; max-width: 100% }
+    .{{ prefix }}overlay svg { position: absolute; left: 0; top: 0; width: 100%; height: 100% }
+  </style>
+{%- if source %}
+  <img src="{{ source }}" width="{{ image.width }}" height="{{ image.height }}" alt="" />
+{%- endif %}
+  {{ svg(vars, image_mode="none") | indent(2) | safe }}
+</div>

@@ -1,0 +1,14 @@
+---
+source: crates/scribe-core/tests/fixtures.rs
+expression: output
+---
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ImageObject",
+  "contentUrl": "paragraph.png",
+  "width": 480,
+  "height": 280,
+  "text": "Reading Machines\nThe quick brown fox jumps\nover the lazy dog, and does\nit again on the next line.\nPrinted in 1996 at Leyden."
+}
+</script>

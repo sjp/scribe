@@ -1,0 +1,23 @@
+{#-
+  The whole layout in the page, as the JSON renderer writes it, inside a
+  `<script type="application/json">` for the page's own code to read. A
+  script or an extension can then build any of these mechanisms from it
+  lazily, or feed the site's own search, without asking a server for anything.
+
+  Takes `var.id`, the id the script carries and the image points at with a
+  `data-` attribute; `var.image`, whether the image is written before it; and
+  `var.class_prefix`, what the class name and that attribute start with.
+
+  The layout goes through `json`, whose escaping of `<`, `>` and `&` is what
+  keeps text read from an image from ending the element early.
+-#}
+{%- set id = vars.id | default("scribe-layout") -%}
+{%- set prefix = vars.class_prefix | default("scribe-") -%}
+{%- set source = image.data_uri or image.href -%}
+{%- set with_image = vars.image | default(true) | flag -%}
+<div class="{{ prefix }}layout">
+{%- if with_image and source %}
+  <img src="{{ source }}" width="{{ image.width }}" height="{{ image.height }}" alt="{{ text | replace("\n", " ") }}" data-{{ prefix }}layout="{{ id }}" />
+{%- endif %}
+  <script type="application/json" id="{{ id }}">{{ layout | json }}</script>
+</div>

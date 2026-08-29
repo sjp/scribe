@@ -104,11 +104,10 @@ fn formats_lists_every_renderer_and_its_options() {
 
 #[test]
 fn templates_lists_the_built_in_templates() {
-    scribe()
-        .arg("templates")
-        .assert()
-        .success()
-        .stdout("html-overlay\nhocr\nalto\nmarkdown\ntext\n");
+    scribe().arg("templates").assert().success().stdout(
+        "html-overlay\nsvg-overlay\nhtml-figure\nsr-only-transcript\nfigure-transcript\n\
+json-ld\nlayout-json\nhocr\nalto\nmarkdown\ntext\nalt-text\n",
+    );
 }
 
 #[test]

@@ -15,6 +15,19 @@ use scribe_core::render::{Options, RenderError, list_templates, registry};
 /// The size of the page the layout was read from.
 const SIZE: (u32, u32) = (284, 140);
 
+/// Every template whose output is markup, and so has to parse as markup.
+const MARKUP: &[&str] = &[
+    "html-overlay",
+    "svg-overlay",
+    "html-figure",
+    "sr-only-transcript",
+    "figure-transcript",
+    "json-ld",
+    "layout-json",
+    "hocr",
+    "alto",
+];
+
 /// A word of the given text, filling the band from `top` to `bottom` between
 /// `left` and `right`.
 fn word(text: &str, left: f32, right: f32, band: (f32, f32), confidence: f32) -> Word {
@@ -179,6 +192,170 @@ fn text() {
 }
 
 #[test]
+fn svg_overlay() {
+    insta::assert_snapshot!(render("svg-overlay", Options::new()));
+}
+
+#[test]
+fn html_figure() {
+    insta::assert_snapshot!(render("html-figure", Options::new()));
+}
+
+#[test]
+fn sr_only_transcript() {
+    insta::assert_snapshot!(render("sr-only-transcript", Options::new()));
+}
+
+#[test]
+fn figure_transcript() {
+    insta::assert_snapshot!(render("figure-transcript", Options::new()));
+}
+
+#[test]
+fn json_ld() {
+    insta::assert_snapshot!(render("json-ld", Options::new()));
+}
+
+#[test]
+fn layout_json() {
+    insta::assert_snapshot!(render("layout-json", Options::new()));
+}
+
+#[test]
+fn alt_text() {
+    insta::assert_snapshot!(render("alt-text", Options::new()));
+}
+
+#[test]
+fn a_transcript_can_be_collapsed_behind_a_summary() {
+    insta::assert_snapshot!(render(
+        "figure-transcript",
+        Options::new()
+            .with("var.mode", "details")
+            .with("var.summary", "What it <says>")
+    ));
+}
+
+#[test]
+fn a_figures_layer_can_be_drawn_by_the_svg_renderer() {
+    insta::assert_snapshot!(render(
+        "html-figure",
+        Options::new().with("var.overlay", "svg")
+    ));
+}
+
+#[test]
+fn an_svg_overlay_takes_the_svg_renderers_own_options() {
+    insta::assert_snapshot!(render(
+        "svg-overlay",
+        Options::new()
+            .with("var.text_mode", "visible")
+            .with("var.class_prefix", "ocr-")
+    ));
+}
+
+#[test]
+fn an_option_the_svg_renderer_does_not_take_is_refused_by_name() {
+    let registry = registry();
+    let renderer = registry.get("template").expect("template is built in");
+    let error = renderer
+        .render(
+            &sample(),
+            &ImageSource::new(SIZE.0, SIZE.1),
+            &Options::new()
+                .with("template", "svg-overlay")
+                .with("var.nonsense", "1"),
+        )
+        .expect_err("the svg renderer has no `nonsense` option");
+    let message = error.to_string();
+    assert!(message.contains("`nonsense`"), "{message}");
+    assert!(message.contains("the `svg-overlay` template"), "{message}");
+}
+
+#[test]
+fn alt_text_is_one_line_and_stops_where_it_is_told() {
+    assert_eq!(
+        render("alt-text", Options::new()),
+        "Hello World Tilted & <set>"
+    );
+    let cut = render("alt-text", Options::new().with("var.max_chars", 20_i64));
+    assert_eq!(cut, "Hello World Tilted…");
+    assert!(cut.chars().count() <= 20, "{cut}");
+}
+
+#[test]
+fn the_transcript_is_tied_to_the_image_it_describes() {
+    let text = render("sr-only-transcript", Options::new());
+    let document = well_formed(&text);
+    let image = document
+        .descendants()
+        .find(|node| node.has_tag_name("img"))
+        .expect("the image is written when there is an href for it");
+    let described = image
+        .attribute("aria-describedby")
+        .expect("the image points at its transcript");
+    let transcript = document
+        .descendants()
+        .find(|node| node.attribute("id") == Some(described))
+        .expect("the transcript carries the id the image points at");
+    let paragraphs: Vec<_> = transcript
+        .children()
+        .filter(|node| node.has_tag_name("p"))
+        .filter_map(|node| node.text())
+        .collect();
+    assert_eq!(paragraphs, ["Hello World", "Tilted & <set>"]);
+}
+
+#[test]
+fn json_ld_describes_the_image_for_a_crawler() {
+    let text = render(
+        "json-ld",
+        Options::new().with("var.caption", "A tilted <page>"),
+    );
+    let document = well_formed(&text);
+    let script = document.root_element();
+    assert_eq!(script.tag_name().name(), "script");
+    assert_eq!(script.attribute("type"), Some("application/ld+json"));
+    let written = script.text().expect("the element holds the document");
+    let data: serde_json::Value = serde_json::from_str(written).expect("json-ld writes JSON");
+    assert_eq!(data["@context"], "https://schema.org");
+    assert_eq!(data["@type"], "ImageObject");
+    assert_eq!(data["contentUrl"], "page.png");
+    assert_eq!(data["width"], 284);
+    assert_eq!(data["height"], 140);
+    assert_eq!(data["caption"], "A tilted <page>");
+    assert_eq!(data["text"], "Hello World\nTilted & <set>");
+}
+
+#[test]
+fn the_embedded_layout_is_the_one_it_was_rendered_from() {
+    let text = render("layout-json", Options::new());
+    let document = well_formed(&text);
+    let script = document
+        .descendants()
+        .find(|node| node.has_tag_name("script"))
+        .expect("the layout is written into a script element");
+    let written = script.text().expect("the element holds the layout");
+    assert!(
+        !written.contains('<'),
+        "the layout should not be able to end its own element: {written}"
+    );
+    assert_eq!(
+        Layout::from_json(written).expect("the element holds a layout"),
+        sample()
+    );
+    let image = document
+        .descendants()
+        .find(|node| node.has_tag_name("img"))
+        .expect("the image is written when there is an href for it");
+    assert_eq!(
+        image.attribute("data-scribe-layout"),
+        script.attribute("id"),
+        "the image should point at the layout beside it"
+    );
+}
+
+#[test]
 fn a_template_can_take_values_of_its_own() {
     insta::assert_snapshot!(render(
         "hocr",
@@ -257,16 +434,33 @@ fn hocr_carries_the_classes_and_boxes_the_format_asks_for() {
 
 #[test]
 fn the_markup_templates_are_well_formed() {
-    for template in ["html-overlay", "hocr", "alto"] {
+    for template in MARKUP {
         let text = render(template, Options::new());
         let document = well_formed(&text);
+        assert!(
+            document.descendants().count() > 1,
+            "{template} should write more than a root element"
+        );
+    }
+}
+
+#[test]
+fn the_text_is_escaped_however_it_is_carried() {
+    // The sample says `&` and `<set>`, so every template that writes it into
+    // markup escapes it as markup, and the two that hand it to a script
+    // escape it as JSON. Either way it cannot end the element it is inside.
+    for template in MARKUP.iter().filter(|template| **template != "json-ld") {
+        let text = render(template, Options::new());
         assert!(
             text.contains("&lt;set&gt;"),
             "{template} should escape the text it writes:\n{text}"
         );
+    }
+    for template in ["json-ld", "layout-json"] {
+        let text = render(template, Options::new());
         assert!(
-            document.descendants().count() > 1,
-            "{template} should write more than a root element"
+            text.contains("\\u003cset\\u003e"),
+            "{template} should escape the text it hands to a script:\n{text}"
         );
     }
 }

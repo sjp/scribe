@@ -1,0 +1,30 @@
+{#-
+  The image, and after it everything it says in an element that only a screen
+  reader reaches, tied to the image by `aria-describedby`. A page looks
+  exactly as it did, and a reader of a long document hears its lines in order
+  instead of a single breathless `alt`.
+
+  Takes `var.id`, the id the transcript carries and the image points at;
+  `var.class_prefix`, what every class name starts with; and `var.alt`, the
+  short label the image itself carries, the transcript being the long one.
+
+  The `<img>` is left out when neither the image's bytes nor an href were
+  given, which leaves a bare transcript to place beside an image already in
+  the page.
+-#}
+{%- set source = image.data_uri or image.href -%}
+{%- set id = vars.id | default("scribe-transcript") -%}
+{%- set prefix = vars.class_prefix | default("scribe-") -%}
+<div class="{{ prefix }}transcript">
+  <style>
+    .{{ prefix }}sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; border: 0; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: normal }
+  </style>
+{%- if source %}
+  <img src="{{ source }}" width="{{ image.width }}" height="{{ image.height }}" alt="{{ vars.alt | default("An image of text, transcribed after it.") }}" aria-describedby="{{ id }}" />
+{%- endif %}
+  <div class="{{ prefix }}sr-only" id="{{ id }}">
+{%- for line in layout.lines %}
+    <p>{{ line.text }}</p>
+{%- endfor %}
+  </div>
+</div>

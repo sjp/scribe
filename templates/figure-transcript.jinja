@@ -1,0 +1,34 @@
+{#-
+  A `<figure>` holding the image and, beneath it, everything it says: a
+  caption everyone sees, or a `<details>` the reader opens. Nothing is
+  positioned over anything, so nothing can drift out of place; the text is
+  simply there, to be found, selected, read aloud and indexed.
+
+  Takes `var.mode`, `caption` or `details`; `var.summary`, what a `<details>`
+  is labelled with; `var.class_prefix`, what every class name starts with;
+  and `var.alt`, the short label the image carries, the transcript beneath it
+  being the long one.
+-#}
+{%- set source = image.data_uri or image.href -%}
+{%- set prefix = vars.class_prefix | default("scribe-") -%}
+{%- set collapsed = (vars.mode | default("caption")) == "details" -%}
+{#- A transcript the reader opens is one element deeper than one that is
+    simply there. -#}
+{%- set indent = "      " if collapsed else "    " -%}
+<figure class="{{ prefix }}figure">
+{%- if source %}
+  <img src="{{ source }}" width="{{ image.width }}" height="{{ image.height }}" alt="{{ vars.alt | default("An image of text, transcribed after it.") }}" />
+{%- endif %}
+  <figcaption class="{{ prefix }}transcript">
+{%- if collapsed %}
+    <details>
+      <summary>{{ vars.summary | default("Text in this image") }}</summary>
+{%- endif %}
+{%- for line in layout.lines %}
+{{ indent }}<p>{{ line.text }}</p>
+{%- endfor %}
+{%- if collapsed %}
+    </details>
+{%- endif %}
+  </figcaption>
+</figure>
