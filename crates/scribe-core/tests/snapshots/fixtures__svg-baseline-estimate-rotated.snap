@@ -1,0 +1,18 @@
+---
+source: crates/scribe-core/tests/fixtures.rs
+expression: output
+---
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="420" height="320" viewBox="0 0 420 320" role="img" aria-label="Tilted line S 2 i">
+  <style>
+    .scribe-text { user-select: text; -webkit-user-select: text; white-space: pre; }
+    .scribe-text::selection, .scribe-text ::selection { fill: #000; background: rgba(0, 90, 255, 0.35); }
+  </style>
+  <image href="rotated.png" width="420" height="320"/>
+  <g class="scribe-text" font-family="sans-serif" fill="transparent">
+    <text class="scribe-line" transform="rotate(13.84 109.14 96.94)"><tspan class="scribe-word" x="32.87" y="116.27" font-size="38" textLength="94.29" lengthAdjust="spacingAndGlyphs">Tilted</tspan> <tspan class="scribe-word" x="131.41" y="112.78" font-size="32.28" textLength="51.81" lengthAdjust="spacingAndGlyphs">line</tspan></text>
+    <text class="scribe-line"><tspan class="scribe-word" x="368" y="176" font-size="26" textLength="24" lengthAdjust="spacingAndGlyphs">S</tspan></text>
+    <text class="scribe-line"><tspan class="scribe-word" x="368" y="194" font-size="20" textLength="25" lengthAdjust="spacingAndGlyphs">2</tspan></text>
+    <text class="scribe-line"><tspan class="scribe-word" x="362" y="286" font-size="91" textLength="25" lengthAdjust="spacingAndGlyphs">i</tspan></text>
+  </g>
+</svg>

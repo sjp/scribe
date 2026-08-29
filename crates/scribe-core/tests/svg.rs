@@ -177,14 +177,22 @@ fn every_variant_is_well_formed_xml() {
         ("image_mode", "link"),
         ("image_mode", "none"),
         ("font_size_scope", "line"),
+        ("font_size_mode", "cap_height"),
+        ("baseline_mode", "estimate"),
         ("length_adjust", "spacing"),
+        ("space_mode", "tspan"),
+        ("line_break_mode", "tspan"),
         ("class_prefix", "a-"),
         ("title", "A <fixture> & its \"text\""),
         ("aria_label", "A <fixture> & its \"text\""),
     ] {
         linked(&hello_world(), Options::new().with(name, value));
     }
-    for (name, value) in [("ids", true), ("include_style", false)] {
+    for (name, value) in [
+        ("ids", true),
+        ("include_style", false),
+        ("char_positions", true),
+    ] {
         linked(&hello_world(), Options::new().with(name, value));
     }
 }

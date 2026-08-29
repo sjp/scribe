@@ -1,0 +1,18 @@
+---
+source: crates/scribe-core/tests/fixtures.rs
+expression: output
+---
+<div class="scribe-overlay">
+  <style>
+    .scribe-overlay { position: relative; display: inline-block; line-height: 0 }
+    .scribe-overlay img { display: block; max-width: 100% }
+    .scribe-overlay span { position: absolute; color: transparent; white-space: pre; line-height: 1; transform-origin: center }
+    .scribe-overlay span::selection { color: #000; background: rgba(0, 90, 255, 0.35) }
+  </style>
+  <img src="rotated.png" width="420" height="320" alt="Tilted line S 2 i" />
+  <span style="left: 33.63px; top: 71.29px; width: 94.29px; height: 38px; font-size: 54.29px; transform: rotate(12.99deg)">Tilted</span>
+  <span style="left: 130.09px; top: 92.02px; width: 51.81px; height: 32.28px; font-size: 46.12px; transform: rotate(3.18deg)">line</span>
+  <span style="left: 368px; top: 150px; width: 24px; height: 26px; font-size: 37.14px; transform: rotate(0deg)">S</span>
+  <span style="left: 368px; top: 174px; width: 25px; height: 20px; font-size: 28.57px; transform: rotate(0deg)">2</span>
+  <span style="left: 362px; top: 195px; width: 25px; height: 91px; font-size: 130px; transform: rotate(0deg)">i</span>
+</div>

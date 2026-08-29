@@ -25,7 +25,7 @@ use minijinja::{AutoEscape, Environment, Error, ErrorKind, Output, State, Undefi
 
 use super::{
     Layout, OptionKind, OptionSpec, OptionValue, Options, RenderError, RenderOutput, Renderer,
-    number,
+    number, parse_bool,
 };
 use crate::image_source::ImageSource;
 use crate::layout::RotatedBox;
@@ -322,6 +322,10 @@ fn prepare(environment: &mut Environment<'_>, escape: AutoEscape, image: &Arc<Im
     environment.add_function("json", json);
     environment.add_filter("round", round);
     environment.add_function("round", round);
+    environment.add_filter("flag", flag);
+    environment.add_function("flag", flag);
+    environment.add_filter("number", as_number);
+    environment.add_function("number", as_number);
     environment.add_filter("rotate_transform", rotate_transform);
     environment.add_function("rotate_transform", rotate_transform);
     environment.add_filter("points", points);
@@ -433,6 +437,38 @@ fn json(value: Value) -> Result<Value, Error> {
 /// a number and so cannot drop the zeros a document has no use for.
 fn round(value: f64, precision: Option<usize>) -> String {
     number(value, precision.unwrap_or(0).min(MAX_PRECISION))
+}
+
+/// A value read as true or false the way a renderer reads its own options,
+/// so that a template makes the same sense of `off` typed at a command line
+/// as of `false` passed from a program.
+///
+/// Text that says neither counts as true when there is any of it, which is
+/// what a bare `name=` on a command line means.
+fn flag(value: Value) -> bool {
+    match value.as_str() {
+        Some(text) => parse_bool(text).unwrap_or(!text.trim().is_empty()),
+        None => value.is_true(),
+    }
+}
+
+/// A value read as a number, so that a template can reckon with one that
+/// reached it as text.
+///
+/// # Errors
+///
+/// Returns an error if the value neither is a number nor spells one.
+fn as_number(value: Value) -> Result<f64, Error> {
+    let read = match value.as_str() {
+        Some(text) => text.trim().parse().ok(),
+        None => f64::try_from(value.clone()).ok(),
+    };
+    read.ok_or_else(|| {
+        Error::new(
+            ErrorKind::InvalidOperation,
+            format!("{value} is not a number"),
+        )
+    })
 }
 
 /// An oriented box's rotation as an SVG or CSS `rotate(angle cx cy)`.
@@ -913,6 +949,24 @@ mod tests {
         assert_eq!(rendered("{{ 28.456 | round(2) }}"), "28.46");
         assert_eq!(rendered("{{ 28.4 | round(3) }}"), "28.4");
         assert_eq!(rendered("{{ round(1.5) }}"), "2");
+    }
+
+    #[test]
+    fn a_value_of_ones_own_can_be_read_as_a_flag_or_a_number() {
+        // A value set on a command line reaches a template as text, and text
+        // is true whatever it says unless it is read as a flag.
+        assert_eq!(rendered(r#"{{ "false" | flag }}"#), "False");
+        assert_eq!(rendered(r#"{{ "off" | flag }}"#), "False");
+        assert_eq!(rendered(r#"{{ "yes" | flag }}"#), "True");
+        assert_eq!(rendered("{{ true | flag }}"), "True");
+        assert_eq!(rendered(r#"{{ "anything" | flag }}"#), "True");
+        assert_eq!(rendered(r#"{{ "" | flag }}"#), "False");
+
+        assert_eq!(rendered(r#"{{ ("0.7" | number) * 10 }}"#), "7.0");
+        assert_eq!(rendered("{{ 3 | number }}"), "3.0");
+        let error =
+            render(Options::new().with("template_source", r#"{{ "wide" | number }}"#)).unwrap_err();
+        assert!(error.to_string().contains("not a number"), "{error}");
     }
 
     #[test]

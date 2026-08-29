@@ -5,9 +5,18 @@
   be selected, searched and read aloud.
 
   Takes `var.text_fill` and `var.selection_background`, the colours selected
-  text is drawn in.
+  text is drawn in; `var.char_positions`, to give every character a span on
+  its own pixels rather than stretching a word across its box; and
+  `var.font_size_mode`, `box_height` or `cap_height`, with
+  `var.cap_height_ratio`, to read a box as the height of a capital letter,
+  which suits text written in capitals.
 -#}
 {%- set source = image.data_uri or image.href -%}
+{%- set per_char = vars.char_positions | default(false) | flag -%}
+{%- set cap_height = (vars.font_size_mode | default("box_height")) == "cap_height" -%}
+{%- set cap_ratio = vars.cap_height_ratio | default(0.7) | number -%}
+{#- How much of an em the height of a box stands for. -#}
+{%- set box_em = cap_ratio if cap_height and cap_ratio > 0 else 1 -%}
 <div class="scribe-overlay">
   <style>
     .scribe-overlay { position: relative; display: inline-block; line-height: 0 }
@@ -21,7 +30,17 @@
 {%- for line in layout.lines %}
 {%- for word in line.words or [line] %}
 {%- set box = word.rotated_box %}
-  <span style="left: {{ (box.cx - box.width / 2) | round(2) }}px; top: {{ (box.cy - box.height / 2) | round(2) }}px; width: {{ box.width | round(2) }}px; height: {{ box.height | round(2) }}px; font-size: {{ box.height | round(2) }}px; transform: rotate({{ box.angle_deg | round(2) }}deg)">{{ word.text }}</span>
+{%- set left = box.cx - box.width / 2 %}
+{%- set top = box.cy - box.height / 2 %}
+{#- Characters are placed in the picture's own frame, so a word holding them
+    is left unturned and each of them carries the turn already in its box. -#}
+{%- set chars = word.chars | default([]) if per_char else [] %}
+  <span style="left: {{ left | round(2) }}px; top: {{ top | round(2) }}px; width: {{ box.width | round(2) }}px; height: {{ box.height | round(2) }}px; font-size: {{ (box.height / box_em) | round(2) }}px{% if not chars %}; transform: rotate({{ box.angle_deg | round(2) }}deg){% endif %}">
+    {#- Nothing may part one character from the next, or copying the word out
+        would part them too. -#}
+    {%- if chars %}{% for char in chars %}<span style="left: {{ (char.bbox.x - left) | round(2) }}px; top: {{ (char.bbox.y - top) | round(2) }}px; width: {{ char.bbox.width | round(2) }}px; height: {{ char.bbox.height | round(2) }}px">{{ char.text }}</span>{% endfor %}
+    {%- else %}{{ word.text }}
+    {%- endif %}</span>
 {%- endfor %}
 {%- endfor %}
 </div>

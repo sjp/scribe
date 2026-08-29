@@ -1,0 +1,37 @@
+---
+source: crates/scribe-core/tests/fixtures.rs
+expression: output
+---
+<div class="scribe-overlay">
+  <style>
+    .scribe-overlay { position: relative; display: inline-block; line-height: 0 }
+    .scribe-overlay img { display: block; max-width: 100% }
+    .scribe-overlay span { position: absolute; color: transparent; white-space: pre; line-height: 1; transform-origin: center }
+    .scribe-overlay span::selection { color: #000; background: rgba(0, 90, 255, 0.35) }
+  </style>
+  <img src="paragraph.png" width="480" height="280" alt="Reading Machines The quick brown fox jumps over the lazy dog, and does it again on the next line. Printed in 1996 at Leyden." />
+  <span style="left: 33px; top: 29px; width: 118px; height: 35px; font-size: 50px; transform: rotate(0deg)">Reading</span>
+  <span style="left: 162px; top: 31px; width: 134px; height: 25px; font-size: 35.71px; transform: rotate(0deg)">Machines</span>
+  <span style="left: 31px; top: 94px; width: 37px; height: 17px; font-size: 24.29px; transform: rotate(0deg)">The</span>
+  <span style="left: 74.63px; top: 93.45px; width: 50.73px; height: 21.4px; font-size: 30.57px; transform: rotate(1.97deg)">quick</span>
+  <span style="left: 131px; top: 93px; width: 58px; height: 17px; font-size: 24.29px; transform: rotate(0deg)">brown</span>
+  <span style="left: 196px; top: 93px; width: 27px; height: 18px; font-size: 25.71px; transform: rotate(0deg)">fox</span>
+  <span style="left: 229px; top: 93px; width: 57px; height: 21px; font-size: 30px; transform: rotate(0deg)">jumps</span>
+  <span style="left: 32px; top: 133px; width: 43px; height: 14px; font-size: 20px; transform: rotate(0deg)">over</span>
+  <span style="left: 81px; top: 129px; width: 31px; height: 18px; font-size: 25.71px; transform: rotate(0deg)">the</span>
+  <span style="left: 118px; top: 129px; width: 38px; height: 20px; font-size: 28.57px; transform: rotate(0deg)">lazy</span>
+  <span style="left: 167px; top: 130px; width: 35px; height: 19px; font-size: 27.14px; transform: rotate(0deg)">dog,</span>
+  <span style="left: 210px; top: 129px; width: 34px; height: 18px; font-size: 25.71px; transform: rotate(0deg)">and</span>
+  <span style="left: 257px; top: 130px; width: 38px; height: 17px; font-size: 24.29px; transform: rotate(0deg)">does</span>
+  <span style="left: 31px; top: 165px; width: 14px; height: 19px; font-size: 27.14px; transform: rotate(0deg)">it</span>
+  <span style="left: 51.67px; top: 164.43px; width: 52.66px; height: 23.3px; font-size: 33.29px; transform: rotate(1.64deg)">again</span>
+  <span style="left: 110px; top: 167px; width: 22px; height: 16px; font-size: 22.86px; transform: rotate(0deg)">on</span>
+  <span style="left: 139.26px; top: 164.45px; width: 31.47px; height: 17.94px; font-size: 25.63px; transform: rotate(-4.76deg)">the</span>
+  <span style="left: 176px; top: 168px; width: 42px; height: 15px; font-size: 21.43px; transform: rotate(0deg)">next</span>
+  <span style="left: 225px; top: 166px; width: 38px; height: 17px; font-size: 24.29px; transform: rotate(0deg)">line.</span>
+  <span style="left: 31px; top: 229px; width: 44px; height: 12px; font-size: 17.14px; transform: rotate(0deg)">Printed</span>
+  <span style="left: 78px; top: 228px; width: 12px; height: 13px; font-size: 18.57px; transform: rotate(0deg)">in</span>
+  <span style="left: 95px; top: 229px; width: 29px; height: 12px; font-size: 17.14px; transform: rotate(0deg)">1996</span>
+  <span style="left: 128px; top: 230px; width: 12px; height: 11px; font-size: 15.71px; transform: rotate(0deg)">at</span>
+  <span style="left: 144px; top: 229px; width: 48px; height: 16px; font-size: 22.86px; transform: rotate(0deg)">Leyden.</span>
+</div>

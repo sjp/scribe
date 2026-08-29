@@ -219,7 +219,7 @@ impl From<&str> for OptionValue {
 }
 
 /// Reads the ways a person might write a boolean at a command line.
-fn parse_bool(text: &str) -> Option<bool> {
+pub(crate) fn parse_bool(text: &str) -> Option<bool> {
     match text.trim().to_ascii_lowercase().as_str() {
         "true" | "yes" | "on" | "1" => Some(true),
         "false" | "no" | "off" | "0" => Some(false),

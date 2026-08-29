@@ -11,9 +11,16 @@
 //! embedded, linked to, or left out so the text layer can be laid over an
 //! `<img>` somewhere else; and the font, the classes, the ids, the number of
 //! decimals and the stylesheet are all the caller's to choose.
+//!
+//! How closely the text layer follows the glyphs under it is a caller's
+//! choice too: a word can be stretched to fill its box or set out character
+//! by character, its baseline can be estimated from what the line says, its
+//! size can be read as a cap height, and the spaces between words and the
+//! breaks between lines can be given elements of their own so that copying
+//! the text out yields what the image says.
 
 use crate::image_source::ImageSource;
-use crate::layout::{Line, RotatedBox};
+use crate::layout::{Char, Line, Rect, RotatedBox};
 
 use super::{
     Layout, OptionKind, OptionSpec, OptionValue, Options, RenderError, RenderOutput, Renderer,
@@ -86,6 +93,26 @@ impl Renderer for SvgRenderer {
                 "What to multiply a box's height by to get its font size.",
             ),
             OptionSpec::new(
+                "font_size_mode",
+                OptionKind::Str,
+                OptionValue::Str(FontSizeMode::CHOICES[0].to_string()),
+                "Whether a box's height is the whole font size or the height of a capital letter set in it, which suits text written in capitals.",
+            )
+            .with_choices(FontSizeMode::CHOICES),
+            OptionSpec::new(
+                "cap_height_ratio",
+                OptionKind::Float,
+                OptionValue::Float(0.7),
+                "How much of the font size a capital letter stands, as a fraction, when the size is worked out from cap height.",
+            ),
+            OptionSpec::new(
+                "baseline_mode",
+                OptionKind::Str,
+                OptionValue::Str(BaselineMode::CHOICES[0].to_string()),
+                "Whether the baseline is always the fixed fraction above a box's bottom, or the bottom itself for a line whose characters do not fall below it.",
+            )
+            .with_choices(BaselineMode::CHOICES),
+            OptionSpec::new(
                 "baseline_ratio",
                 OptionKind::Float,
                 OptionValue::Float(0.2),
@@ -98,6 +125,26 @@ impl Renderer for SvgRenderer {
                 "Whether fitting a word to its box stretches the gaps alone or the glyphs as well.",
             )
             .with_choices(LENGTH_ADJUST),
+            OptionSpec::new(
+                "char_positions",
+                OptionKind::Bool,
+                OptionValue::Bool(false),
+                "Set each character at the pixels it was read from, where the recogniser said where they are, rather than stretching a whole word to fill its box.",
+            ),
+            OptionSpec::new(
+                "space_mode",
+                OptionKind::Str,
+                OptionValue::Str(SeparatorMode::CHOICES[0].to_string()),
+                "Whether the gap between two words holds a `<tspan>` of its own carrying the space, or the words are parted by a plain space character.",
+            )
+            .with_choices(SeparatorMode::CHOICES),
+            OptionSpec::new(
+                "line_break_mode",
+                OptionKind::Str,
+                OptionValue::Str(SeparatorMode::CHOICES[0].to_string()),
+                "Whether one line is parted from the next by a `<tspan>` carrying a newline, so that copying several lines out keeps them on separate lines.",
+            )
+            .with_choices(SeparatorMode::CHOICES),
             OptionSpec::new(
                 "axis_align_tolerance",
                 OptionKind::Float,
@@ -273,9 +320,89 @@ impl Scope {
     }
 }
 
+/// What a box's height says about the size of the text in it.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum FontSizeMode {
+    /// It is the font size itself, so that the tallest letters of a font fill
+    /// the box.
+    BoxHeight,
+    /// It is the height of a capital letter, which is what a box holds when
+    /// the text in it has neither ascenders nor descenders.
+    CapHeight,
+}
+
+impl FontSizeMode {
+    /// The words this mode is chosen by, the first being the default.
+    const CHOICES: &'static [&'static str] = &["box_height", "cap_height"];
+
+    /// Reads one of [`FontSizeMode::CHOICES`], as [`TextMode::read`] does.
+    fn read(text: &str) -> Self {
+        match text {
+            "cap_height" => Self::CapHeight,
+            _ => Self::BoxHeight,
+        }
+    }
+}
+
+/// How far above the bottom of a box its baseline is taken to be.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum BaselineMode {
+    /// The fixed fraction of the height the caller gave, whatever the line
+    /// says.
+    Ratio,
+    /// The bottom of the box for a line no character of which falls below the
+    /// baseline, and the fixed fraction for one where some character does.
+    Estimate,
+}
+
+impl BaselineMode {
+    /// The words this mode is chosen by, the first being the default.
+    const CHOICES: &'static [&'static str] = &["ratio", "estimate"];
+
+    /// Reads one of [`BaselineMode::CHOICES`], as [`TextMode::read`] does.
+    fn read(text: &str) -> Self {
+        match text {
+            "estimate" => Self::Estimate,
+            _ => Self::Ratio,
+        }
+    }
+}
+
+/// Whether what parts two pieces of text is an element of its own.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum SeparatorMode {
+    /// It is not, leaving the document as short as it can be.
+    None,
+    /// It is a `<tspan>`, which stands in the document whether or not a
+    /// browser makes anything of the character it holds.
+    Tspan,
+}
+
+impl SeparatorMode {
+    /// The words this mode is chosen by, the first being the default.
+    const CHOICES: &'static [&'static str] = &["none", "tspan"];
+
+    /// Reads one of [`SeparatorMode::CHOICES`], as [`TextMode::read`] does.
+    fn read(text: &str) -> Self {
+        match text {
+            "tspan" => Self::Tspan,
+            _ => Self::None,
+        }
+    }
+}
+
+/// The characters taken to fall below the baseline when a baseline is
+/// estimated: a rule of thumb for text in the Latin script rather than a fact
+/// about any one font.
+const DESCENDERS: &str = "gjpqyJQ,;()[]{}/\\|@_$";
+
 /// The ways SVG can stretch a word to the width of its box, the first being
 /// the default.
 const LENGTH_ADJUST: &[&str] = &["spacingAndGlyphs", "spacing"];
+
+/// A newline written so that it survives being read back out of the document
+/// without breaking the line the element is written on.
+const NEWLINE: &str = "&#10;";
 
 /// The options, read once into the shapes the writing wants them in.
 struct Settings<'a> {
@@ -284,8 +411,14 @@ struct Settings<'a> {
     font_family: &'a str,
     font_size_scope: Scope,
     font_scale: f32,
+    font_size_mode: FontSizeMode,
+    cap_height_ratio: f32,
+    baseline_mode: BaselineMode,
     baseline_ratio: f32,
     length_adjust: &'a str,
+    char_positions: bool,
+    space_mode: SeparatorMode,
+    line_break_mode: SeparatorMode,
     axis_align_tolerance: f32,
     min_confidence: f32,
     text_fill: &'a str,
@@ -309,8 +442,14 @@ impl<'a> Settings<'a> {
             font_family: options.str("font_family"),
             font_size_scope: Scope::read(options.str("font_size_scope")),
             font_scale: options.float("font_scale") as f32,
+            font_size_mode: FontSizeMode::read(options.str("font_size_mode")),
+            cap_height_ratio: options.float("cap_height_ratio") as f32,
+            baseline_mode: BaselineMode::read(options.str("baseline_mode")),
             baseline_ratio: options.float("baseline_ratio") as f32,
             length_adjust: options.str("length_adjust"),
+            char_positions: options.bool("char_positions"),
+            space_mode: SeparatorMode::read(options.str("space_mode")),
+            line_break_mode: SeparatorMode::read(options.str("line_break_mode")),
             axis_align_tolerance: options.float("axis_align_tolerance") as f32,
             min_confidence: options.float("min_confidence") as f32,
             text_fill: options.str("text_fill"),
@@ -469,8 +608,15 @@ fn write_text_layer(out: &mut Writer, layout: &Layout, settings: &Settings<'_>) 
     }
 
     out.open(&group.open());
-    for (index, line, words) in lines {
-        out.line(&text_element(index, line, &words, settings));
+    let last = lines.len() - 1;
+    for (position, (index, line, words)) in lines.iter().enumerate() {
+        out.line(&text_element(
+            *index,
+            line,
+            words,
+            position < last,
+            settings,
+        ));
     }
     out.close("g");
 }
@@ -479,11 +625,14 @@ fn write_text_layer(out: &mut Writer, layout: &Layout, settings: &Settings<'_>) 
 /// indentation of this document's own ends up inside the text.
 ///
 /// The words are separated by single spaces, which is what a browser copies
-/// out between them.
+/// out between them, or by spaces of their own laid over the gaps; a line
+/// with another after it may end with a newline, so that copying several
+/// lines out keeps them apart.
 fn text_element(
     index: usize,
     line: &Line,
     words: &[Placed<'_>],
+    followed: bool,
     settings: &Settings<'_>,
 ) -> String {
     let mut tag = Tag::new("text").attr("class", &settings.class("line"));
@@ -505,19 +654,69 @@ fn text_element(
     if settings.font_size_scope == Scope::Line {
         tag = tag.attr(
             "font-size",
-            &settings.num(line.rotated_box.height * settings.font_scale),
+            &settings.num(font_size(line.rotated_box.height, settings)),
         );
     }
 
     let mut element = tag.open();
     for (position, word) in words.iter().enumerate() {
         if position > 0 {
-            element.push(' ');
+            match settings.space_mode {
+                SeparatorMode::None => element.push(' '),
+                SeparatorMode::Tspan => {
+                    element.push_str(&space_tspan(&words[position - 1], word, settings));
+                }
+            }
         }
         element.push_str(&word.tspan(index, settings));
     }
+    if followed && settings.line_break_mode == SeparatorMode::Tspan {
+        element.push_str(&break_tspan(settings));
+    }
     element.push_str("</text>");
     element
+}
+
+/// Writes the space between two words as a `<tspan>` laid over the gap
+/// between their boxes, so that every browser copies a space out there and a
+/// selection running across the gap is unbroken.
+fn space_tspan(before: &Placed<'_>, after: &Placed<'_>, settings: &Settings<'_>) -> String {
+    let start = before.x + before.width;
+    let gap = (after.x - start).max(0.0);
+    let mut tag = Tag::new("tspan")
+        .attr("class", &settings.class("space"))
+        .attr("x", &settings.num(start))
+        .attr("y", &settings.num(before.baseline));
+    if settings.font_size_scope == Scope::Word {
+        tag = tag.attr(
+            "font-size",
+            &settings.num(font_size(before.height, settings)),
+        );
+    }
+    if gap > 0.0 {
+        tag = tag
+            .attr("textLength", &settings.num(gap))
+            .attr("lengthAdjust", settings.length_adjust);
+    }
+    tag.with_text(" ")
+}
+
+/// Writes the newline parting one line from the next as a `<tspan>` of its
+/// own, which the stylesheet's `white-space: pre` keeps intact.
+fn break_tspan(settings: &Settings<'_>) -> String {
+    Tag::new("tspan")
+        .attr("class", &settings.class("break"))
+        .with_raw(NEWLINE)
+}
+
+/// The font size text in a box of the given height is set at.
+fn font_size(height: f32, settings: &Settings<'_>) -> f32 {
+    let size = height * settings.font_scale;
+    let ratio = settings.cap_height_ratio;
+    match settings.font_size_mode {
+        FontSizeMode::CapHeight if ratio.is_finite() && ratio > 0.0 => size / ratio,
+        FontSizeMode::CapHeight | FontSizeMode::BoxHeight => size,
+    }
 }
 
 /// A word laid out in its line's un-rotated frame, ready to be written.
@@ -534,6 +733,9 @@ struct Placed<'a> {
     width: f32,
     /// The height of its box, which its font size comes from.
     height: f32,
+    /// Where each of its characters starts, when they are to be set one by
+    /// one and the recogniser said where they are.
+    char_x: Option<Vec<f32>>,
 }
 
 impl Placed<'_> {
@@ -544,16 +746,24 @@ impl Placed<'_> {
         if settings.ids {
             tag = tag.attr("id", &format!("word-{line}-{}", self.index));
         }
-        tag = tag
-            .attr("x", &settings.num(self.x))
-            .attr("y", &settings.num(self.baseline));
+        tag = match &self.char_x {
+            Some(starts) => tag.attr(
+                "x",
+                &starts
+                    .iter()
+                    .map(|start| settings.num(*start))
+                    .collect::<Vec<_>>()
+                    .join(" "),
+            ),
+            None => tag.attr("x", &settings.num(self.x)),
+        };
+        tag = tag.attr("y", &settings.num(self.baseline));
         if settings.font_size_scope == Scope::Word {
-            tag = tag.attr(
-                "font-size",
-                &settings.num(self.height * settings.font_scale),
-            );
+            tag = tag.attr("font-size", &settings.num(font_size(self.height, settings)));
         }
-        if self.width > 0.0 {
+        // A word set out character by character is already as wide as its
+        // box, and stretching it again would undo that.
+        if self.char_x.is_none() && self.width > 0.0 {
             tag = tag
                 .attr("textLength", &settings.num(self.width))
                 .attr("lengthAdjust", settings.length_adjust);
@@ -570,12 +780,23 @@ impl Placed<'_> {
 fn placed_words<'a>(line: &'a Line, settings: &Settings<'_>) -> Vec<Placed<'a>> {
     let angle = rotation(line.rotated_box, settings);
     let centre = (line.rotated_box.cx, line.rotated_box.cy);
+    let baseline_ratio = baseline_ratio(&line.text, settings);
 
-    let whole_line = [(line.text.as_str(), line.rotated_box, line.confidence)];
-    let words = line
-        .words
-        .iter()
-        .map(|word| (word.text.as_str(), word.rotated_box, word.confidence));
+    let nothing: &[Char] = &[];
+    let whole_line = [(
+        line.text.as_str(),
+        line.rotated_box,
+        line.confidence,
+        nothing,
+    )];
+    let words = line.words.iter().map(|word| {
+        (
+            word.text.as_str(),
+            word.rotated_box,
+            word.confidence,
+            word.chars.as_slice(),
+        )
+    });
     let boxes: Vec<_> = if line.words.is_empty() {
         whole_line.to_vec()
     } else {
@@ -585,22 +806,73 @@ fn placed_words<'a>(line: &'a Line, settings: &Settings<'_>) -> Vec<Placed<'a>> 
     boxes
         .into_iter()
         .enumerate()
-        .filter(|(_, (text, _, confidence))| {
+        .filter(|(_, (text, _, confidence, _))| {
             !text.trim().is_empty()
                 && !confidence.is_some_and(|confidence| confidence < settings.min_confidence)
         })
-        .map(|(index, (text, box_, _))| {
+        .map(|(index, (text, box_, _, chars))| {
             let (cx, cy) = rotate_point((box_.cx, box_.cy), -angle, centre);
             Placed {
                 index,
                 text,
                 x: cx - box_.width / 2.0,
-                baseline: cy + box_.height * (0.5 - settings.baseline_ratio),
+                baseline: cy + box_.height * (0.5 - baseline_ratio),
                 width: box_.width.max(0.0),
                 height: box_.height,
+                char_x: settings
+                    .char_positions
+                    .then(|| char_starts(text, chars, angle, centre))
+                    .flatten(),
             }
         })
         .collect()
+}
+
+/// How far above the bottom of a line's boxes their baseline sits, as a
+/// fraction of their height.
+///
+/// Estimating it rests on what the line says: a box drawn around text that
+/// never dips below the baseline ends at the baseline, and only a line some
+/// character of which descends needs room left underneath.
+fn baseline_ratio(text: &str, settings: &Settings<'_>) -> f32 {
+    let descends = || text.chars().any(|character| DESCENDERS.contains(character));
+    match settings.baseline_mode {
+        BaselineMode::Ratio => settings.baseline_ratio,
+        BaselineMode::Estimate if descends() => settings.baseline_ratio,
+        BaselineMode::Estimate => 0.0,
+    }
+}
+
+/// Where each character of a word starts along its line, or `None` when the
+/// recogniser said nothing about the characters or said something that does
+/// not line up with the text.
+///
+/// A character starts at the corner of its box the line reaches first,
+/// measured along the direction the line reads in, which for a level line is
+/// simply the left edge of the box.
+fn char_starts(text: &str, chars: &[Char], angle: f32, centre: (f32, f32)) -> Option<Vec<f32>> {
+    if chars.len() != text.chars().count() {
+        return None;
+    }
+    // The characters the document cannot carry are dropped from the text, so
+    // their positions have to go with them or every position after would be
+    // given to the wrong character.
+    let starts: Vec<_> = text
+        .chars()
+        .zip(chars)
+        .filter(|(character, _)| !is_forbidden(*character))
+        .map(|(_, character)| projected_start(character.bbox, angle, centre))
+        .collect();
+    (!starts.is_empty()).then_some(starts)
+}
+
+/// Where a box begins along a line reading at `angle`, in the frame that
+/// line's rotation is undone in.
+fn projected_start(rect: Rect, angle: f32, centre: (f32, f32)) -> f32 {
+    let (sin, cos) = angle.to_radians().sin_cos();
+    let x = if cos >= 0.0 { rect.x } else { rect.right() };
+    let y = if sin >= 0.0 { rect.y } else { rect.bottom() };
+    centre.0 + (x - centre.0) * cos + (y - centre.1) * sin
 }
 
 /// Writes the group outlining the boxes the text was read from.
@@ -777,6 +1049,12 @@ impl<'a> Tag<'a> {
     fn with_text(self, text: &str) -> String {
         format!("{}>{}</{}>", self.text, escape(text, false), self.name)
     }
+
+    /// The whole of an element holding markup this module has already made
+    /// safe to write, such as a character reference.
+    fn with_raw(self, markup: &str) -> String {
+        format!("{}>{}</{}>", self.text, markup, self.name)
+    }
 }
 
 /// The document as it is built, a line at a time, indented by how deep in it
@@ -823,7 +1101,7 @@ impl Writer {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::layout::{Rect, Word};
+    use crate::layout::Word;
 
     /// The smallest PNG that decoders accept: one opaque black pixel.
     const PIXEL_PNG: &[u8] = &[
@@ -842,6 +1120,27 @@ mod tests {
             chars: Vec::new(),
             confidence,
         }
+    }
+
+    /// The same word, with the characters of `text` laid across its box in
+    /// the given widths, as a recogniser that says where each one is gives.
+    fn lettered(text: &str, x: f32, widths: &[f32]) -> Word {
+        let mut word = word(text, x, widths.iter().sum(), Some(0.99));
+        let mut left = x;
+        word.chars = text
+            .chars()
+            .zip(widths)
+            .map(|(character, width)| {
+                let bbox = Rect::new(left, 10.0, *width, 20.0);
+                left += width;
+                Char {
+                    text: character.to_string(),
+                    bbox,
+                    confidence: None,
+                }
+            })
+            .collect();
+        word
     }
 
     fn line(words: Vec<Word>) -> Line {
@@ -987,6 +1286,173 @@ mod tests {
         assert!(
             render_layout(&layout, Options::new().with("image_mode", "none"))
                 .contains(r#"transform="rotate(0.6 60 20)""#),
+        );
+    }
+
+    #[test]
+    fn characters_can_be_set_where_the_recogniser_saw_them() {
+        let mut layout = sample();
+        layout.lines[0].words[0] = lettered("Hello", 10.0, &[12.0, 8.0, 5.0, 5.0, 15.0]);
+        let svg = render_layout(
+            &layout,
+            Options::new()
+                .with("image_mode", "none")
+                .with("char_positions", true),
+        );
+        // Each character is placed where its own box begins, and the word is
+        // no longer stretched over the box as a whole.
+        assert!(svg.contains(r#"x="10 22 30 35 40" y="26""#), "{svg}");
+        assert!(!svg.contains("textLength=\"45\""), "{svg}");
+        // The word beside it, whose characters the recogniser did not give,
+        // is stretched as before.
+        assert!(
+            svg.contains(r#"x="60" y="26" font-size="20" textLength="50""#),
+            "{svg}"
+        );
+    }
+
+    #[test]
+    fn characters_of_a_turned_line_are_set_along_the_line() {
+        let mut layout = sample();
+        layout.lines[0].words[0] = lettered("Hello", 10.0, &[12.0, 8.0, 5.0, 5.0, 15.0]);
+        let centre = (60.0, 20.0);
+        layout.lines[0].rotated_box = RotatedBox::new(60.0, 20.0, 100.0, 20.0, 30.0);
+        for word in &mut layout.lines[0].words {
+            let box_ = word.rotated_box;
+            let (cx, cy) = rotate_point((box_.cx, box_.cy), 30.0, centre);
+            word.rotated_box = RotatedBox::new(cx, cy, box_.width, box_.height, 30.0);
+            for character in &mut word.chars {
+                let bbox = character.bbox;
+                let (cx, cy) = rotate_point(
+                    (bbox.x + bbox.width / 2.0, bbox.y + bbox.height / 2.0),
+                    30.0,
+                    centre,
+                );
+                character.bbox = Rect::new(
+                    cx - bbox.width / 2.0,
+                    cy - bbox.height / 2.0,
+                    bbox.width,
+                    bbox.height,
+                );
+            }
+        }
+
+        let svg = render_layout(
+            &layout,
+            Options::new()
+                .with("image_mode", "none")
+                .with("char_positions", true)
+                .with("precision", 3_i64),
+        );
+        let starts: Vec<f32> = svg
+            .split_once(r#"<tspan class="scribe-word" x=""#)
+            .and_then(|(_, rest)| rest.split_once('"'))
+            .expect("the word carries a position for each character")
+            .0
+            .split(' ')
+            .map(|start| start.parse().expect("a position is a number"))
+            .collect();
+        assert_eq!(starts.len(), 5, "{svg}");
+        // Undoing the line's turn puts the characters back in reading order,
+        // each one starting within a pixel of where the one before it ended,
+        // which is as close as boxes measured square to the image can say
+        // where a turned character begins.
+        for (gap, width) in starts
+            .windows(2)
+            .map(|pair| pair[1] - pair[0])
+            .zip([12.0, 8.0, 5.0, 5.0])
+        {
+            assert!((gap - width as f32).abs() < 1.0, "{starts:?}");
+        }
+    }
+
+    #[test]
+    fn a_baseline_can_be_estimated_from_what_the_line_says() {
+        let settled = |text: &str| {
+            let mut layout = sample();
+            layout.lines[0].text = text.to_string();
+            render_layout(
+                &layout,
+                Options::new()
+                    .with("image_mode", "none")
+                    .with("baseline_mode", "estimate"),
+            )
+        };
+
+        // Nothing in "Hello World" falls below the baseline, so the bottom of
+        // the box is the baseline.
+        assert!(
+            settled("Hello World").contains(r#"x="10" y="30""#),
+            "{}",
+            settled("Hello World")
+        );
+        // "jump" descends, so the box keeps room under it for the tail.
+        assert!(
+            settled("Hello jump").contains(r#"x="10" y="26""#),
+            "{}",
+            settled("Hello jump")
+        );
+    }
+
+    #[test]
+    fn a_font_size_can_be_read_as_the_height_of_a_capital() {
+        let svg = render(
+            Options::new()
+                .with("image_mode", "none")
+                .with("font_size_mode", "cap_height"),
+        );
+        // A capital stands seven tenths of the size it is set at, so filling
+        // a box twenty pixels tall with capitals takes a larger size.
+        assert!(svg.contains(r#"font-size="28.57""#), "{svg}");
+
+        let told = render(
+            Options::new()
+                .with("image_mode", "none")
+                .with("font_size_mode", "cap_height")
+                .with("cap_height_ratio", 0.5),
+        );
+        assert!(told.contains(r#"font-size="40""#), "{told}");
+    }
+
+    #[test]
+    fn the_space_between_two_words_can_be_laid_over_the_gap() {
+        let svg = render(
+            Options::new()
+                .with("image_mode", "none")
+                .with("space_mode", "tspan"),
+        );
+        // The first word ends at 55 and the second begins at 60, so the space
+        // is stretched over the five pixels between them.
+        assert!(
+            svg.contains(
+                r#"<tspan class="scribe-space" x="55" y="26" font-size="20" textLength="5" lengthAdjust="spacingAndGlyphs"> </tspan>"#
+            ),
+            "{svg}"
+        );
+        assert!(!svg.contains("</tspan> <tspan"), "{svg}");
+    }
+
+    #[test]
+    fn a_newline_can_part_one_line_from_the_next() {
+        let mut layout = sample();
+        layout
+            .lines
+            .push(line(vec![word("Again", 10.0, 45.0, None)]));
+        let svg = render_layout(
+            &layout,
+            Options::new()
+                .with("image_mode", "none")
+                .with("line_break_mode", "tspan"),
+        );
+        assert!(
+            svg.contains(r#"<tspan class="scribe-break">&#10;</tspan></text>"#),
+            "{svg}"
+        );
+        // Only between the lines: the last one has nothing to be parted from.
+        assert_eq!(svg.matches("scribe-break").count(), 1, "{svg}");
+        assert!(
+            !render_layout(&layout, Options::new().with("image_mode", "none"))
+                .contains("scribe-break")
         );
     }
 
