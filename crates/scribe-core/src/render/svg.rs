@@ -161,12 +161,18 @@ impl Renderer for SvgRenderer {
                 "text_fill",
                 OptionKind::Str,
                 OptionValue::Str("#000".to_string()),
-                "The colour drawn text is filled with, and that selected text shows in.",
+                "The colour drawn text is filled with.",
+            ),
+            OptionSpec::new(
+                "selection_fill",
+                OptionKind::Str,
+                OptionValue::Str("HighlightText".to_string()),
+                "The colour selected text shows in; a system colour follows the reader's own.",
             ),
             OptionSpec::new(
                 "selection_background",
                 OptionKind::Str,
-                OptionValue::Str("rgba(0, 90, 255, 0.35)".to_string()),
+                OptionValue::Str("color-mix(in srgb, Highlight 35%, transparent)".to_string()),
                 "The colour behind selected text, so that selecting invisible text shows.",
             ),
             OptionSpec::new(
@@ -422,6 +428,7 @@ struct Settings<'a> {
     axis_align_tolerance: f32,
     min_confidence: f32,
     text_fill: &'a str,
+    selection_fill: &'a str,
     selection_background: &'a str,
     debug_line_stroke: &'a str,
     debug_word_stroke: &'a str,
@@ -453,6 +460,7 @@ impl<'a> Settings<'a> {
             axis_align_tolerance: options.float("axis_align_tolerance") as f32,
             min_confidence: options.float("min_confidence") as f32,
             text_fill: options.str("text_fill"),
+            selection_fill: options.str("selection_fill"),
             selection_background: options.str("selection_background"),
             debug_line_stroke: options.str("debug_line_stroke"),
             debug_word_stroke: options.str("debug_word_stroke"),
@@ -496,6 +504,7 @@ fn document(
         root = root.attr("xmlns:xlink", XLINK_NS);
     }
     root = root
+        .attr("class", &settings.class(ROOT_CLASS))
         .attr("width", &width.to_string())
         .attr("height", &height.to_string())
         .attr("viewBox", &format!("0 0 {width} {height}"))
@@ -566,17 +575,29 @@ fn image_href(image: &ImageSource<'_>, mode: ImageMode) -> Result<Option<String>
 }
 
 /// The stylesheet that makes a transparent text layer behave like text.
+///
+/// The document opts into both colour schemes, so that the system colours the
+/// selection is drawn in resolve to whichever one the reader is in, and so
+/// that a document opened on its own is drawn on a canvas of the same scheme
+/// rather than on white. The opt-in is hung off the root element's class
+/// rather than the element itself, leaving the colour scheme of a page the
+/// document is placed inline in alone.
 fn style_rules(settings: &Settings<'_>) -> Vec<String> {
+    let root = escape(&settings.class(ROOT_CLASS), false);
     let text = escape(&settings.class(TEXT_CLASS), false);
     vec![
+        format!(".{root} {{ color-scheme: light dark; }}"),
         format!(".{text} {{ user-select: text; -webkit-user-select: text; white-space: pre; }}"),
         format!(
             ".{text}::selection, .{text} ::selection {{ fill: {}; background: {}; }}",
-            escape(settings.text_fill, false),
+            escape(settings.selection_fill, false),
             escape(settings.selection_background, false),
         ),
     ]
 }
+
+/// The class the root element carries, and the colour scheme hangs off.
+const ROOT_CLASS: &str = "root";
 
 /// The class the text layer's group carries, and the stylesheet hangs off.
 const TEXT_CLASS: &str = "text";
@@ -1513,6 +1534,33 @@ mod tests {
         assert!(svg.contains(r#"<g class="ocr-text""#), "{svg}");
         assert!(svg.contains(".ocr-text ::selection"), "{svg}");
         assert!(!svg.contains("scribe-"), "{svg}");
+    }
+
+    #[test]
+    fn selection_is_drawn_in_the_readers_own_colours() {
+        let svg = render(Options::new().with("image_mode", "none"));
+        assert!(
+            svg.contains(".scribe-root { color-scheme: light dark; }"),
+            "{svg}"
+        );
+        assert!(
+            svg.contains(r#"<svg xmlns="http://www.w3.org/2000/svg" class="scribe-root""#),
+            "{svg}"
+        );
+        assert!(
+            svg.contains(
+                "fill: HighlightText; background: color-mix(in srgb, Highlight 35%, transparent);"
+            ),
+            "{svg}"
+        );
+
+        let chosen = render(
+            Options::new()
+                .with("image_mode", "none")
+                .with("selection_fill", "#fff")
+                .with("selection_background", "#036"),
+        );
+        assert!(chosen.contains("fill: #fff; background: #036;"), "{chosen}");
     }
 
     #[test]

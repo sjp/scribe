@@ -4,10 +4,10 @@ expression: output
 ---
 <div class="scribe-overlay">
   <style>
-    .scribe-overlay { position: relative; display: inline-block; line-height: 0 }
+    .scribe-overlay { position: relative; display: inline-block; line-height: 0; color-scheme: light dark }
     .scribe-overlay img { display: block; max-width: 100% }
     .scribe-overlay span { position: absolute; color: transparent; white-space: pre; line-height: 1; transform-origin: center }
-    .scribe-overlay span::selection { color: #000; background: rgba(0, 90, 255, 0.35) }
+    .scribe-overlay span::selection { color: HighlightText; background: color-mix(in srgb, Highlight 35%, transparent) }
   </style>
   <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAANwAAACMCAAAAAAyv5iqAAACj0lEQVR4Ae3AA6AkWZbG8f937o3IzKdyS2Oubdu2bdu2bdu2bWmMnpZKr54yMyLu+Xa3anqmhztr1a+a/5MACP5vAiD4vwmA4P8mAIL/mwAI/m8CIPi/CYDg/yYAgv+bAAj+bwIg+L8JgOD/JgCC/5sACP5vAiD4vwmA4P8mAIL/mwAI/m8CIPi/CYDg/yYAgv+bAAj+bwIg+L8JgOD/JgCC/5sACP5vAiD4vwmA4P8mAIL/mwAI/m8CIPi/CYDg/yYAgv+bAAj+bwIg+L8JgOD/JgCC/5sACP5vAiD4vwmA4P8mAIL/mwAI/m8CIPi/CYDg/yYAgv+bAAj+bwIg+L8JgOD/JgCC/5sACP5vAiD4vwmA4P8mAIL/mwAI/m8CIPi/CYDg/yYAgv+bAAj+bwIg+L8JgOD/JgCC/5sACP5vAiD4vwmA4P8mAIL/mwAI/m8CIPi/CYDg/yYAgv+bAAj+bwIg+L8JgOD/JgCC/5sACP5vAiD4vwmA4P8mAIL/mwAI/m8CIPi/CYDg/yYAgv+bAAj+bwIg+L8JgOD/JgCC/5sACP5vAiD4vwmA4P8mAIL/mwAI/m8CIPi/CYDg/yYAgv+bAAj+bwIg+L8JgOD/JgCC/5sACP5vAiD4vwmA4P8mAIL/mwAI/m8CIPi/CYDg/yYAgv+bAAj+bwIg+L8JgOD/JgCC/5sACP5vAiD4vwmA4P8mAIL/mwAI/m8CIPi/CYDg/yYAgv+bAAj+bwIg+L8JgOD/JgCC/5sACP5vAiD4vwmA4P8mAIL/mwAI/m8CIPi/CYDg/yYAgv+bAAj+bwIg+L8JgOD/JgCC/5sACP5vAiD4vwmA4P8mAIL/mwAI/m8CIPi/CYDg/yYA/hFo6QIaftzMegAAAABJRU5ErkJggg==" width="220" height="140" alt="" />
 </div>

@@ -3,10 +3,11 @@ source: crates/scribe-core/tests/fixtures.rs
 expression: output
 ---
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="480" height="280" viewBox="0 0 480 280" role="img" aria-label="Reading Machines The quick brown fox jumps over the lazy dog, and does it again on the next line. Printed in 1996 at Leyden.">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="scribe-root" width="480" height="280" viewBox="0 0 480 280" role="img" aria-label="Reading Machines The quick brown fox jumps over the lazy dog, and does it again on the next line. Printed in 1996 at Leyden.">
   <style>
+    .scribe-root { color-scheme: light dark; }
     .scribe-text { user-select: text; -webkit-user-select: text; white-space: pre; }
-    .scribe-text::selection, .scribe-text ::selection { fill: #000; background: rgba(0, 90, 255, 0.35); }
+    .scribe-text::selection, .scribe-text ::selection { fill: HighlightText; background: color-mix(in srgb, Highlight 35%, transparent); }
   </style>
   <image href="paragraph.png" width="480" height="280"/>
   <g class="scribe-text" font-family="sans-serif" fill="transparent">

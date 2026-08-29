@@ -25,7 +25,10 @@ Versioning](https://semver.org/spec/v2.0.0.html).
   transparent, visible or drawn with the boxes it came from; the image
   embedded, linked or left out; and the fit of the layer to the glyphs beneath
   it settled by font size mode, baseline mode, per-character placement, length
-  adjustment and separator elements.
+  adjustment and separator elements. The document opts into both colour
+  schemes and draws selected text in the reader's own system colours, so that
+  a selection, and the canvas a document opened on its own sits on, follow
+  light and dark mode without the document naming a colour for either.
 - The `template` renderer, writing whatever a Jinja template describes, with
   callers' own templates and values accepted and twelve built in: text layers
   to lay over an image, written as positioned HTML or as SVG; transcripts an

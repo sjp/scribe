@@ -91,10 +91,11 @@ scribe render page.layout.json --no-image --opt precision=1
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="284" height="96" viewBox="0 0 284 96" role="img" aria-label="Hello World">
+<svg xmlns="http://www.w3.org/2000/svg" class="scribe-root" width="284" height="96" viewBox="0 0 284 96" role="img" aria-label="Hello World">
   <style>
+    .scribe-root { color-scheme: light dark; }
     .scribe-text { user-select: text; -webkit-user-select: text; white-space: pre; }
-    .scribe-text::selection, .scribe-text ::selection { fill: #000; background: rgba(0, 90, 255, 0.35); }
+    .scribe-text::selection, .scribe-text ::selection { fill: HighlightText; background: color-mix(in srgb, Highlight 35%, transparent); }
   </style>
   <g class="scribe-text" font-family="sans-serif" fill="transparent">
     <text class="scribe-line"><tspan class="scribe-word" x="26" y="55.4" font-size="33" textLength="105" lengthAdjust="spacingAndGlyphs">Hello</tspan> <tspan class="scribe-word" x="146" y="56" font-size="35" textLength="111" lengthAdjust="spacingAndGlyphs">World</tspan></text>

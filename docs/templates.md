@@ -160,19 +160,21 @@ from. This is the shape a browser extension injects into a page, and the same
 approach a PDF viewer's text layer takes. Find-in-page, selection and screen
 readers all work; the `alt` attribute carries the whole text as well.
 
-Takes `var.text_fill` and `var.selection_background`, the colours selected text
-is drawn in; `var.char_positions`, to give every character a span on its own
-pixels rather than stretching a word across its box; and `var.font_size_mode`
-(`box_height` or `cap_height`) with `var.cap_height_ratio`, to read a box as
-the height of a capital letter.
+Takes `var.selection_fill` and `var.selection_background`, the colours selected
+text is drawn in, both of them a system colour by default so that a selection
+looks like every other selection the reader makes, in light mode and in dark;
+`var.char_positions`, to give every character a span on its own pixels rather
+than stretching a word across its box; and `var.font_size_mode` (`box_height`
+or `cap_height`) with `var.cap_height_ratio`, to read a box as the height of a
+capital letter.
 
 ```html
 <div class="scribe-overlay">
   <style>
-    .scribe-overlay { position: relative; display: inline-block; line-height: 0 }
+    .scribe-overlay { position: relative; display: inline-block; line-height: 0; color-scheme: light dark }
     .scribe-overlay img { display: block; max-width: 100% }
     .scribe-overlay span { position: absolute; color: transparent; white-space: pre; line-height: 1; transform-origin: center }
-    .scribe-overlay span::selection { color: #000; background: rgba(0, 90, 255, 0.35) }
+    .scribe-overlay span::selection { color: HighlightText; background: color-mix(in srgb, Highlight 35%, transparent) }
   </style>
   <img src="hello.png" width="284" height="96" alt="Hello World" />
   <span style="left: 26px; top: 29px; width: 105px; height: 33px; font-size: 33px; transform: rotate(0deg)">Hello</span>
@@ -200,7 +202,7 @@ name — save that the image is never carried in the layer, since the page's own
     .scribe-overlay svg { position: absolute; left: 0; top: 0; width: 100%; height: 100% }
   </style>
   <img src="hello.png" width="284" height="96" alt="" />
-  <svg xmlns="http://www.w3.org/2000/svg" width="284" height="96" viewBox="0 0 284 96" role="img" aria-label="Hello World">
+  <svg xmlns="http://www.w3.org/2000/svg" class="scribe-root" width="284" height="96" viewBox="0 0 284 96" role="img" aria-label="Hello World">
     …
   </svg>
 </div>
@@ -220,7 +222,7 @@ is not yours to know.
 Takes `var.overlay`, `spans` (the default) or `svg`, for whether the layer is
 positioned HTML or the SVG renderer's own; `var.id`, the id of the transcript;
 and the options of the templates it says the same as — `var.class_prefix`,
-`var.text_fill`, `var.selection_background`, `var.char_positions`,
+`var.selection_fill`, `var.selection_background`, `var.char_positions`,
 `var.font_size_mode` and `var.cap_height_ratio`.
 
 ```html

@@ -4,10 +4,10 @@ expression: output
 ---
 <div class="scribe-overlay">
   <style>
-    .scribe-overlay { position: relative; display: inline-block; line-height: 0 }
+    .scribe-overlay { position: relative; display: inline-block; line-height: 0; color-scheme: light dark }
     .scribe-overlay img { display: block; max-width: 100% }
     .scribe-overlay span { position: absolute; color: transparent; white-space: pre; line-height: 1; transform-origin: center }
-    .scribe-overlay span::selection { color: #000; background: rgba(0, 90, 255, 0.35) }
+    .scribe-overlay span::selection { color: HighlightText; background: color-mix(in srgb, Highlight 35%, transparent) }
   </style>
   <img src="rotated.png" width="420" height="320" alt="Tilted line S 2 i" />
   <span style="left: 33.63px; top: 71.29px; width: 94.29px; height: 38px; font-size: 38px"><span style="left: 4.37px; top: -5.29px; width: 22px; height: 31px">T</span><span style="left: 26.37px; top: -1.29px; width: 11px; height: 30px">i</span><span style="left: 37.37px; top: 1.71px; width: 8px; height: 29px">l</span><span style="left: 45.37px; top: 3.71px; width: 11px; height: 30px">t</span><span style="left: 56.37px; top: 6.71px; width: 22px; height: 33px">e</span><span style="left: 78.37px; top: 12.71px; width: 11px; height: 33px">d</span></span>

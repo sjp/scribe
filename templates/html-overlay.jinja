@@ -4,12 +4,13 @@
   span per word placed on the pixels it was read from, so that the text can
   be selected, searched and read aloud.
 
-  Takes `var.text_fill` and `var.selection_background`, the colours selected
-  text is drawn in; `var.char_positions`, to give every character a span on
-  its own pixels rather than stretching a word across its box; and
-  `var.font_size_mode`, `box_height` or `cap_height`, with
-  `var.cap_height_ratio`, to read a box as the height of a capital letter,
-  which suits text written in capitals.
+  Takes `var.selection_fill` and `var.selection_background`, the colours
+  selected text is drawn in, both of them a system colour by default so that
+  a selection looks like every other selection the reader makes;
+  `var.char_positions`, to give every character a span on its own pixels
+  rather than stretching a word across its box; and `var.font_size_mode`,
+  `box_height` or `cap_height`, with `var.cap_height_ratio`, to read a box as
+  the height of a capital letter, which suits text written in capitals.
 -#}
 {%- set source = image.data_uri or image.href -%}
 {%- set per_char = vars.char_positions | default(false) | flag -%}
@@ -19,10 +20,10 @@
 {%- set box_em = cap_ratio if cap_height and cap_ratio > 0 else 1 -%}
 <div class="scribe-overlay">
   <style>
-    .scribe-overlay { position: relative; display: inline-block; line-height: 0 }
+    .scribe-overlay { position: relative; display: inline-block; line-height: 0; color-scheme: light dark }
     .scribe-overlay img { display: block; max-width: 100% }
     .scribe-overlay span { position: absolute; color: transparent; white-space: pre; line-height: 1; transform-origin: center }
-    .scribe-overlay span::selection { color: {{ vars.text_fill | default("#000") }}; background: {{ vars.selection_background | default("rgba(0, 90, 255, 0.35)") }} }
+    .scribe-overlay span::selection { color: {{ vars.selection_fill | default("HighlightText") }}; background: {{ vars.selection_background | default("color-mix(in srgb, Highlight 35%, transparent)") }} }
   </style>
 {%- if source %}
   <img src="{{ source }}" width="{{ image.width }}" height="{{ image.height }}" alt="{{ text | replace("\n", " ") }}" />

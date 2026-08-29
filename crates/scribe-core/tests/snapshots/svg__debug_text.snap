@@ -3,10 +3,11 @@ source: crates/scribe-core/tests/svg.rs
 expression: "linked(&hello_world(), Options::new().with(\"text_mode\", \"debug\"))"
 ---
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="284" height="96" viewBox="0 0 284 96" role="img" aria-label="Hello World">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="scribe-root" width="284" height="96" viewBox="0 0 284 96" role="img" aria-label="Hello World">
   <style>
+    .scribe-root { color-scheme: light dark; }
     .scribe-text { user-select: text; -webkit-user-select: text; white-space: pre; }
-    .scribe-text::selection, .scribe-text ::selection { fill: #000; background: rgba(0, 90, 255, 0.35); }
+    .scribe-text::selection, .scribe-text ::selection { fill: HighlightText; background: color-mix(in srgb, Highlight 35%, transparent); }
   </style>
   <image href="hello.png" width="284" height="96"/>
   <g class="scribe-text" font-family="sans-serif" fill="#000">

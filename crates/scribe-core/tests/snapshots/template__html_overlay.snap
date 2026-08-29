@@ -4,10 +4,10 @@ expression: "render(\"html-overlay\", Options::new())"
 ---
 <div class="scribe-overlay">
   <style>
-    .scribe-overlay { position: relative; display: inline-block; line-height: 0 }
+    .scribe-overlay { position: relative; display: inline-block; line-height: 0; color-scheme: light dark }
     .scribe-overlay img { display: block; max-width: 100% }
     .scribe-overlay span { position: absolute; color: transparent; white-space: pre; line-height: 1; transform-origin: center }
-    .scribe-overlay span::selection { color: #000; background: rgba(0, 90, 255, 0.35) }
+    .scribe-overlay span::selection { color: HighlightText; background: color-mix(in srgb, Highlight 35%, transparent) }
   </style>
   <img src="page.png" width="284" height="140" alt="Hello World Tilted &amp; &lt;set&gt;" />
   <span style="left: 28px; top: 31px; width: 98px; height: 32px; font-size: 32px; transform: rotate(0deg)">Hello</span>

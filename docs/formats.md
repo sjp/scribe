@@ -62,10 +62,11 @@ scribe render page.layout.json --no-image --opt precision=1
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="284" height="96" viewBox="0 0 284 96" role="img" aria-label="Hello World">
+<svg xmlns="http://www.w3.org/2000/svg" class="scribe-root" width="284" height="96" viewBox="0 0 284 96" role="img" aria-label="Hello World">
   <style>
+    .scribe-root { color-scheme: light dark; }
     .scribe-text { user-select: text; -webkit-user-select: text; white-space: pre; }
-    .scribe-text::selection, .scribe-text ::selection { fill: #000; background: rgba(0, 90, 255, 0.35); }
+    .scribe-text::selection, .scribe-text ::selection { fill: HighlightText; background: color-mix(in srgb, Highlight 35%, transparent); }
   </style>
   <g class="scribe-text" font-family="sans-serif" fill="transparent">
     <text class="scribe-line"><tspan class="scribe-word" x="26" y="55.4" font-size="33" textLength="105" lengthAdjust="spacingAndGlyphs">Hello</tspan> <tspan class="scribe-word" x="146" y="56" font-size="35" textLength="111" lengthAdjust="spacingAndGlyphs">World</tspan></text>
@@ -87,6 +88,26 @@ or `<iframe>`.
 - `debug` — the text is drawn and the boxes it came from are outlined, lines in
   `debug_line_stroke` and words in `debug_word_stroke`. This is the mode to
   look at when a layer sits wrongly.
+
+### What a selection looks like: `selection_fill`, `selection_background`
+
+Selected text is drawn in the reader's own colours rather than colours of the
+document's choosing. `selection_fill` defaults to `HighlightText` and
+`selection_background` to `Highlight` mixed down to 35% — the system colours a
+browser selects with — so a selection here looks like a selection anywhere
+else, in light mode and in dark. The mix is what lets the pixels of the word
+beneath a selection still show through, the way a PDF viewer's highlight does.
+
+The root element carries `color-scheme: light dark`, which is what lets those
+colours resolve to the dark ones when the reader is in dark mode. It also
+settles what a document opened on its own is drawn on: without it the canvas
+around the picture stays white however dark the browser is. The rule hangs off
+the root's class rather than the element itself, so an SVG placed inline in a
+page cannot change the colour scheme that page chose for itself.
+
+Note that the image underneath is unchanged either way: a scan of a white page
+stays white in dark mode. It is the selection and the canvas that follow the
+reader, not the picture.
 
 ### Where the image comes from: `image_mode`
 
@@ -141,8 +162,9 @@ How closely the text layer follows the glyphs under it is a choice:
 | `line_break_mode` | `none`, `tspan` | `none` | Whether one line is parted from the next by a `<tspan>` carrying a newline, so that copying several lines out keeps them on separate lines. |
 | `axis_align_tolerance` | a number | `0.5` | How many degrees off level a line may be before it is given a rotation. |
 | `min_confidence` | a number | `0` | Leave out words the recogniser is less sure of than this, from 0 to 1. |
-| `text_fill` | text | `#000` | The colour drawn text is filled with, and that selected text shows in. |
-| `selection_background` | text | `rgba(0, 90, 255, 0.35)` | The colour behind selected text, so that selecting invisible text shows. |
+| `text_fill` | text | `#000` | The colour drawn text is filled with. |
+| `selection_fill` | text | `HighlightText` | The colour selected text shows in; a system colour follows the reader's own. |
+| `selection_background` | text | `color-mix(in srgb, Highlight 35%, transparent)` | The colour behind selected text, so that selecting invisible text shows. |
 | `debug_line_stroke` | text | `#06c` | The colour line boxes are outlined in. |
 | `debug_word_stroke` | text | `#c00` | The colour word boxes are outlined in. |
 | `class_prefix` | text | `scribe-` | What every class name in the document starts with; a valid CSS identifier prefix. |
