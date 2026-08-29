@@ -17,7 +17,7 @@ use crate::layout::{Line, RotatedBox};
 
 use super::{
     Layout, OptionKind, OptionSpec, OptionValue, Options, RenderError, RenderOutput, Renderer,
-    ResolvedOptions,
+    ResolvedOptions, number,
 };
 
 /// The name this renderer is registered under.
@@ -334,7 +334,7 @@ impl<'a> Settings<'a> {
 
     /// A number as the document writes it.
     fn num(&self, value: f32) -> String {
-        number(value, self.precision)
+        number(value as f64, self.precision)
     }
 }
 
@@ -708,26 +708,6 @@ fn aria_label(layout: &Layout, settings: &Settings<'_>) -> String {
     label.chars().take(ARIA_LABEL_CHARS).collect()
 }
 
-/// Writes a number with at most `precision` decimals, dropping the trailing
-/// zeros so that whole pixels read as whole numbers.
-///
-/// A number SVG cannot hold is written as zero rather than as `NaN`, which no
-/// renderer would accept.
-fn number(value: f32, precision: usize) -> String {
-    if !value.is_finite() {
-        return "0".to_string();
-    }
-    let text = format!("{value:.precision$}");
-    let trimmed = match text.split_once('.') {
-        Some(_) => text.trim_end_matches('0').trim_end_matches('.'),
-        None => text.as_str(),
-    };
-    match trimmed {
-        "" | "-0" => "0".to_string(),
-        trimmed => trimmed.to_string(),
-    }
-}
-
 /// Replaces the characters XML gives a meaning of its own, and drops the ones
 /// it cannot carry at all.
 ///
@@ -916,7 +896,10 @@ mod tests {
                 &Options::new().with("image_mode", "none"),
             )
             .unwrap();
-        assert_eq!((output.mime, output.extension), ("image/svg+xml", "svg"));
+        assert_eq!(
+            (&*output.mime, &*output.extension),
+            ("image/svg+xml", "svg")
+        );
     }
 
     #[test]
@@ -1197,8 +1180,8 @@ mod tests {
         assert_eq!(number(12.345, 2), "12.35");
         assert_eq!(number(12.345, 0), "12");
         assert_eq!(number(-0.001, 2), "0");
-        assert_eq!(number(f32::NAN, 2), "0");
-        assert_eq!(number(f32::INFINITY, 2), "0");
+        assert_eq!(number(f64::NAN, 2), "0");
+        assert_eq!(number(f64::INFINITY, 2), "0");
 
         let mut layout = sample();
         layout.lines[0].words = vec![word("Hello", 10.125, 45.0, None)];

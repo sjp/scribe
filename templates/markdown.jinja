@@ -1,0 +1,2 @@
+{#- Each recognised line as its own paragraph. -#}
+{{ layout.lines | map(attribute="text") | join("\n\n") }}

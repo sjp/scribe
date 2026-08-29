@@ -1,0 +1,29 @@
+{#-
+  hOCR 1.2: HTML whose class names and `title` attributes carry the layout,
+  which is what PDF builders and text-layer viewers read.
+
+  Takes `var.title`, the title of the document.
+-#}
+{%- macro bbox(box) %}bbox {{ box.x | round }} {{ box.y | round }} {{ (box.x + box.width) | round }} {{ (box.y + box.height) | round }}{% endmacro -%}
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+  <head>
+    <title>{{ vars.title | default("") }}</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="ocr-system" content="scribe" />
+    <meta name="ocr-capabilities" content="ocr_page ocr_line ocrx_word" />
+  </head>
+  <body>
+    <div class="ocr_page" id="page_1" title="bbox 0 0 {{ layout.image.width }} {{ layout.image.height }}{% if image.href %}; image &quot;{{ image.href }}&quot;{% endif %}">
+{%- for line in layout.lines %}
+{%- set line_number = loop.index %}
+      <span class="ocr_line" id="line_{{ line_number }}" title="{{ bbox(line.bbox) }}">
+{%- for word in line.words or [line] %}
+        <span class="ocrx_word" id="word_{{ line_number }}_{{ loop.index }}" title="{{ bbox(word.bbox) }}{% if word.confidence is not none %}; x_wconf {{ (word.confidence * 100) | round }}{% endif %}">{{ word.text }}</span>
+{%- endfor %}
+      </span>
+{%- endfor %}
+    </div>
+  </body>
+</html>

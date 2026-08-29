@@ -31,6 +31,7 @@ image = { version = "0.25.10", default-features = false, features = [
     "webp",
 ] }
 insta = "1.48.0"
+minijinja = "2.24.0"
 roxmltree = "0.21.1"
 schemars = "1.2.2"
 serde = { version = "1.0.229", features = ["derive"] }

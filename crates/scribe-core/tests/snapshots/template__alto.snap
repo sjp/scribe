@@ -1,0 +1,30 @@
+---
+source: crates/scribe-core/tests/template.rs
+expression: "render(\"alto\", Options::new())"
+---
+<?xml version="1.0" encoding="UTF-8"?>
+<alto xmlns="http://www.loc.gov/standards/alto/ns-v4#">
+  <Description>
+    <MeasurementUnit>pixel</MeasurementUnit>
+    <sourceImageInformation>
+      <fileName>page.png</fileName>
+    </sourceImageInformation>
+  </Description>
+  <Layout>
+    <Page ID="page_1" PHYSICAL_IMG_NR="1" WIDTH="284" HEIGHT="140">
+      <PrintSpace HPOS="0" VPOS="0" WIDTH="284" HEIGHT="140">
+        <TextBlock ID="block_1" HPOS="0" VPOS="0" WIDTH="284" HEIGHT="140">
+          <TextLine ID="line_1" HPOS="28" VPOS="31" WIDTH="228" HEIGHT="32">
+            <String ID="word_1_1" HPOS="28" VPOS="31" WIDTH="98" HEIGHT="32" WC="0.99" CONTENT="Hello" />
+            <String ID="word_1_2" HPOS="143" VPOS="31" WIDTH="113" HEIGHT="32" WC="0.97" CONTENT="World" />
+          </TextLine>
+          <TextLine ID="line_2" HPOS="30" VPOS="75" WIDTH="221" HEIGHT="50">
+            <String ID="word_2_1" HPOS="30" VPOS="75" WIDTH="92" HEIGHT="32" WC="0.88" CONTENT="Tilted" />
+            <String ID="word_2_2" HPOS="127" VPOS="88" WIDTH="15" HEIGHT="21" WC="0.62" CONTENT="&amp;" />
+            <String ID="word_2_3" HPOS="149" VPOS="91" WIDTH="102" HEIGHT="34" WC="0.91" CONTENT="&lt;set&gt;" />
+          </TextLine>
+        </TextBlock>
+      </PrintSpace>
+    </Page>
+  </Layout>
+</alto>

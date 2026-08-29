@@ -37,10 +37,13 @@
 
 mod json;
 mod svg;
+mod template;
 
 pub use json::JsonRenderer;
 pub use svg::SvgRenderer;
+pub use template::{TemplateRenderer, list_templates};
 
+use std::borrow::Cow;
 use std::collections::BTreeMap;
 use std::fmt;
 
@@ -55,28 +58,41 @@ pub type OutputError = Box<dyn std::error::Error + Send + Sync>;
 
 /// A rendered document, ready to be written somewhere this crate knows
 /// nothing about.
+///
+/// The media type and the extension are borrowed or owned as the renderer
+/// finds convenient: one whose output is always the same format names it with
+/// a literal, while one rendering whatever format a caller's template
+/// describes works its out at render time.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct RenderOutput {
     /// The document itself. Text formats are UTF-8.
     pub bytes: Vec<u8>,
     /// The media type of the document, such as `application/json`.
-    pub mime: &'static str,
+    pub mime: Cow<'static, str>,
     /// The customary file extension, without a dot, such as `json`.
-    pub extension: &'static str,
+    pub extension: Cow<'static, str>,
 }
 
 impl RenderOutput {
     /// A document of the given bytes, media type and extension.
-    pub fn new(bytes: Vec<u8>, mime: &'static str, extension: &'static str) -> Self {
+    pub fn new(
+        bytes: Vec<u8>,
+        mime: impl Into<Cow<'static, str>>,
+        extension: impl Into<Cow<'static, str>>,
+    ) -> Self {
         Self {
             bytes,
-            mime,
-            extension,
+            mime: mime.into(),
+            extension: extension.into(),
         }
     }
 
     /// A document that is text, stored as its UTF-8 bytes.
-    pub fn text(text: impl Into<String>, mime: &'static str, extension: &'static str) -> Self {
+    pub fn text(
+        text: impl Into<String>,
+        mime: impl Into<Cow<'static, str>>,
+        extension: impl Into<Cow<'static, str>>,
+    ) -> Self {
         Self::new(text.into().into_bytes(), mime, extension)
     }
 
@@ -506,6 +522,24 @@ pub enum RenderError {
         missing: &'static str,
     },
 
+    /// A template could not be read, or failed while it was being rendered.
+    #[error("the {renderer} renderer could not use {template}{}: {detail}", at(*line, *column))]
+    Template {
+        /// The renderer that could not go on.
+        renderer: String,
+        /// Which template it was, such as ``the `hocr` template``.
+        template: String,
+        /// The line the failure was reported at, counting from one.
+        line: Option<usize>,
+        /// The column within that line, counting from one.
+        column: Option<usize>,
+        /// What the templating engine said, without its own idea of where.
+        detail: String,
+        /// The engine's own error, for a caller that wants more of it.
+        #[source]
+        source: OutputError,
+    },
+
     /// The renderer had everything it needed but could not produce a
     /// document.
     #[error("the {renderer} renderer could not write its output")]
@@ -534,6 +568,36 @@ impl RenderError {
             intent,
             missing,
         }
+    }
+}
+
+/// Spells where in a template something went wrong, and nothing at all when
+/// that is not known.
+fn at(line: Option<usize>, column: Option<usize>) -> String {
+    match (line, column) {
+        (Some(line), Some(column)) => format!(", line {line} column {column}"),
+        (Some(line), None) => format!(", line {line}"),
+        _ => String::new(),
+    }
+}
+
+/// Writes a number with at most `precision` decimals, dropping the trailing
+/// zeros so that a whole pixel reads as a whole number.
+///
+/// A number no document format can hold is written as zero rather than as
+/// `NaN` or `inf`, which no reader of one would accept.
+pub(crate) fn number(value: f64, precision: usize) -> String {
+    if !value.is_finite() {
+        return "0".to_string();
+    }
+    let text = format!("{value:.precision$}");
+    let trimmed = match text.split_once('.') {
+        Some(_) => text.trim_end_matches('0').trim_end_matches('.'),
+        None => text.as_str(),
+    };
+    match trimmed {
+        "" | "-0" => "0".to_string(),
+        trimmed => trimmed.to_string(),
     }
 }
 
@@ -633,6 +697,7 @@ pub fn registry() -> Registry {
     let mut registry = Registry::new();
     registry.register(Box::new(JsonRenderer));
     registry.register(Box::new(SvgRenderer));
+    registry.register(Box::new(TemplateRenderer));
     registry
 }
 
@@ -869,9 +934,13 @@ mod tests {
     #[test]
     fn the_built_in_registry_holds_every_built_in_renderer() {
         let registry = registry();
-        assert_eq!(registry.names(), ["json", "svg"]);
+        assert_eq!(registry.names(), ["json", "svg", "template"]);
         assert_eq!(registry.get("json").map(Renderer::name), Some("json"));
         assert_eq!(registry.get("svg").map(Renderer::name), Some("svg"));
+        assert_eq!(
+            registry.get("template").map(Renderer::name),
+            Some("template")
+        );
         assert!(registry.get("nothing").is_none());
     }
 
@@ -879,7 +948,7 @@ mod tests {
     fn a_registry_takes_renderers_of_its_own() {
         let mut registry = registry();
         assert!(registry.register(Box::new(Everything)).is_none());
-        assert_eq!(registry.names(), ["everything", "json", "svg"]);
+        assert_eq!(registry.names(), ["everything", "json", "svg", "template"]);
 
         // Registering the same name again replaces what was there, so a
         // caller can put its own renderer in place of a built-in.
@@ -888,10 +957,10 @@ mod tests {
             replaced.map(|renderer| renderer.name().to_string()),
             Some("everything".to_string())
         );
-        assert_eq!(registry.names(), ["everything", "json", "svg"]);
+        assert_eq!(registry.names(), ["everything", "json", "svg", "template"]);
         assert_eq!(
             format!("{registry:?}"),
-            r#"Registry(["everything", "json", "svg"])"#
+            r#"Registry(["everything", "json", "svg", "template"])"#
         );
     }
 
@@ -899,7 +968,7 @@ mod tests {
     fn output_carries_its_type_and_extension() {
         let output = RenderOutput::text("hello", "text/plain", "txt");
         assert_eq!(output.as_str(), Some("hello"));
-        assert_eq!((output.mime, output.extension), ("text/plain", "txt"));
+        assert_eq!((&*output.mime, &*output.extension), ("text/plain", "txt"));
         assert_eq!(
             RenderOutput::new(vec![0xff], "application/octet-stream", "bin").as_str(),
             None

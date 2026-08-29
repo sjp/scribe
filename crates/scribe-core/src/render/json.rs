@@ -158,7 +158,7 @@ mod tests {
             .render(&sample_layout(), &ImageSource::new(80, 24), &Options::new())
             .unwrap();
         assert_eq!(
-            (output.mime, output.extension),
+            (&*output.mime, &*output.extension),
             ("application/json", "json")
         );
         assert_eq!(

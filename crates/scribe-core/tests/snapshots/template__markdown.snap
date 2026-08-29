@@ -1,0 +1,7 @@
+---
+source: crates/scribe-core/tests/template.rs
+expression: "render(\"markdown\", Options::new())"
+---
+Hello World
+
+Tilted & <set>

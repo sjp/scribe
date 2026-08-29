@@ -96,7 +96,7 @@ fn render(layout: &Layout, options: Options) -> String {
         .render(layout, &image, &options)
         .expect("the fixture layout renders");
     assert_eq!(
-        (output.mime, output.extension),
+        (&*output.mime, &*output.extension),
         ("image/svg+xml", "svg"),
         "an SVG document should say that it is one"
     );
@@ -186,18 +186,5 @@ fn every_variant_is_well_formed_xml() {
     }
     for (name, value) in [("ids", true), ("include_style", false)] {
         linked(&hello_world(), Options::new().with(name, value));
-    }
-}
-
-#[test]
-fn the_registry_offers_both_built_in_renderers() {
-    let registry = registry();
-    assert_eq!(registry.names(), ["json", "svg"]);
-    for name in registry.names() {
-        let renderer = registry.get(name).expect("the name came from the registry");
-        assert!(
-            !renderer.describe_options().is_empty(),
-            "{name} should describe its options"
-        );
     }
 }

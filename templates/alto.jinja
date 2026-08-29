@@ -1,0 +1,30 @@
+{#-
+  ALTO 4: the XML that digitisation pipelines and archives exchange page
+  layouts in. One text block holds every line, since the recogniser reports
+  lines rather than the regions they were set in.
+-#}
+<?xml version="1.0" encoding="UTF-8"?>
+<alto xmlns="http://www.loc.gov/standards/alto/ns-v4#">
+  <Description>
+    <MeasurementUnit>pixel</MeasurementUnit>
+    <sourceImageInformation>
+      <fileName>{{ image.href | default("", true) }}</fileName>
+    </sourceImageInformation>
+  </Description>
+  <Layout>
+    <Page ID="page_1" PHYSICAL_IMG_NR="1" WIDTH="{{ layout.image.width }}" HEIGHT="{{ layout.image.height }}">
+      <PrintSpace HPOS="0" VPOS="0" WIDTH="{{ layout.image.width }}" HEIGHT="{{ layout.image.height }}">
+        <TextBlock ID="block_1" HPOS="0" VPOS="0" WIDTH="{{ layout.image.width }}" HEIGHT="{{ layout.image.height }}">
+{%- for line in layout.lines %}
+{%- set line_number = loop.index %}
+          <TextLine ID="line_{{ line_number }}" HPOS="{{ line.bbox.x | round }}" VPOS="{{ line.bbox.y | round }}" WIDTH="{{ line.bbox.width | round }}" HEIGHT="{{ line.bbox.height | round }}">
+{%- for word in line.words or [line] %}
+            <String ID="word_{{ line_number }}_{{ loop.index }}" HPOS="{{ word.bbox.x | round }}" VPOS="{{ word.bbox.y | round }}" WIDTH="{{ word.bbox.width | round }}" HEIGHT="{{ word.bbox.height | round }}"{% if word.confidence is not none %} WC="{{ word.confidence | round(2) }}"{% endif %} CONTENT="{{ word.text }}" />
+{%- endfor %}
+          </TextLine>
+{%- endfor %}
+        </TextBlock>
+      </PrintSpace>
+    </Page>
+  </Layout>
+</alto>
