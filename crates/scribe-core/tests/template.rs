@@ -129,6 +129,18 @@ fn render(template: &str, options: Options) -> String {
     output.as_str().expect("a template writes text").to_string()
 }
 
+/// Renders a layout of the caller's own through one of the built-in
+/// templates.
+fn render_layout(layout: &Layout, template: &str, options: Options) -> String {
+    let registry = registry();
+    let renderer = registry.get("template").expect("template is built in");
+    let image = ImageSource::new(layout.image.width, layout.image.height).with_href("page.png");
+    let output = renderer
+        .render(layout, &image, &options.with("template", template))
+        .unwrap_or_else(|error| panic!("the {template} template should render: {error}"));
+    output.as_str().expect("a template writes text").to_string()
+}
+
 /// Renders the sample through a template written for the test itself.
 fn render_source(source: &str, options: Options) -> String {
     let registry = registry();
@@ -193,6 +205,46 @@ fn property(node: &roxmltree::Node<'_, '_>, name: &str) -> Option<Vec<f64>> {
 #[test]
 fn html_overlay() {
     insta::assert_snapshot!(render("html-overlay", Options::new()));
+}
+
+#[test]
+fn an_overlays_names_can_be_settled_by_the_page() {
+    insta::assert_snapshot!(render(
+        "html-overlay",
+        Options::new()
+            .with("var.scope_mode", "fixed")
+            .with("var.scope", "left")
+    ));
+}
+
+#[test]
+fn two_overlays_in_one_page_share_no_name() {
+    // The name is worked out from what the layout says, so two pictures laid
+    // over one page carry two sets of rules rather than one, and the same
+    // picture rendered twice is the same document both times.
+    let overlay = |text: &str| {
+        let mut layout = sample();
+        layout.lines[0].text = text.to_string();
+        let rendered = render_layout(&layout, "html-overlay", Options::new());
+        let class = well_formed(&rendered)
+            .root_element()
+            .attribute("class")
+            .expect("the wrapper carries a class")
+            .to_string();
+        assert!(
+            rendered.contains(&format!(".{class} span::selection")),
+            "the stylesheet should hang off the wrapper: {rendered}"
+        );
+        class
+    };
+
+    let first = overlay("Hello World");
+    assert!(
+        first.starts_with("scribe-") && first.ends_with("-overlay"),
+        "{first}"
+    );
+    assert_eq!(first, overlay("Hello World"));
+    assert_ne!(first, overlay("Goodbye World"));
 }
 
 #[test]
@@ -374,6 +426,7 @@ fn a_name_a_selector_cannot_begin_with_is_refused() {
 #[test]
 fn a_built_in_template_refuses_a_prefix_it_cannot_name_with() {
     for template in [
+        "html-overlay",
         "html-figure",
         "svg-overlay",
         "sr-only-transcript",

@@ -196,21 +196,23 @@ from. This is the shape a browser extension injects into a page, and the same
 approach a PDF viewer's text layer takes. Find-in-page, selection and screen
 readers all work; the `alt` attribute carries the whole text as well.
 
-Takes `var.selection_fill` and `var.selection_background`, the colours selected
-text is drawn in, both of them a system colour by default so that a selection
-looks like every other selection the reader makes, in light mode and in dark;
-`var.char_positions`, to give every character a span on its own pixels rather
-than stretching a word across its box; and `var.font_size_mode` (`box_height`
-or `cap_height`) with `var.cap_height_ratio`, to read a box as the height of a
-capital letter.
+Takes `var.class_prefix`, what every name starts with, with `var.scope_mode`
+and `var.scope` settling the token that follows it, so that two overlays in one
+page share no name between them; `var.selection_fill` and
+`var.selection_background`, the colours selected text is drawn in, both of them
+a system colour by default so that a selection looks like every other selection
+the reader makes, in light mode and in dark; `var.char_positions`, to give every
+character a span on its own pixels rather than stretching a word across its box;
+and `var.font_size_mode` (`box_height` or `cap_height`) with
+`var.cap_height_ratio`, to read a box as the height of a capital letter.
 
 ```html
-<div class="scribe-overlay">
+<div class="scribe-g923no-overlay">
   <style>
-    .scribe-overlay { position: relative; display: inline-block; line-height: 0; color-scheme: light dark }
-    .scribe-overlay img { display: block; max-width: 100% }
-    .scribe-overlay span { position: absolute; color: transparent; white-space: pre; line-height: 1; transform-origin: center }
-    .scribe-overlay span::selection { color: HighlightText; background: color-mix(in srgb, Highlight 35%, transparent) }
+    .scribe-g923no-overlay { position: relative; display: inline-block; line-height: 0; color-scheme: light dark }
+    .scribe-g923no-overlay img { display: block; max-width: 100% }
+    .scribe-g923no-overlay span { position: absolute; color: transparent; white-space: pre; line-height: 1; transform-origin: center }
+    .scribe-g923no-overlay span::selection { color: HighlightText; background: color-mix(in srgb, Highlight 35%, transparent) }
   </style>
   <img src="hello.png" width="284" height="96" alt="Hello World" />
   <span style="left: 26px; top: 29px; width: 105px; height: 33px; font-size: 33px; transform: rotate(0deg)">Hello</span>

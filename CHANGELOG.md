@@ -70,7 +70,11 @@ Versioning](https://semver.org/spec/v2.0.0.html).
   written into and open a rule over the whole page, or a name that a selector
   could not carry, saying which value was refused and why. The built-in
   templates put every value they write into a stylesheet, a class or an id
-  through them.
+  through them. The ones that go into somebody else's page — the two text
+  layers, the figure, the transcript and the embedded layout — build every
+  name from `var.class_prefix` and a token settled by `var.scope_mode` and
+  `var.scope`, so that two of them in one page share no class name, no id and
+  no rule.
 - The `scribe` command line tool: `ocr`, `render`, `formats`, `templates` and
   `schema`, over one image or many, with the layout kept beside the output. An
   output that links to its image rather than carrying it points at the image

@@ -4,15 +4,24 @@
   span per word placed on the pixels it was read from, so that the text can
   be selected, searched and read aloud.
 
-  Takes `var.selection_fill` and `var.selection_background`, the colours
-  selected text is drawn in, both of them a system colour by default so that
-  a selection looks like every other selection the reader makes;
+  Takes `var.class_prefix`, what every name starts with, with
+  `var.scope_mode` and `var.scope` settling the token that follows it so that
+  two overlays in one page share no name between them;
+  `var.selection_fill` and `var.selection_background`, the colours selected
+  text is drawn in, both of them a system colour by default so that a
+  selection looks like every other selection the reader makes;
   `var.char_positions`, to give every character a span on its own pixels
   rather than stretching a word across its box; and `var.font_size_mode`,
   `box_height` or `cap_height`, with `var.cap_height_ratio`, to read a box as
   the height of a capital letter, which suits text written in capitals.
 -#}
 {%- set source = image.data_uri or image.href -%}
+{%- set prefix = vars.class_prefix | default("scribe-") | css_ident("class_prefix") -%}
+{%- set mode = vars.scope_mode | default("content") -%}
+{%- set token = ((vars.scope | default("")) | css_ident("scope")) if mode == "fixed" else ("" if mode == "none" else scope()) -%}
+{#- What every name in this document starts with: the prefix, and the token
+    after it when there is one. -#}
+{%- set ns = (prefix ~ token ~ "-" if token else prefix) | css_ident_start("class_prefix") -%}
 {%- set selection_fill = vars.selection_fill | default("HighlightText") | css_value("selection_fill") -%}
 {%- set selection = vars.selection_background | default("color-mix(in srgb, Highlight 35%, transparent)") | css_value("selection_background") -%}
 {%- set per_char = vars.char_positions | default(false) | flag -%}
@@ -20,12 +29,12 @@
 {%- set cap_ratio = vars.cap_height_ratio | default(0.7) | number -%}
 {#- How much of an em the height of a box stands for. -#}
 {%- set box_em = cap_ratio if cap_height and cap_ratio > 0 else 1 -%}
-<div class="scribe-overlay">
+<div class="{{ ns }}overlay">
   <style>
-    .scribe-overlay { position: relative; display: inline-block; line-height: 0; color-scheme: light dark }
-    .scribe-overlay img { display: block; max-width: 100% }
-    .scribe-overlay span { position: absolute; color: transparent; white-space: pre; line-height: 1; transform-origin: center }
-    .scribe-overlay span::selection { color: {{ selection_fill }}; background: {{ selection }} }
+    .{{ ns }}overlay { position: relative; display: inline-block; line-height: 0; color-scheme: light dark }
+    .{{ ns }}overlay img { display: block; max-width: 100% }
+    .{{ ns }}overlay span { position: absolute; color: transparent; white-space: pre; line-height: 1; transform-origin: center }
+    .{{ ns }}overlay span::selection { color: {{ selection_fill }}; background: {{ selection }} }
   </style>
 {%- if source %}
   <img src="{{ source }}" width="{{ image.width }}" height="{{ image.height }}" alt="{{ text | replace("\n", " ") }}" />
