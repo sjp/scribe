@@ -188,6 +188,101 @@ fn rendering_writes_where_it_is_told() {
     );
 }
 
+/// The `href` of the `<image>` a rendered SVG points at.
+fn linked_image(svg: &str) -> &str {
+    let opening = svg
+        .split_once("<image ")
+        .expect("the document carries an image")
+        .1;
+    let href = opening
+        .split_once("href=\"")
+        .expect("the image has an href")
+        .1;
+    href.split_once('"').expect("the href is closed").0
+}
+
+/// A directory holding an image and the layout read from it, so that a run
+/// started somewhere else has somewhere else again to write to.
+fn scans_directory(name: &str) -> PathBuf {
+    let work = work_directory(name);
+    let scans = work.join("scans");
+    std::fs::create_dir_all(&scans).expect("a directory of images can be made");
+    for file in ["hello.png", "hello.layout.json"] {
+        std::fs::copy(fixture(file), scans.join(file)).expect("the fixture can be copied");
+    }
+    work
+}
+
+#[test]
+fn a_link_is_written_from_the_directory_the_output_lands_in() {
+    let work = scans_directory("link-from-the-output");
+    scribe()
+        .current_dir(&work)
+        .args([
+            "render",
+            "scans/hello.layout.json",
+            "--link",
+            "--image",
+            "scans/hello.png",
+            "--out-dir",
+            "out",
+        ])
+        .assert()
+        .success();
+
+    let out = work.join("out");
+    let svg = std::fs::read_to_string(out.join("hello.svg")).expect("the output was written");
+    let href = linked_image(&svg);
+    assert_eq!(href, "../scans/hello.png");
+    assert!(
+        out.join(href).exists(),
+        "{href} does not resolve from {}",
+        out.display()
+    );
+}
+
+#[test]
+fn a_link_given_outright_is_written_as_it_was_given() {
+    let work = scans_directory("link-given-outright");
+    scribe()
+        .current_dir(&work)
+        .args([
+            "render",
+            "scans/hello.layout.json",
+            "--link",
+            "--image",
+            "scans/hello.png",
+            "--link-href",
+            "https://example.invalid/hello.png",
+            "--out-dir",
+            "out",
+        ])
+        .assert()
+        .success();
+
+    let svg = std::fs::read_to_string(work.join("out/hello.svg")).expect("the output was written");
+    assert_eq!(linked_image(&svg), "https://example.invalid/hello.png");
+}
+
+#[test]
+fn a_link_stands_as_it_was_typed_when_the_output_goes_to_standard_output() {
+    let work = scans_directory("link-to-standard-output");
+    let output = scribe()
+        .current_dir(&work)
+        .args([
+            "render",
+            "scans/hello.layout.json",
+            "--link",
+            "--image",
+            "scans/hello.png",
+        ])
+        .assert()
+        .success();
+
+    let svg = String::from_utf8(output.get_output().stdout.clone()).expect("the SVG is UTF-8");
+    assert_eq!(linked_image(&svg), "scans/hello.png");
+}
+
 #[test]
 fn a_missing_model_says_where_models_come_from() {
     scribe()

@@ -6,7 +6,7 @@
 use std::borrow::Cow;
 use std::fs;
 use std::io::{self, Read, Write};
-use std::path::{Path, PathBuf};
+use std::path::{Component, Path, PathBuf};
 
 use anyhow::{Context, Result};
 
@@ -138,8 +138,128 @@ impl Destination {
     }
 }
 
+/// How a document written into `directory` points at `image`.
+///
+/// A link is resolved against the document it sits in, not against the
+/// directory the run was started from, so a path typed on the command line
+/// has to be spelled out again from where the output lands. Both are
+/// anchored to the working directory and then compared as they are written,
+/// without asking the filesystem what they lead to, and the answer comes back
+/// with forward slashes because it is going into a URL.
+///
+/// This is `None` when the two share no root to count from, when either path
+/// is not UTF-8, or when the working directory cannot be read; the caller
+/// then has nothing better than the path as it was typed.
+pub fn href_from(directory: &Path, image: &Path) -> Option<String> {
+    let working = std::env::current_dir().ok()?;
+    let (from, to) = (anchored(&working, directory), anchored(&working, image));
+    let (directory, image) = (spelling(&from), spelling(&to));
+
+    let shared = directory
+        .iter()
+        .zip(&image)
+        .take_while(|(one, other)| one == other)
+        .count();
+    if shared == 0 || shared == image.len() {
+        return None;
+    }
+
+    let mut href = "../".repeat(directory.len() - shared);
+    for (position, part) in image[shared..].iter().enumerate() {
+        if position > 0 {
+            href.push('/');
+        }
+        href.push_str(part.as_os_str().to_str()?);
+    }
+    Some(href)
+}
+
+/// A path made absolute against the working directory, if it was not already.
+fn anchored(working: &Path, path: &Path) -> PathBuf {
+    if path.is_absolute() {
+        path.to_path_buf()
+    } else {
+        working.join(path)
+    }
+}
+
+/// The parts of a path as it is written, with `.` dropped and `..` taken to
+/// mean the name before it.
+///
+/// This is what a link resolver does, and it is deliberately not what the
+/// filesystem does: no symbolic link is followed and nothing has to exist.
+fn spelling(path: &Path) -> Vec<Component<'_>> {
+    let mut parts: Vec<Component<'_>> = Vec::new();
+    for component in path.components() {
+        match component {
+            Component::CurDir => {}
+            Component::ParentDir if matches!(parts.last(), Some(Component::Normal(_))) => {
+                parts.pop();
+            }
+            component => parts.push(component),
+        }
+    }
+    parts
+}
+
 /// Makes sure a directory named for outputs exists.
 pub fn make_directory(directory: &Path) -> Result<()> {
     fs::create_dir_all(directory)
         .with_context(|| format!("{} cannot be created", directory.display()))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn an_image_below_the_output_is_reached_by_name() {
+        assert_eq!(
+            href_from(Path::new("/work/out"), Path::new("/work/out/pages/a.png")),
+            Some("pages/a.png".to_string())
+        );
+    }
+
+    #[test]
+    fn an_image_beside_the_output_is_reached_by_climbing_out() {
+        assert_eq!(
+            href_from(Path::new("/work/out"), Path::new("/work/scans/a.png")),
+            Some("../scans/a.png".to_string())
+        );
+    }
+
+    #[test]
+    fn an_image_in_the_output_directory_is_reached_by_its_name_alone() {
+        assert_eq!(
+            href_from(Path::new("/work/out"), Path::new("/work/out/a.png")),
+            Some("a.png".to_string())
+        );
+    }
+
+    #[test]
+    fn a_path_is_read_as_it_is_written_rather_than_followed() {
+        assert_eq!(
+            href_from(
+                Path::new("/work/./out/deep/.."),
+                Path::new("/work/scans/../a.png")
+            ),
+            Some("../a.png".to_string())
+        );
+    }
+
+    #[test]
+    fn an_image_that_is_the_output_directory_itself_has_no_href() {
+        assert_eq!(
+            href_from(Path::new("/work/out"), Path::new("/work/out")),
+            None
+        );
+    }
+
+    #[test]
+    fn a_relative_pair_is_anchored_to_the_same_working_directory() {
+        assert_eq!(
+            href_from(Path::new("out"), Path::new("scans/a.png")),
+            Some("../scans/a.png".to_string())
+        );
+    }
 }

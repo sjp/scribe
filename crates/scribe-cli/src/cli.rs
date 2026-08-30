@@ -231,7 +231,8 @@ pub struct RenderArgs {
     #[arg(long)]
     pub no_image: bool,
 
-    /// What `--link` points at; the image's path as given when unset.
+    /// What `--link` points at, written out as given; when unset, the path
+    /// of the image, resolved from the directory the output is written into.
     #[arg(long, value_name = "HREF")]
     pub link_href: Option<String>,
 

@@ -191,7 +191,9 @@ reader, not the picture.
   is one self-contained file. Needs the image's bytes and media type.
 - `link` — the document points at the image with `<image href="…">`, which
   keeps it small but ties it to where the image is. Needs an href; the command
-  line uses the path as it was written, or whatever `--link-href` says.
+  line writes the image's path as it reads from the directory the output goes
+  into, since that is what a browser resolves it against, or whatever
+  `--link-href` says.
 - `none` — no image at all, leaving a text layer to be laid over an `<img>`
   elsewhere. This is the mode a browser overlay wants.
 

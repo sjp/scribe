@@ -57,7 +57,11 @@ Versioning](https://semver.org/spec/v2.0.0.html).
   and `alt-text`. A template can ask the SVG renderer for its text layer
   rather than writing a second one.
 - The `scribe` command line tool: `ocr`, `render`, `formats`, `templates` and
-  `schema`, over one image or many, with the layout kept beside the output.
+  `schema`, over one image or many, with the layout kept beside the output. An
+  output that links to its image rather than carrying it points at the image
+  from the directory it is written into, so it still finds the picture when it
+  is opened from somewhere other than where the run was started; `--link-href`
+  says outright where to point instead.
 - WebAssembly bindings packaged for the browser and for Node, with TypeScript
   declarations for the layout model, the renderer options and the rendered
   document.

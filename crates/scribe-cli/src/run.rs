@@ -4,7 +4,7 @@
 //! happens in, the timings worth reporting, and the translation between a
 //! person's flags and a renderer's options.
 
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::time::Instant;
 
 use anyhow::{Context, Result};
@@ -117,12 +117,17 @@ fn one_image(
         started.elapsed()
     );
 
+    let link = href(
+        render,
+        Some(path),
+        output_directory(output.out_dir.as_deref(), output.out.as_deref()).as_deref(),
+    );
     let source = ImageSource {
         width: decoded.width,
         height: decoded.height,
         mime: mime_of(&encoded),
         bytes: Some(&encoded),
-        href: href(render, Some(path)),
+        href: link.as_deref(),
     };
 
     let started = Instant::now();
@@ -210,12 +215,17 @@ fn render(command: RenderCommand) -> Result<()> {
             (None, Some(carried)) => (Some(carried.mime.as_str()), Some(carried.bytes.as_slice())),
             (None, None) => (None, None),
         };
+        let link = href(
+            &render,
+            image.as_deref(),
+            output_directory(out_dir.as_deref(), out.as_deref()).as_deref(),
+        );
         let source = ImageSource {
             width: layout.image.width,
             height: layout.image.height,
             mime,
             bytes,
-            href: href(&render, image.as_deref()),
+            href: link.as_deref(),
         };
 
         let started = Instant::now();
@@ -343,13 +353,41 @@ fn ocr_options(args: &RecognitionArgs) -> OcrOptions {
 }
 
 /// What an output points at when it links to the image rather than carrying
-/// it: whatever `--link-href` said, or the path as it was written.
-fn href<'a>(args: &'a RenderArgs, image: Option<&'a Path>) -> Option<&'a str> {
-    args.link_href.as_deref().or_else(|| {
-        image
-            .filter(|path| !io::is_stream(path))
-            .and_then(Path::to_str)
-    })
+/// it.
+///
+/// `--link-href` is written out as it was given, whatever it says. Otherwise
+/// it is the path of the image the run was given, spelled out from the
+/// directory the output lands in, since that is what a reader of the output
+/// resolves it against. An output going to standard output has no directory
+/// to be read from, so there the path stands as it was typed.
+fn href(args: &RenderArgs, image: Option<&Path>, directory: Option<&Path>) -> Option<String> {
+    if let Some(given) = &args.link_href {
+        return Some(given.clone());
+    }
+    let image = image.filter(|path| !io::is_stream(path))?;
+    let as_typed = || image.to_str().map(str::to_owned);
+    match directory {
+        Some(directory) => io::href_from(directory, image).or_else(as_typed),
+        None => as_typed(),
+    }
+}
+
+/// The directory a rendered document is written into, or `None` when it goes
+/// to standard output.
+///
+/// What the file is called is not settled until the render is over, since the
+/// extension is the renderer's to choose, but the directory is known before
+/// it starts — and the directory is all a link out of the document is
+/// resolved against.
+fn output_directory(out_dir: Option<&Path>, out: Option<&Path>) -> Option<PathBuf> {
+    if let Some(directory) = out_dir {
+        return Some(directory.to_path_buf());
+    }
+    match out {
+        Some(path) if io::is_stream(path) => None,
+        Some(path) => Some(path.parent().unwrap_or(Path::new("")).to_path_buf()),
+        None => None,
+    }
 }
 
 /// The media type of an encoded image, as far as its bytes give it away.
