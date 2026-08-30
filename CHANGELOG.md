@@ -80,7 +80,11 @@ Versioning](https://semver.org/spec/v2.0.0.html).
   layers, the figure, the transcript and the embedded layout — build every
   name from `var.class_prefix` and a token settled by `var.scope_mode` and
   `var.scope`, so that two of them in one page share no class name, no id and
-  no rule.
+  no rule. A render copies the layout once however much of it is asked for:
+  the layout a template reads is the one `svg` and `scope` write from, and the
+  engine's own values are built out of it only when a template first names it,
+  so a transcript, a caption or a plain-text output never pays for a page of
+  per-character boxes.
 - The `scribe` command line tool: `ocr`, `render`, `formats`, `templates` and
   `schema`, over one image or many, with the layout kept beside the output. An
   output that links to its image rather than carrying it points at the image

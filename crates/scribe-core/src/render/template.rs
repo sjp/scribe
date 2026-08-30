@@ -269,12 +269,18 @@ impl Renderer for TemplateRenderer {
         );
 
         let image = Arc::new(Image::of(image));
+        // The template is given a layout of this renderer's own: `svg()` and
+        // `scope()` can be called at any point in a template, by which time
+        // the borrowed one is gone. Everything the template can reach reads
+        // that one layout, so a page of per-character boxes is copied once
+        // however many of them ask for it.
+        let layout = Arc::new(layout.clone());
         let mut environment = Environment::new();
         prepare(
             &mut environment,
             escaping(own.str("autoescape"), &mime),
             &image,
-            layout,
+            &layout,
         );
         environment
             .add_template(name, source)
@@ -285,7 +291,7 @@ impl Renderer for TemplateRenderer {
 
         let text = template
             .render(minijinja::context! {
-                layout => Value::from_serialize(layout),
+                layout => Value::from_dyn_object(Arc::new(LayoutValue::of(&layout))),
                 image => Value::from_dyn_object(Arc::clone(&image)),
                 text => layout.text(),
                 vars => Value::from_iter(vars),
@@ -375,7 +381,7 @@ fn prepare(
     environment: &mut Environment<'_>,
     escape: AutoEscape,
     image: &Arc<Image>,
-    layout: &Layout,
+    layout: &Arc<Layout>,
 ) {
     environment.set_undefined_behavior(UndefinedBehavior::Strict);
     environment.set_debug(true);
@@ -411,16 +417,11 @@ fn prepare(
     let data_uri = Arc::clone(image);
     environment.add_function("data_uri", move || optional(data_uri.data_uri()));
 
-    // The layer is written from a layout of this function's own: it can be
-    // asked for at any point in a template, by which time the borrowed one is
-    // gone. The context beside it already holds a copy of the layout, so this
-    // is the second rather than the first.
-    let layout = Arc::new(layout.clone());
-
-    let scoped = Arc::clone(&layout);
+    let scoped = Arc::clone(layout);
     environment.add_function("scope", move || scope_token(&scoped));
 
     let image = Arc::clone(image);
+    let layout = Arc::clone(layout);
     let layer = move |options: Option<Value>, overrides: Kwargs| {
         svg_layer(&layout, &image, options.as_ref(), &overrides)
     };
@@ -812,11 +813,63 @@ fn position(source: &str, error: &Error) -> (Option<usize>, Option<usize>) {
     (Some(line), Some(column))
 }
 
+/// The layout as a template reads it.
+///
+/// The engine's values are a tree of its own making, built by walking what it
+/// is given; for a page with a box under every character, building one is as
+/// much work as writing the output. This stands in for that tree until a
+/// template first names the layout, and holds the same layout the `svg` and
+/// `scope` functions were given rather than a second copy of it, so a
+/// template that writes the text alone never builds one at all.
+#[derive(Debug)]
+struct LayoutValue {
+    layout: Arc<Layout>,
+    fields: OnceLock<Value>,
+}
+
+impl LayoutValue {
+    /// The same layout, as a template reads it.
+    fn of(layout: &Arc<Layout>) -> Self {
+        Self {
+            layout: Arc::clone(layout),
+            fields: OnceLock::new(),
+        }
+    }
+
+    /// The layout as the engine's own values, built the first time a template
+    /// asks for any part of it and remembered after that.
+    fn fields(&self) -> &Value {
+        self.fields
+            .get_or_init(|| Value::from_serialize(&*self.layout))
+    }
+}
+
+impl Object for LayoutValue {
+    fn get_value(self: &Arc<Self>, key: &Value) -> Option<Value> {
+        self.fields()
+            .get_item(key)
+            .ok()
+            .filter(|value| !value.is_undefined())
+    }
+
+    /// The layout's fields, in the order the model writes them, so that a
+    /// template walking or serialising the layout sees what the JSON renderer
+    /// would have written.
+    fn enumerate(self: &Arc<Self>) -> Enumerator {
+        match self.fields().try_iter() {
+            Ok(names) => Enumerator::Values(names.collect()),
+            Err(_) => Enumerator::Empty,
+        }
+    }
+}
+
 /// The source image as a template sees it.
 ///
 /// The bytes are copied because a template's values outlive the borrowed
-/// [`ImageSource`] they came from; encoding them is not, since that is the
-/// expensive part and most templates never ask for it.
+/// [`ImageSource`] they came from, and the image is held behind an `Arc` from
+/// there on, so the context, `data_uri` and `svg` read one copy between them.
+/// Encoding them is not copying them, since that is the expensive part and
+/// most templates never ask for it.
 #[derive(Debug)]
 struct Image {
     width: u32,
@@ -1126,6 +1179,28 @@ mod tests {
             "30.0"
         );
         assert!(rendered("{{ layout | json }}").starts_with(r#"{"version":1,"#));
+    }
+
+    #[test]
+    fn the_layout_reads_as_the_model_it_came_from() {
+        // A template sees the layout itself rather than a rearrangement of
+        // it: the same fields, in the same order, holding the same values as
+        // the layout written out anywhere else.
+        assert_eq!(
+            rendered("{{ layout | list | join(\",\") }}"),
+            "version,image,lines"
+        );
+        assert_eq!(
+            rendered("{{ layout | json }}"),
+            sample().to_json().expect("a layout is written as JSON")
+        );
+    }
+
+    #[test]
+    fn a_field_the_layout_has_not_got_is_still_an_error() {
+        let error =
+            render(Options::new().with("template_source", "{{ layout.nonsense }}")).unwrap_err();
+        assert!(error.to_string().contains("undefined"), "{error}");
     }
 
     #[test]
