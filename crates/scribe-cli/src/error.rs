@@ -29,9 +29,10 @@ pub fn usage(message: impl Into<String>) -> anyhow::Error {
 
 /// The status the process leaves with when this error ends the run.
 ///
-/// A renderer that rejects an option was told to do something impossible by
-/// whoever wrote the command line, so it counts as a mistake in the request
-/// even though it is only noticed once the renderer sees it.
+/// A renderer that rejects an option, or that is asked for an image it was
+/// never given, was told to do something impossible by whoever wrote the
+/// command line, so it counts as a mistake in the request even though it is
+/// only noticed once the renderer sees it.
 pub fn exit_code(error: &anyhow::Error) -> ExitCode {
     let misused = error.chain().any(|cause| {
         cause.is::<UsageError>()
@@ -42,6 +43,7 @@ pub fn exit_code(error: &anyhow::Error) -> ExitCode {
                         | RenderError::InvalidOption { .. }
                         | RenderError::InvalidChoice { .. }
                         | RenderError::UnusableOption { .. }
+                        | RenderError::MissingImage { .. }
                 )
             )
     });

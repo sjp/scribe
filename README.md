@@ -72,6 +72,14 @@ scribe render page.layout.json --format template --opt template=hocr --out page.
 scribe render page.layout.json --format template --opt template=text
 ```
 
+The layout knows how big the image was but not what it looked like, so a
+render with no image to hand writes the text layer alone. Name the picture to
+have it back underneath:
+
+```sh
+scribe render page.layout.json --image page.png --out page.svg
+```
+
 A whole directory at once, and a look at how well the text layer fits:
 
 ```sh
@@ -104,8 +112,9 @@ scribe render page.layout.json --no-image --opt precision=1
 </svg>
 ```
 
-That is the text layer alone, with `--no-image`; by default the picture is
-carried in the document beneath it and the output is one self-contained file.
+That is the text layer alone, which is what comes out when there is no image
+to hand; given one, the picture is carried in the document beneath it and the
+output is one self-contained file.
 Every name in it carries a token worked out from what the layout says, so that
 the document can be dropped into somebody else's page without its classes, its
 ids or its stylesheet reaching anything else there — `--opt scope_mode=fixed

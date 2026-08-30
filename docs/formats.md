@@ -198,7 +198,16 @@ reader, not the picture.
   elsewhere. This is the mode a browser overlay wants.
 
 Asking to embed an image whose bytes were not supplied, or to link to one with
-no href, is an error rather than a silently empty document.
+no href, is an error rather than a silently empty document, and the command
+line answers it by naming `--image` and `--no-image`.
+
+The library keeps `embed` as its default, since a caller that reached for a
+renderer usually has the picture in hand. `scribe render` is given a layout
+and not always an image, so when none is named, none is carried in the
+document being read and no flag or `--opt` said what to do with one, it
+renders as though `--no-image` had been given and says so at `-v`. An
+`--image` whose kind cannot be told from its bytes is refused by name before
+anything is rendered.
 
 ### What a screen reader hears: `role`, `aria_label`, `title`
 

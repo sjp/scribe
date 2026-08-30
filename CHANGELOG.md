@@ -76,7 +76,12 @@ Versioning](https://semver.org/spec/v2.0.0.html).
   output that links to its image rather than carrying it points at the image
   from the directory it is written into, so it still finds the picture when it
   is opened from somewhere other than where the run was started; `--link-href`
-  says outright where to point instead.
+  says outright where to point instead. `scribe render` with no image to hand
+  and nothing said about one writes the text layer on its own rather than
+  stopping; a format asked outright for an image it was never given says which
+  flags name one, an `--image` whose kind cannot be told from its bytes is
+  refused before anything is rendered, and both leave with the status of a
+  mistake in the request rather than that of a failed run.
 - WebAssembly bindings packaged for the browser and for Node, with TypeScript
   declarations for the layout model, the renderer options and the rendered
   document.

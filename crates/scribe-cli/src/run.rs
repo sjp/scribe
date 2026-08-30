@@ -4,6 +4,7 @@
 //! happens in, the timings worth reporting, and the translation between a
 //! person's flags and a renderer's options.
 
+use std::borrow::Cow;
 use std::path::{Path, PathBuf};
 use std::time::Instant;
 
@@ -13,7 +14,7 @@ use scribe_core::image_source::ImageSource;
 use scribe_core::layout::{Layout, LayoutDocument};
 use scribe_core::ocr::{DecodeMethod, Engine, OcrOptions, PixelImage};
 use scribe_core::render::{
-    OptionSpec, Options, Registry, RenderOutput, Renderer, list_templates, registry,
+    OptionSpec, Options, Registry, RenderError, RenderOutput, Renderer, list_templates, registry,
 };
 
 use crate::cli::{
@@ -25,6 +26,9 @@ use crate::models;
 
 /// The option `--template-file` sets.
 const TEMPLATE_SOURCE: &str = "template_source";
+
+/// The option `--embed`, `--link` and `--no-image` set.
+const IMAGE_MODE: &str = "image_mode";
 
 /// How wide the lines of the format listing are.
 const LISTING_WIDTH: usize = 74;
@@ -196,7 +200,19 @@ fn render(command: RenderCommand) -> Result<()> {
     if let Some(directory) = &out_dir {
         io::make_directory(directory)?;
     }
-    let encoded = image.as_deref().map(io::read).transpose()?;
+    let encoded = match image.as_deref() {
+        Some(path) => Some(readable_image(path)?),
+        None => None,
+    };
+
+    // Nothing on the command line said what to do with the image and none was
+    // named, so the plainest command writes the text layer on its own rather
+    // than stopping over a picture nobody asked for. Whether a layout carries
+    // its own image is not known until it is read, so that half of the
+    // question is asked again for each one; the library keeps `embed`.
+    let leave_image_out = takes_option(renderer, IMAGE_MODE)
+        && encoded.is_none()
+        && options.get(IMAGE_MODE).is_none();
 
     for path in &layouts {
         let name = io::shown(path);
@@ -227,9 +243,17 @@ fn render(command: RenderCommand) -> Result<()> {
             bytes,
             href: link.as_deref(),
         };
+        let options = if leave_image_out && carried.is_none() {
+            log::info!("{name}: no image was given, so the text layer stands on its own");
+            Cow::Owned(options.clone().with(IMAGE_MODE, "none"))
+        } else {
+            Cow::Borrowed(&options)
+        };
 
         let started = Instant::now();
-        let document = renderer.render(&layout, &source, &options)?;
+        let document = renderer
+            .render(&layout, &source, &options)
+            .map_err(where_the_image_comes_from)?;
         log::info!(
             "{name}: rendered {} bytes of {} in {:.1?}",
             document.bytes.len(),
@@ -329,6 +353,39 @@ fn options(renderer: &dyn Renderer, args: &RenderArgs) -> Result<Options> {
         options.set(name, value);
     }
     Ok(options)
+}
+
+/// Whether a renderer takes an option of that name.
+fn takes_option(renderer: &dyn Renderer, option: &str) -> bool {
+    renderer
+        .describe_options()
+        .iter()
+        .any(|spec| spec.name == option)
+}
+
+/// The bytes of an image the run was given, refused here rather than half way
+/// through a render if nothing about them says what kind of image it is.
+fn readable_image(path: &Path) -> Result<Vec<u8>> {
+    let encoded = io::read(path)?;
+    if mime_of(&encoded).is_none() {
+        let name = io::shown(path);
+        return Err(usage(format!(
+            "the media type of {name} could not be worked out from its bytes, so it cannot be embedded or described; convert it to PNG or JPEG and pass that"
+        )));
+    }
+    Ok(encoded)
+}
+
+/// Says which flags supply an image to a renderer that wanted one and was not
+/// given it, and leaves every other failure to speak for itself.
+fn where_the_image_comes_from(error: RenderError) -> anyhow::Error {
+    let missing = matches!(error, RenderError::MissingImage { .. });
+    let error = anyhow::Error::new(error);
+    if missing {
+        error.context("pass `--image PATH`, or `--no-image` to leave it out")
+    } else {
+        error
+    }
 }
 
 /// The message for a flag whose option the chosen format has never heard of.

@@ -143,6 +143,43 @@ fn a_layout_renders_as_a_text_layer_without_the_image() {
 }
 
 #[test]
+fn a_layout_renders_on_its_own_when_no_image_is_named() {
+    scribe()
+        .arg("render")
+        .arg(fixture("hello.layout.json"))
+        .assert()
+        .success()
+        .stdout(predicate::str::starts_with("<?xml"))
+        .stdout(predicate::str::contains(">Hello</tspan>"))
+        .stdout(predicate::str::contains("<image").not());
+}
+
+#[test]
+fn asking_for_the_image_without_naming_one_says_which_flags_name_it() {
+    scribe()
+        .args(["render", "--embed"])
+        .arg(fixture("hello.layout.json"))
+        .assert()
+        .code(USAGE)
+        .stderr(predicate::str::contains("--image PATH"))
+        .stderr(predicate::str::contains("--no-image"));
+}
+
+#[test]
+fn an_image_of_no_recognisable_kind_is_a_usage_error() {
+    scribe()
+        .arg("render")
+        .arg(fixture("hello.layout.json"))
+        .arg("--image")
+        .arg(fixture("hello.layout.json"))
+        .assert()
+        .code(USAGE)
+        .stderr(predicate::str::contains("hello.layout.json"))
+        .stderr(predicate::str::contains("media type of"))
+        .stderr(predicate::str::contains("could not be worked out"));
+}
+
+#[test]
 fn a_layout_that_carries_the_image_renders_with_it() {
     let embedded = work_directory("render-a-self-contained-layout").join("hello.json");
     scribe()
