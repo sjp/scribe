@@ -2,12 +2,12 @@
 source: crates/scribe-core/tests/fixtures.rs
 expression: output
 ---
-<div class="scribe-hlv5aw-overlay">
+<div class="scribe-u9mh84-overlay">
   <style>
-    .scribe-hlv5aw-overlay { position: relative; display: inline-block; line-height: 0; color-scheme: light dark }
-    .scribe-hlv5aw-overlay img { display: block; max-width: 100% }
-    .scribe-hlv5aw-overlay span { position: absolute; color: transparent; white-space: pre; line-height: 1; transform-origin: center }
-    .scribe-hlv5aw-overlay span::selection { color: HighlightText; background: color-mix(in srgb, Highlight 35%, transparent) }
+    .scribe-u9mh84-overlay { position: relative; display: inline-block; line-height: 0; color-scheme: light dark }
+    .scribe-u9mh84-overlay img { display: block; max-width: 100% }
+    .scribe-u9mh84-overlay span { position: absolute; color: transparent; white-space: pre; line-height: 1; transform-origin: center }
+    .scribe-u9mh84-overlay span::selection { color: HighlightText; background: color-mix(in srgb, Highlight 35%, transparent) }
   </style>
   <img src="rotated.png" width="420" height="320" alt="Tilted line S 2 i" />
   <span style="left: 33.63px; top: 71.29px; width: 94.29px; height: 38px; font-size: 54.29px; transform: rotate(12.99deg)">Tilted</span>

@@ -219,7 +219,7 @@ fn an_overlays_names_can_be_settled_by_the_page() {
 
 #[test]
 fn two_overlays_in_one_page_share_no_name() {
-    // The name is worked out from what the layout says, so two pictures laid
+    // The name is worked out from the whole of the layout, so two pictures laid
     // over one page carry two sets of rules rather than one, and the same
     // picture rendered twice is the same document both times.
     let overlay = |text: &str| {

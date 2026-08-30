@@ -216,7 +216,7 @@ impl Renderer for SvgRenderer {
                 "scope_mode",
                 OptionKind::Str,
                 OptionValue::Str(ScopeMode::CHOICES[0].to_string()),
-                "Whether the class names, the ids and the stylesheet carry a token setting this document apart from anything around it: one worked out from what the document says, one of your own, or none at all.",
+                "Whether the class names, the ids and the stylesheet carry a token setting this document apart from anything around it: one worked out from the whole of the layout, one of your own, or none at all.",
             )
             .with_choices(ScopeMode::CHOICES),
             OptionSpec::new(
@@ -569,17 +569,21 @@ const HASH_OFFSET: u64 = 0xcbf2_9ce4_8422_2325;
 const HASH_PRIME: u64 = 0x0000_0100_0000_01b3;
 
 /// The token that sets a document written from this layout apart from every
-/// other, worked out from what the layout says and how large the image is.
+/// other, worked out from the whole of the layout: its text, the size of the
+/// image, and where every box sits on it.
 ///
 /// It is derived rather than random so that rendering the same layout twice
 /// gives the same document, and it is hashed here rather than through
 /// `std::hash::DefaultHasher`, whose output is not promised to be the same
 /// from one release of Rust to the next.
 pub(crate) fn scope_token(layout: &Layout) -> String {
-    let mut hash = HASH_OFFSET;
-    hash = hashed(hash, layout.text().as_bytes());
-    hash = hashed(hash, &layout.image.width.to_le_bytes());
-    hash = hashed(hash, &layout.image.height.to_le_bytes());
+    // The layout's compact JSON is a deterministic spelling of every field it
+    // has, so two crops of one sign, or a page rendered either side of a
+    // correction to a box, are told apart. Writing this model out is numbers
+    // and strings and cannot fail; a layout that somehow would not be written
+    // still gets a token, from as much of it as there is to hash.
+    let json = layout.to_json().unwrap_or_else(|_| layout.text());
+    let hash = hashed(HASH_OFFSET, json.as_bytes());
 
     // The first character is a letter, so that the token can begin an
     // identifier when the prefix before it is empty.
@@ -2393,6 +2397,19 @@ mod tests {
         other.lines[0].text = "Goodbye World".to_string();
         assert_ne!(scope_token(&other), token);
         assert_ne!(scope_token(&Layout::empty(120, 40)), token);
+    }
+
+    #[test]
+    fn a_name_follows_where_the_text_sits_as_well_as_what_it_says() {
+        let token = scope_token(&sample());
+        assert_eq!(scope_token(&sample()), token);
+
+        // Two crops of one sign say the same words over an image of the same
+        // size and differ only in where the words landed. Names them the same
+        // and the two collide in the page that holds both.
+        let mut moved = sample();
+        moved.lines[0].bbox.x += 1.0;
+        assert_ne!(scope_token(&moved), token);
     }
 
     #[test]

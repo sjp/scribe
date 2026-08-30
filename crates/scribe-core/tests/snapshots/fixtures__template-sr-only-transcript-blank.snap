@@ -2,11 +2,11 @@
 source: crates/scribe-core/tests/fixtures.rs
 expression: output
 ---
-<div class="scribe-v8i16z-transcript">
+<div class="scribe-ik4cv8-transcript">
   <style>
-    .scribe-v8i16z-sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; border: 0; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: normal }
+    .scribe-ik4cv8-sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; border: 0; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: normal }
   </style>
-  <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAANwAAACMCAAAAAAyv5iqAAACj0lEQVR4Ae3AA6AkWZbG8f937o3IzKdyS2Oubdu2bdu2bdu2bWmMnpZKr54yMyLu+Xa3anqmhztr1a+a/5MACP5vAiD4vwmA4P8mAIL/mwAI/m8CIPi/CYDg/yYAgv+bAAj+bwIg+L8JgOD/JgCC/5sACP5vAiD4vwmA4P8mAIL/mwAI/m8CIPi/CYDg/yYAgv+bAAj+bwIg+L8JgOD/JgCC/5sACP5vAiD4vwmA4P8mAIL/mwAI/m8CIPi/CYDg/yYAgv+bAAj+bwIg+L8JgOD/JgCC/5sACP5vAiD4vwmA4P8mAIL/mwAI/m8CIPi/CYDg/yYAgv+bAAj+bwIg+L8JgOD/JgCC/5sACP5vAiD4vwmA4P8mAIL/mwAI/m8CIPi/CYDg/yYAgv+bAAj+bwIg+L8JgOD/JgCC/5sACP5vAiD4vwmA4P8mAIL/mwAI/m8CIPi/CYDg/yYAgv+bAAj+bwIg+L8JgOD/JgCC/5sACP5vAiD4vwmA4P8mAIL/mwAI/m8CIPi/CYDg/yYAgv+bAAj+bwIg+L8JgOD/JgCC/5sACP5vAiD4vwmA4P8mAIL/mwAI/m8CIPi/CYDg/yYAgv+bAAj+bwIg+L8JgOD/JgCC/5sACP5vAiD4vwmA4P8mAIL/mwAI/m8CIPi/CYDg/yYAgv+bAAj+bwIg+L8JgOD/JgCC/5sACP5vAiD4vwmA4P8mAIL/mwAI/m8CIPi/CYDg/yYAgv+bAAj+bwIg+L8JgOD/JgCC/5sACP5vAiD4vwmA4P8mAIL/mwAI/m8CIPi/CYDg/yYAgv+bAAj+bwIg+L8JgOD/JgCC/5sACP5vAiD4vwmA4P8mAIL/mwAI/m8CIPi/CYDg/yYA/hFo6QIaftzMegAAAABJRU5ErkJggg==" width="220" height="140" alt="An image of text, transcribed after it." aria-describedby="scribe-v8i16z-transcript" />
-  <div class="scribe-v8i16z-sr-only" id="scribe-v8i16z-transcript">
+  <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAANwAAACMCAAAAAAyv5iqAAACj0lEQVR4Ae3AA6AkWZbG8f937o3IzKdyS2Oubdu2bdu2bdu2bWmMnpZKr54yMyLu+Xa3anqmhztr1a+a/5MACP5vAiD4vwmA4P8mAIL/mwAI/m8CIPi/CYDg/yYAgv+bAAj+bwIg+L8JgOD/JgCC/5sACP5vAiD4vwmA4P8mAIL/mwAI/m8CIPi/CYDg/yYAgv+bAAj+bwIg+L8JgOD/JgCC/5sACP5vAiD4vwmA4P8mAIL/mwAI/m8CIPi/CYDg/yYAgv+bAAj+bwIg+L8JgOD/JgCC/5sACP5vAiD4vwmA4P8mAIL/mwAI/m8CIPi/CYDg/yYAgv+bAAj+bwIg+L8JgOD/JgCC/5sACP5vAiD4vwmA4P8mAIL/mwAI/m8CIPi/CYDg/yYAgv+bAAj+bwIg+L8JgOD/JgCC/5sACP5vAiD4vwmA4P8mAIL/mwAI/m8CIPi/CYDg/yYAgv+bAAj+bwIg+L8JgOD/JgCC/5sACP5vAiD4vwmA4P8mAIL/mwAI/m8CIPi/CYDg/yYAgv+bAAj+bwIg+L8JgOD/JgCC/5sACP5vAiD4vwmA4P8mAIL/mwAI/m8CIPi/CYDg/yYAgv+bAAj+bwIg+L8JgOD/JgCC/5sACP5vAiD4vwmA4P8mAIL/mwAI/m8CIPi/CYDg/yYAgv+bAAj+bwIg+L8JgOD/JgCC/5sACP5vAiD4vwmA4P8mAIL/mwAI/m8CIPi/CYDg/yYAgv+bAAj+bwIg+L8JgOD/JgCC/5sACP5vAiD4vwmA4P8mAIL/mwAI/m8CIPi/CYDg/yYAgv+bAAj+bwIg+L8JgOD/JgCC/5sACP5vAiD4vwmA4P8mAIL/mwAI/m8CIPi/CYDg/yYA/hFo6QIaftzMegAAAABJRU5ErkJggg==" width="220" height="140" alt="An image of text, transcribed after it." aria-describedby="scribe-ik4cv8-transcript" />
+  <div class="scribe-ik4cv8-sr-only" id="scribe-ik4cv8-transcript">
   </div>
 </div>

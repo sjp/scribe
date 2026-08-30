@@ -95,10 +95,12 @@ name itself.
 class="scribe-g923no-text"    id="scribe-g923no-line-3"
 ```
 
-- `scope_mode=content`, the default, works the token out from what the layout
-  says and how large the image is. It is derived rather than random, so the
-  same layout rendered twice gives the same document, byte for byte — which is
-  what makes the output worth caching and worth keeping under version control.
+- `scope_mode=content`, the default, works the token out from the whole of the
+  layout: what it says, how large the image is, and where every box sits on it,
+  so that two crops of one sign are told apart. It is derived rather than
+  random, so the same layout rendered twice gives the same document, byte for
+  byte — which is what makes the output worth caching and worth keeping under
+  version control.
   The consequence to know about is the other side of the same coin: the *same
   image twice in one page collides with itself*.
 - `scope_mode=fixed` takes the token from `scope`. This is what the page with
@@ -293,7 +295,7 @@ How closely the text layer follows the glyphs under it is a choice:
 | `debug_line_stroke` | text | `#06c` | The colour line boxes are outlined in. |
 | `debug_word_stroke` | text | `#c00` | The colour word boxes are outlined in. |
 | `class_prefix` | text | `scribe-` | What every class name in the document starts with; a valid CSS identifier prefix. May be empty when a token follows it, since a token begins with a letter of its own. |
-| `scope_mode` | `content`, `fixed`, `none` | `content` | Whether the class names, the ids and the stylesheet carry a token setting this document apart from anything around it: one worked out from what the document says, one of your own, or none at all. |
+| `scope_mode` | `content`, `fixed`, `none` | `content` | Whether the class names, the ids and the stylesheet carry a token setting this document apart from anything around it: one worked out from the whole of the layout, one of your own, or none at all. |
 | `scope` | text | empty | The token to set this document apart, when `scope_mode` is `fixed`; a valid CSS identifier part. |
 | `ids` | `true` or `false` | `false` | Give every line and word an id, such as `line-3` and `word-3-1`, under the same prefix and token as the classes. |
 | `role` | `none`, `img`, `group` | `none` | What the document is announced as: `none` writes no role and leaves the text layer to be read word by word, `img` announces `aria_label` and nothing within, and `group` reads the text with a boundary around it. |

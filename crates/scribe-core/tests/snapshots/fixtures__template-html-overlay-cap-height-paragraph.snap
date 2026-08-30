@@ -2,12 +2,12 @@
 source: crates/scribe-core/tests/fixtures.rs
 expression: output
 ---
-<div class="scribe-gsfqf9-overlay">
+<div class="scribe-xn3jur-overlay">
   <style>
-    .scribe-gsfqf9-overlay { position: relative; display: inline-block; line-height: 0; color-scheme: light dark }
-    .scribe-gsfqf9-overlay img { display: block; max-width: 100% }
-    .scribe-gsfqf9-overlay span { position: absolute; color: transparent; white-space: pre; line-height: 1; transform-origin: center }
-    .scribe-gsfqf9-overlay span::selection { color: HighlightText; background: color-mix(in srgb, Highlight 35%, transparent) }
+    .scribe-xn3jur-overlay { position: relative; display: inline-block; line-height: 0; color-scheme: light dark }
+    .scribe-xn3jur-overlay img { display: block; max-width: 100% }
+    .scribe-xn3jur-overlay span { position: absolute; color: transparent; white-space: pre; line-height: 1; transform-origin: center }
+    .scribe-xn3jur-overlay span::selection { color: HighlightText; background: color-mix(in srgb, Highlight 35%, transparent) }
   </style>
   <img src="paragraph.png" width="480" height="280" alt="Reading Machines The quick brown fox jumps over the lazy dog, and does it again on the next line. Printed in 1996 at Leyden." />
   <span style="left: 33px; top: 29px; width: 118px; height: 35px; font-size: 50px; transform: rotate(0deg)">Reading</span>

@@ -2,12 +2,12 @@
 source: crates/scribe-core/tests/template.rs
 expression: "render(\"html-overlay\", Options::new())"
 ---
-<div class="scribe-g6patc-overlay">
+<div class="scribe-e7vgfz-overlay">
   <style>
-    .scribe-g6patc-overlay { position: relative; display: inline-block; line-height: 0; color-scheme: light dark }
-    .scribe-g6patc-overlay img { display: block; max-width: 100% }
-    .scribe-g6patc-overlay span { position: absolute; color: transparent; white-space: pre; line-height: 1; transform-origin: center }
-    .scribe-g6patc-overlay span::selection { color: HighlightText; background: color-mix(in srgb, Highlight 35%, transparent) }
+    .scribe-e7vgfz-overlay { position: relative; display: inline-block; line-height: 0; color-scheme: light dark }
+    .scribe-e7vgfz-overlay img { display: block; max-width: 100% }
+    .scribe-e7vgfz-overlay span { position: absolute; color: transparent; white-space: pre; line-height: 1; transform-origin: center }
+    .scribe-e7vgfz-overlay span::selection { color: HighlightText; background: color-mix(in srgb, Highlight 35%, transparent) }
   </style>
   <img src="page.png" width="284" height="140" alt="Hello World Tilted &amp; &lt;set&gt;" />
   <span style="left: 28px; top: 31px; width: 98px; height: 32px; font-size: 32px; transform: rotate(0deg)">Hello</span>

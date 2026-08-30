@@ -3,13 +3,13 @@ source: crates/scribe-core/tests/svg.rs
 expression: "linked(&Layout::empty(SIZE.0, SIZE.1), Options::new())"
 ---
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="scribe-gcsuvz" class="scribe-gcsuvz-root" width="284" height="96" viewBox="0 0 284 96">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="scribe-ip7ang" class="scribe-ip7ang-root" width="284" height="96" viewBox="0 0 284 96">
   <style>
-    #scribe-gcsuvz { color-scheme: light dark; }
-    #scribe-gcsuvz .scribe-gcsuvz-text { all: revert; fill: transparent; stroke: none; font-family: sans-serif; font-style: normal; font-weight: normal; font-variant: normal; font-stretch: normal; letter-spacing: normal; word-spacing: normal; text-anchor: start; text-decoration: none; text-transform: none; direction: ltr; user-select: text; -webkit-user-select: text; white-space: pre; }
-    #scribe-gcsuvz .scribe-gcsuvz-text text, #scribe-gcsuvz .scribe-gcsuvz-text tspan { fill: inherit; stroke: inherit; font-family: inherit; font-style: inherit; font-weight: inherit; font-variant: inherit; font-stretch: inherit; letter-spacing: inherit; word-spacing: inherit; text-anchor: inherit; text-decoration: inherit; text-transform: inherit; direction: inherit; unicode-bidi: isolate; white-space: inherit; user-select: inherit; -webkit-user-select: inherit; }
-    #scribe-gcsuvz .scribe-gcsuvz-text::selection, #scribe-gcsuvz .scribe-gcsuvz-text ::selection { fill: HighlightText; background: color-mix(in srgb, Highlight 35%, transparent); }
+    #scribe-ip7ang { color-scheme: light dark; }
+    #scribe-ip7ang .scribe-ip7ang-text { all: revert; fill: transparent; stroke: none; font-family: sans-serif; font-style: normal; font-weight: normal; font-variant: normal; font-stretch: normal; letter-spacing: normal; word-spacing: normal; text-anchor: start; text-decoration: none; text-transform: none; direction: ltr; user-select: text; -webkit-user-select: text; white-space: pre; }
+    #scribe-ip7ang .scribe-ip7ang-text text, #scribe-ip7ang .scribe-ip7ang-text tspan { fill: inherit; stroke: inherit; font-family: inherit; font-style: inherit; font-weight: inherit; font-variant: inherit; font-stretch: inherit; letter-spacing: inherit; word-spacing: inherit; text-anchor: inherit; text-decoration: inherit; text-transform: inherit; direction: inherit; unicode-bidi: isolate; white-space: inherit; user-select: inherit; -webkit-user-select: inherit; }
+    #scribe-ip7ang .scribe-ip7ang-text::selection, #scribe-ip7ang .scribe-ip7ang-text ::selection { fill: HighlightText; background: color-mix(in srgb, Highlight 35%, transparent); }
   </style>
   <image href="hello.png" width="284" height="96"/>
-  <g class="scribe-gcsuvz-text"/>
+  <g class="scribe-ip7ang-text"/>
 </svg>

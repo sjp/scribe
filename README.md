@@ -122,11 +122,12 @@ scribe render page.layout.json --no-image --opt precision=1
 That is the text layer alone, which is what comes out when there is no image
 to hand; given one, the picture is carried in the document beneath it and the
 output is one self-contained file.
-Every name in it carries a token worked out from what the layout says, so that
-the document can be dropped into somebody else's page without its classes, its
-ids or its stylesheet reaching anything else there — `--opt scope_mode=fixed
---opt scope=left` names it yourself, and `--opt scope_mode=none` leaves the
-token out of a document that is going to stand alone.
+Every name in it carries a token worked out from the whole of the layout, so
+that the document can be dropped into somebody else's page without its
+classes, its ids or its stylesheet reaching anything else there — `--opt
+scope_mode=fixed --opt scope=left` names it yourself, and `--opt
+scope_mode=none` leaves the token out of a document that is going to stand
+alone.
 
 Three formats ship with scribe: `svg`, `json`, and `template` — the last
 rendering a Jinja template, of which twelve come built in and any number can be
