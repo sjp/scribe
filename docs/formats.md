@@ -229,16 +229,16 @@ How closely the text layer follows the glyphs under it is a choice:
 | `image_mode` | `embed`, `link`, `none` | `embed` | Whether the image is carried in the document, referenced by its path or URL, or left out. |
 | `font_family` | text | `sans-serif` | The CSS font family the text layer is set in. |
 | `font_size_scope` | `word`, `line` | `word` | Whether each word takes its font size from its own box or from the line's. |
-| `font_scale` | a number | `1` | What to multiply a box's height by to get its font size. |
+| `font_scale` | a number | `1` | What to multiply a box's height by to get its font size; above zero. |
 | `font_size_mode` | `box_height`, `cap_height` | `box_height` | Whether a box's height is the whole font size or the height of a capital letter set in it, which suits text written in capitals. |
-| `cap_height_ratio` | a number | `0.7` | How much of the font size a capital letter stands, as a fraction, when the size is worked out from cap height. |
+| `cap_height_ratio` | a number | `0.7` | How much of the font size a capital letter stands, as a fraction above zero, when the size is worked out from cap height. |
 | `baseline_mode` | `ratio`, `estimate` | `ratio` | Whether the baseline is always the fixed fraction above a box's bottom, or the bottom itself for a line whose characters do not fall below it. |
-| `baseline_ratio` | a number | `0.2` | How far above the bottom of a box its baseline sits, as a fraction of the height. |
+| `baseline_ratio` | a number | `0.2` | How far above the bottom of a box its baseline sits, as a fraction of the height, from 0 to 1. |
 | `length_adjust` | `spacingAndGlyphs`, `spacing` | `spacingAndGlyphs` | Whether fitting a word to its box stretches the gaps alone or the glyphs as well. |
 | `char_positions` | `true` or `false` | `false` | Set each character at the pixels it was read from, where the recogniser said where they are, rather than stretching a whole word to fill its box. |
 | `space_mode` | `none`, `tspan` | `none` | Whether the gap between two words holds a `<tspan>` of its own carrying the space, or the words are parted by a plain space character. |
 | `line_break_mode` | `none`, `tspan` | `none` | Whether one line is parted from the next by a `<tspan>` carrying a newline, so that copying several lines out keeps them on separate lines. |
-| `axis_align_tolerance` | a number | `0.5` | How many degrees off level a line may be before it is given a rotation. |
+| `axis_align_tolerance` | a number | `0.5` | How many degrees off level a line may be before it is given a rotation; not negative. |
 | `min_confidence` | a number | `0` | Leave out words the recogniser is less sure of than this, from 0 to 1. The recogniser scribe reads images with reports no confidence, so this filters only a layout that came from somewhere else. |
 | `unscored_words` | `keep`, `drop` | `keep` | Whether a word carrying no confidence at all is kept or left out once `min_confidence` is above zero. |
 | `text_fill` | text | `#000` | The colour drawn text is filled with. |
@@ -252,7 +252,7 @@ How closely the text layer follows the glyphs under it is a choice:
 | `ids` | `true` or `false` | `false` | Give every line and word an id, such as `line-3` and `word-3-1`, under the same prefix and token as the classes. |
 | `title` | text | empty | A title for the document; left out when empty. |
 | `aria_label` | text | empty | What assistive technology announces; the recognised text when empty. |
-| `precision` | a whole number | `2` | How many decimals coordinates are written to. |
+| `precision` | a whole number | `2` | How many decimals coordinates are written to, from 0 to 10. |
 | `include_style` | `true` or `false` | `true` | Carry a stylesheet making the text selectable and its selection visible. |
 | `style_nonce` | text | empty | The nonce the stylesheet is written with, for a page whose content security policy does not allow inline styles outright. |
 | `xml_declaration` | `true` or `false` | `true` | Begin the document with an XML declaration. |

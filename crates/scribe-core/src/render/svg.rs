@@ -96,7 +96,7 @@ impl Renderer for SvgRenderer {
                 "font_scale",
                 OptionKind::Float,
                 OptionValue::Float(1.0),
-                "What to multiply a box's height by to get its font size.",
+                "What to multiply a box's height by to get its font size; above zero.",
             ),
             OptionSpec::new(
                 "font_size_mode",
@@ -109,7 +109,7 @@ impl Renderer for SvgRenderer {
                 "cap_height_ratio",
                 OptionKind::Float,
                 OptionValue::Float(0.7),
-                "How much of the font size a capital letter stands, as a fraction, when the size is worked out from cap height.",
+                "How much of the font size a capital letter stands, as a fraction above zero, when the size is worked out from cap height.",
             ),
             OptionSpec::new(
                 "baseline_mode",
@@ -122,7 +122,7 @@ impl Renderer for SvgRenderer {
                 "baseline_ratio",
                 OptionKind::Float,
                 OptionValue::Float(0.2),
-                "How far above the bottom of a box its baseline sits, as a fraction of the height.",
+                "How far above the bottom of a box its baseline sits, as a fraction of the height, from 0 to 1.",
             ),
             OptionSpec::new(
                 "length_adjust",
@@ -155,7 +155,7 @@ impl Renderer for SvgRenderer {
                 "axis_align_tolerance",
                 OptionKind::Float,
                 OptionValue::Float(0.5),
-                "How many degrees off level a line may be before it is given a rotation.",
+                "How many degrees off level a line may be before it is given a rotation; not negative.",
             ),
             OptionSpec::new(
                 "min_confidence",
@@ -241,7 +241,7 @@ impl Renderer for SvgRenderer {
                 "precision",
                 OptionKind::Int,
                 OptionValue::Int(2),
-                "How many decimals coordinates are written to.",
+                "How many decimals coordinates are written to, from 0 to 10.",
             ),
             OptionSpec::new(
                 "include_style",
@@ -677,6 +677,52 @@ fn check_nonce(value: &str) -> Result<(), RenderError> {
     }
 }
 
+/// Checks that a number an option is set to is one the document can be
+/// written with, and narrows it to the `f32` the geometry is worked in.
+///
+/// `range` finishes the sentence "it has to be …", so that a value outside
+/// it is refused with the range it fell outside of.
+///
+/// # Errors
+///
+/// Returns an error naming the option when the value is not a finite number,
+/// or `within` does not accept it.
+fn check_float(
+    name: &'static str,
+    value: f64,
+    within: impl Fn(f32) -> bool,
+    range: &str,
+) -> Result<f32, RenderError> {
+    let narrowed = value as f32;
+    if narrowed.is_finite() && within(narrowed) {
+        return Ok(narrowed);
+    }
+    Err(RenderError::unusable_option(
+        NAME,
+        name,
+        value.to_string(),
+        format!("it has to be {range}"),
+    ))
+}
+
+/// Checks that the number of decimals asked for is one an `f32` has left to
+/// give.
+///
+/// # Errors
+///
+/// Returns an error naming the option and the range it fell outside of.
+fn check_precision(value: i64) -> Result<usize, RenderError> {
+    if (0..=MAX_PRECISION).contains(&value) {
+        return Ok(value as usize);
+    }
+    Err(RenderError::unusable_option(
+        NAME,
+        "precision",
+        value.to_string(),
+        format!("it has to be a whole number of decimals from 0 to {MAX_PRECISION}"),
+    ))
+}
+
 /// The options, read once into the shapes the writing wants them in.
 struct Settings<'a> {
     text_mode: TextMode,
@@ -759,22 +805,54 @@ impl<'a> Settings<'a> {
         let style_nonce = options.str("style_nonce");
         check_nonce(style_nonce)?;
 
+        let font_scale = check_float(
+            "font_scale",
+            options.float("font_scale"),
+            |value| value > 0.0,
+            "a number above zero",
+        )?;
+        let cap_height_ratio = check_float(
+            "cap_height_ratio",
+            options.float("cap_height_ratio"),
+            |value| value > 0.0,
+            "a fraction above zero",
+        )?;
+        let baseline_ratio = check_float(
+            "baseline_ratio",
+            options.float("baseline_ratio"),
+            |value| (0.0..=1.0).contains(&value),
+            "a fraction from 0 to 1",
+        )?;
+        let axis_align_tolerance = check_float(
+            "axis_align_tolerance",
+            options.float("axis_align_tolerance"),
+            |value| value >= 0.0,
+            "an angle in degrees that is not negative",
+        )?;
+        let min_confidence = check_float(
+            "min_confidence",
+            options.float("min_confidence"),
+            |value| (0.0..=1.0).contains(&value),
+            "a confidence from 0 to 1",
+        )?;
+        let precision = check_precision(options.int("precision"))?;
+
         Ok(Self {
             text_mode: TextMode::read(options.str("text_mode")),
             image_mode: ImageMode::read(options.str("image_mode")),
             font_family,
             font_size_scope: Scope::read(options.str("font_size_scope")),
-            font_scale: options.float("font_scale") as f32,
+            font_scale,
             font_size_mode: FontSizeMode::read(options.str("font_size_mode")),
-            cap_height_ratio: options.float("cap_height_ratio") as f32,
+            cap_height_ratio,
             baseline_mode: BaselineMode::read(options.str("baseline_mode")),
-            baseline_ratio: options.float("baseline_ratio") as f32,
+            baseline_ratio,
             length_adjust: options.str("length_adjust"),
             char_positions: options.bool("char_positions"),
             space_mode: SeparatorMode::read(options.str("space_mode")),
             line_break_mode: SeparatorMode::read(options.str("line_break_mode")),
-            axis_align_tolerance: options.float("axis_align_tolerance") as f32,
-            min_confidence: options.float("min_confidence") as f32,
+            axis_align_tolerance,
+            min_confidence,
             unscored_words: UnscoredWords::read(options.str("unscored_words")),
             text_fill: options.str("text_fill"),
             selection_fill: options.str("selection_fill"),
@@ -786,7 +864,7 @@ impl<'a> Settings<'a> {
             ids: options.bool("ids"),
             title: options.str("title"),
             aria_label: options.str("aria_label"),
-            precision: options.int("precision").clamp(0, MAX_PRECISION) as usize,
+            precision,
             include_style: options.bool("include_style"),
             style_nonce,
             xml_declaration: options.bool("xml_declaration"),
@@ -1170,10 +1248,9 @@ fn break_tspan(settings: &Settings<'_>) -> String {
 /// The font size text in a box of the given height is set at.
 fn font_size(height: f32, settings: &Settings<'_>) -> f32 {
     let size = height * settings.font_scale;
-    let ratio = settings.cap_height_ratio;
     match settings.font_size_mode {
-        FontSizeMode::CapHeight if ratio.is_finite() && ratio > 0.0 => size / ratio,
-        FontSizeMode::CapHeight | FontSizeMode::BoxHeight => size,
+        FontSizeMode::CapHeight => size / settings.cap_height_ratio,
+        FontSizeMode::BoxHeight => size,
     }
 }
 
@@ -2368,6 +2445,56 @@ mod tests {
             kept.contains("font-family: \"Times New Roman\", serif;"),
             "{kept}"
         );
+    }
+
+    #[test]
+    fn a_number_the_document_cannot_be_written_with_is_refused() {
+        let refuse = |name: &str, value: OptionValue| {
+            try_render(
+                &sample(),
+                &Options::new().with("image_mode", "none").with(name, value),
+            )
+            .unwrap_err()
+            .to_string()
+        };
+        let refused = |name: &'static str, value: OptionValue, range: &str| {
+            let error = refuse(name, value);
+            assert!(error.contains(&format!("`{name}`")), "{error}");
+            assert!(error.contains(range), "{error}");
+        };
+
+        refused("font_scale", (-1.0).into(), "above zero");
+        refused("font_scale", (0.0).into(), "above zero");
+        refused("font_scale", f64::NAN.into(), "above zero");
+        refused("cap_height_ratio", (0.0).into(), "above zero");
+        refused("baseline_ratio", (1.5).into(), "from 0 to 1");
+        refused("baseline_ratio", (-0.1).into(), "from 0 to 1");
+        refused("axis_align_tolerance", (-0.5).into(), "not negative");
+        refused("min_confidence", (1.2).into(), "from 0 to 1");
+        refused("precision", (-1_i64).into(), "from 0 to 10");
+        refused("precision", (11_i64).into(), "from 0 to 10");
+
+        // A number too big for the coordinates to be written in is as
+        // unusable as one outside the range outright.
+        refused("font_scale", 1e300.into(), "above zero");
+
+        // The edges of each range are the caller's to ask for.
+        for (name, value) in [
+            ("font_scale", OptionValue::from(0.5)),
+            ("cap_height_ratio", 1.0.into()),
+            ("baseline_ratio", 0.0.into()),
+            ("baseline_ratio", 1.0.into()),
+            ("axis_align_tolerance", 0.0.into()),
+            ("min_confidence", 1.0.into()),
+            ("precision", 0_i64.into()),
+            ("precision", 10_i64.into()),
+        ] {
+            try_render(
+                &sample(),
+                &Options::new().with("image_mode", "none").with(name, value),
+            )
+            .unwrap_or_else(|error| panic!("`{name}` at the edge of its range renders: {error}"));
+        }
     }
 
     #[test]

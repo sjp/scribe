@@ -46,8 +46,11 @@ Versioning](https://semver.org/spec/v2.0.0.html).
   rule in its stylesheet hangs off the root element rather than reaching the
   page around it; the text layer holds its own against whatever that page
   styles its text with; the names and colours it is given are checked rather
-  than escaped; and the stylesheet can carry a nonce for a page whose content
-  security policy asks for one.
+  than escaped; a number it cannot be written with — a font scale at zero, a
+  ratio past one, more decimals than a coordinate has to give — is refused
+  naming the range it fell outside of, rather than quietly clamped or written
+  into a document no browser will honour; and the stylesheet can carry a nonce
+  for a page whose content security policy asks for one.
 - The `template` renderer, writing whatever a Jinja template describes, with
   callers' own templates and values accepted and twelve built in: text layers
   to lay over an image, written as positioned HTML or as SVG; transcripts an
