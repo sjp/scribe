@@ -11,8 +11,10 @@
   `var.scope` settle the token that follows the prefix, so that the wrapper
   and the layer inside it carry one name between them.
 
-  The image carries no `alt`: the layer over it is what a screen reader
-  announces, and announcing the same text twice helps nobody.
+  The image carries no `alt`: the layer over it is read as the text it is,
+  and reading the same words twice helps nobody. A `var.role` of `img` turns
+  the layer back into a picture with a label, so a page asking for that wants
+  to write the `alt` itself.
 -#}
 {%- set source = image.data_uri or image.href -%}
 {%- set prefix = vars.class_prefix | default("scribe-") | css_ident("class_prefix") -%}

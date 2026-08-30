@@ -3,7 +3,7 @@ source: crates/scribe-core/tests/svg.rs
 expression: "render(&hello_world(), Options::new().with(\"image_mode\", \"link\"))"
 ---
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="scribe-g923no" class="scribe-g923no-root" width="284" height="96" viewBox="0 0 284 96" role="img" aria-label="Hello World">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="scribe-g923no" class="scribe-g923no-root" width="284" height="96" viewBox="0 0 284 96">
   <style>
     #scribe-g923no { color-scheme: light dark; }
     #scribe-g923no .scribe-g923no-text { all: revert; fill: transparent; stroke: none; font-family: sans-serif; font-style: normal; font-weight: normal; font-variant: normal; font-stretch: normal; letter-spacing: normal; word-spacing: normal; text-anchor: start; text-decoration: none; text-transform: none; direction: ltr; user-select: text; -webkit-user-select: text; white-space: pre; }

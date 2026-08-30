@@ -91,7 +91,7 @@ scribe render page.layout.json --no-image --opt precision=1
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" id="scribe-g923no" class="scribe-g923no-root" width="284" height="96" viewBox="0 0 284 96" role="img" aria-label="Hello World">
+<svg xmlns="http://www.w3.org/2000/svg" id="scribe-g923no" class="scribe-g923no-root" width="284" height="96" viewBox="0 0 284 96">
   <style>
     #scribe-g923no { color-scheme: light dark; }
     #scribe-g923no .scribe-g923no-text { all: revert; fill: transparent; font-family: sans-serif; white-space: pre; … }
@@ -120,8 +120,8 @@ SVG, a transcript only a screen reader reaches, a `<figure>` with the whole
 text beneath it, everything at once, the layout itself in a `<script>`, and
 JSON-LD for a crawler. The rest are `hocr`, `alto`, `markdown`, `text` and
 `alt-text`. Nothing is hard-coded that could be an option: embedding or
-linking the image, visible or invisible text, the font, the class names, the
-ids, the number of decimals. See [output formats](docs/formats.md).
+linking the image, visible or invisible text, what a screen reader is told,
+the font, the class names, the ids, the number of decimals. See [output formats](docs/formats.md).
 
 ## In a browser
 

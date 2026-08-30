@@ -62,7 +62,7 @@ scribe render page.layout.json --no-image --opt precision=1
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" id="scribe-g923no" class="scribe-g923no-root" width="284" height="96" viewBox="0 0 284 96" role="img" aria-label="Hello World">
+<svg xmlns="http://www.w3.org/2000/svg" id="scribe-g923no" class="scribe-g923no-root" width="284" height="96" viewBox="0 0 284 96">
   <style>
     #scribe-g923no { color-scheme: light dark; }
     #scribe-g923no .scribe-g923no-text { all: revert; fill: transparent; font-family: sans-serif; white-space: pre; … }
@@ -200,6 +200,38 @@ reader, not the picture.
 Asking to embed an image whose bytes were not supplied, or to link to one with
 no href, is an error rather than a silently empty document.
 
+### What a screen reader hears: `role`, `aria_label`, `title`
+
+An SVG inline in a page is part of that page's accessibility tree, and the
+role on its root element decides how much of the text layer that tree holds.
+
+- `role=none`, the default, leaves the attribute off the element rather than
+  writing the ARIA role of that name, which would mean the opposite. The
+  `<text>` elements are exposed as the text they are, so a screen reader reads
+  the whole of the layer in the order the lines were written, which is what
+  the layer is for. No `aria-label` is derived: the text already says what the
+  text says.
+- `role=img` announces the document as a picture. WAI-ARIA makes the children
+  of an image presentational, so what is heard is the label and nothing
+  within, however much text the layer holds. Given no `aria_label`, the
+  document takes one from the recognised text, cut to 200 characters at a word
+  boundary and ended with an ellipsis. This is the mode for a picture whose
+  words are an aside — a logo, a sign, a caption — or for a page that carries
+  the text somewhere else already.
+- `role=group` exposes the text as `none` does and draws a boundary around it
+  that a reader can move to and past in one step, and that `aria_label` names.
+  This is the middle ground for a page with several of these in it: the whole
+  transcript is there, and it can be skipped.
+
+`aria_label` is written under any role when you set it, and derived from the
+text only under `img`. `title` becomes a `<title>` element whatever the role
+is: a tooltip in a browser, and the name of a document opened on its own.
+
+None of it reaches a reader through `<img src="page.svg">`, which is a picture
+whatever its root says. How much of it is heard otherwise differs between
+screen readers, and between a document inline in a page and one in an
+`<object>` or an `<iframe>`.
+
 ### Fitting the layer to the glyphs
 
 The recogniser gives a box per word and, when it can, a box per character.
@@ -250,8 +282,9 @@ How closely the text layer follows the glyphs under it is a choice:
 | `scope_mode` | `content`, `fixed`, `none` | `content` | Whether the class names, the ids and the stylesheet carry a token setting this document apart from anything around it: one worked out from what the document says, one of your own, or none at all. |
 | `scope` | text | empty | The token to set this document apart, when `scope_mode` is `fixed`; a valid CSS identifier part. |
 | `ids` | `true` or `false` | `false` | Give every line and word an id, such as `line-3` and `word-3-1`, under the same prefix and token as the classes. |
+| `role` | `none`, `img`, `group` | `none` | What the document is announced as: `none` writes no role and leaves the text layer to be read word by word, `img` announces `aria_label` and nothing within, and `group` reads the text with a boundary around it. |
 | `title` | text | empty | A title for the document; left out when empty. |
-| `aria_label` | text | empty | What assistive technology announces; the recognised text when empty. |
+| `aria_label` | text | empty | What assistive technology announces the document as; under `role=img`, the recognised text when empty. |
 | `precision` | a whole number | `2` | How many decimals coordinates are written to, from 0 to 10. |
 | `include_style` | `true` or `false` | `true` | Carry a stylesheet making the text selectable and its selection visible. |
 | `style_nonce` | text | empty | The nonce the stylesheet is written with, for a page whose content security policy does not allow inline styles outright. |

@@ -240,14 +240,16 @@ page share nothing.
     .scribe-g923no-overlay svg { position: absolute; left: 0; top: 0; width: 100%; height: 100% }
   </style>
   <img src="hello.png" width="284" height="96" alt="" />
-  <svg xmlns="http://www.w3.org/2000/svg" id="scribe-g923no" class="scribe-g923no-root" width="284" height="96" viewBox="0 0 284 96" role="img" aria-label="Hello World">
+  <svg xmlns="http://www.w3.org/2000/svg" id="scribe-g923no" class="scribe-g923no-root" width="284" height="96" viewBox="0 0 284 96">
     …
   </svg>
 </div>
 ```
 
-The image carries no `alt`: the layer over it is what a screen reader
-announces, and announcing the same text twice helps nobody.
+The image carries no `alt`: the layer over it is read as the text it is, and
+reading the same words twice helps nobody. A `var.role` of `img` turns the
+layer back into a picture with a label, so a page asking for that wants to
+write the `alt` itself.
 
 ### `html-figure`
 
@@ -263,6 +265,10 @@ and the options of the templates it says the same as — `var.class_prefix`,
 `var.scope_mode`, `var.scope`, `var.selection_fill`,
 `var.selection_background`, `var.char_positions`, `var.font_size_mode` and
 `var.cap_height_ratio`.
+
+An SVG layer here is written with `role=img`, unlike the one `svg-overlay`
+writes: the `alt` and the transcript already say the text, so the layer is
+there to be found and selected rather than read out a third time.
 
 ```html
 <figure class="scribe-g923no-figure">

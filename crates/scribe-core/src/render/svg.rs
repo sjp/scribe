@@ -6,6 +6,12 @@
 //! exactly like the image it came from while the browser can select it, search
 //! it and read it aloud.
 //!
+//! Nothing on the root element stands in the way of that reading: the
+//! document carries no `role` unless asked for one, so the `<text>` elements
+//! are reached and read in the order they were written. `role=img` is there
+//! for the caller who wants a picture with a label and nothing announced
+//! within it.
+//!
 //! Every part of that is an option: the text can be drawn instead of hidden,
 //! with the boxes it came from outlined for inspection; the image can be
 //! embedded, linked to, or left out so the text layer can be laid over an
@@ -226,6 +232,13 @@ impl Renderer for SvgRenderer {
                 "Give every line and word an id, such as `line-3` and `word-3-1`, under the same prefix and token as the classes.",
             ),
             OptionSpec::new(
+                "role",
+                OptionKind::Str,
+                OptionValue::Str(Role::CHOICES[0].to_string()),
+                "What the document is announced as: `none` writes no role and leaves the text layer to be read word by word, `img` announces `aria_label` and nothing within, and `group` reads the text with a boundary around it.",
+            )
+            .with_choices(Role::CHOICES),
+            OptionSpec::new(
                 "title",
                 OptionKind::Str,
                 OptionValue::Str(String::new()),
@@ -235,7 +248,7 @@ impl Renderer for SvgRenderer {
                 "aria_label",
                 OptionKind::Str,
                 OptionValue::Str(String::new()),
-                "What assistive technology announces; the recognised text when empty.",
+                "What assistive technology announces the document as; under `role=img`, the recognised text when empty.",
             ),
             OptionSpec::new(
                 "precision",
@@ -482,6 +495,50 @@ impl UnscoredWords {
     }
 }
 
+/// What the document is announced as by assistive technology.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Role {
+    /// Nothing at all, leaving the `<text>` elements to be exposed as the text
+    /// they are and read in the order they were written in.
+    None,
+    /// An image. WAI-ARIA makes the children of an image presentational, so
+    /// the label is announced and nothing inside it is, however much text the
+    /// layer holds.
+    Img,
+    /// A group: the text is exposed as it is under no role at all, with a
+    /// boundary around it that a reader can move to and past in one step.
+    Group,
+}
+
+impl Role {
+    /// The words this role is chosen by, the first being the default.
+    const CHOICES: &'static [&'static str] = &["none", "img", "group"];
+
+    /// Reads one of [`Role::CHOICES`], as [`TextMode::read`] does.
+    fn read(text: &str) -> Self {
+        match text {
+            "img" => Self::Img,
+            "group" => Self::Group,
+            _ => Self::None,
+        }
+    }
+
+    /// The `role` attribute this writes, if it writes one at all.
+    fn attribute(self) -> Option<&'static str> {
+        match self {
+            Self::None => None,
+            Self::Img => Some("img"),
+            Self::Group => Some("group"),
+        }
+    }
+
+    /// Whether the label stands in for the text rather than describing a layer
+    /// that is announced in full on its own.
+    fn label_stands_in_for_the_text(self) -> bool {
+        self == Self::Img
+    }
+}
+
 /// The characters taken to fall below the baseline when a baseline is
 /// estimated: a rule of thumb for text in the Latin script rather than a fact
 /// about any one font.
@@ -675,6 +732,7 @@ struct Settings<'a> {
     class_prefix: &'a str,
     token: String,
     ids: bool,
+    role: Role,
     title: &'a str,
     aria_label: &'a str,
     precision: usize,
@@ -788,6 +846,7 @@ impl<'a> Settings<'a> {
             class_prefix,
             token,
             ids: options.bool("ids"),
+            role: Role::read(options.str("role")),
             title: options.str("title"),
             aria_label: options.str("aria_label"),
             precision,
@@ -883,8 +942,10 @@ fn document(
         .attr("class", &settings.class(ROOT_CLASS))
         .attr("width", &width.to_string())
         .attr("height", &height.to_string())
-        .attr("viewBox", &format!("0 0 {width} {height}"))
-        .attr("role", "img");
+        .attr("viewBox", &format!("0 0 {width} {height}"));
+    if let Some(role) = settings.role.attribute() {
+        root = root.attr("role", role);
+    }
     let label = aria_label(layout, settings);
     if !label.is_empty() {
         root = root.attr("aria-label", &label);
@@ -1423,10 +1484,18 @@ fn rotate_point(point: (f32, f32), degrees: f32, centre: (f32, f32)) -> (f32, f3
 }
 
 /// What assistive technology announces the document as: what the caller said,
-/// or the recognised text, cut to a length that can be read out.
+/// or, where the role keeps the text layer from being announced itself, the
+/// recognised text cut to a length that can be read out.
+///
+/// The text is derived only under [`Role::Img`]. Under any other role the
+/// words are exposed as words; announcing them again as one label would say
+/// the beginning of the page twice and the rest of it never.
 fn aria_label(layout: &Layout, settings: &Settings<'_>) -> String {
     if !settings.aria_label.is_empty() {
         return settings.aria_label.to_string();
+    }
+    if !settings.role.label_stands_in_for_the_text() {
+        return String::new();
     }
     let mut label = String::new();
     for line in layout.lines.iter().map(|line| line.text.trim()) {
@@ -1437,11 +1506,32 @@ fn aria_label(layout: &Layout, settings: &Settings<'_>) -> String {
             label.push(' ');
         }
         label.push_str(line);
-        if label.chars().count() >= ARIA_LABEL_CHARS {
+        if label.chars().count() > ARIA_LABEL_CHARS {
             break;
         }
     }
-    label.chars().take(ARIA_LABEL_CHARS).collect()
+    cut_to_label(&label)
+}
+
+/// Cuts a derived label to [`ARIA_LABEL_CHARS`] characters, ellipsis and all,
+/// at the last word boundary that leaves room for it, so that what is
+/// announced ends as a phrase rather than in the middle of a word. A first
+/// word longer than the whole label is cut where it falls, there being no
+/// boundary to cut at.
+fn cut_to_label(text: &str) -> String {
+    if text.chars().count() <= ARIA_LABEL_CHARS {
+        return text.to_string();
+    }
+    let head: String = text.chars().take(ARIA_LABEL_CHARS - 1).collect();
+    let whole_word = text
+        .chars()
+        .nth(ARIA_LABEL_CHARS - 1)
+        .is_some_and(char::is_whitespace);
+    let cut = match head.rsplit_once(char::is_whitespace) {
+        Some((before, _)) if !whole_word && !before.trim_end().is_empty() => before,
+        _ => head.as_str(),
+    };
+    format!("{}…", cut.trim_end())
 }
 
 /// Replaces the characters XML gives a meaning of its own, and drops the ones
@@ -2078,31 +2168,81 @@ mod tests {
     }
 
     #[test]
-    fn the_label_is_the_text_until_the_caller_says_otherwise() {
+    fn the_text_layer_is_left_to_speak_for_itself() {
         let svg = render(Options::new().with("image_mode", "none"));
-        assert!(svg.contains(r#"aria-label="Hello World""#), "{svg}");
+        assert!(!svg.contains("role="), "{svg}");
+        assert!(!svg.contains("aria-label"), "{svg}");
 
-        let said = render(
+        let grouped = render(
             Options::new()
                 .with("image_mode", "none")
-                .with("aria_label", "A scanned receipt")
-                .with("title", "Receipt"),
+                .with("role", "group"),
         );
-        assert!(said.contains(r#"aria-label="A scanned receipt""#), "{said}");
-        assert!(said.contains("<title>Receipt</title>"), "{said}");
+        assert!(grouped.contains(r#"role="group""#), "{grouped}");
+        assert!(!grouped.contains("aria-label"), "{grouped}");
+    }
+
+    #[test]
+    fn a_document_announced_as_an_image_says_the_text_in_its_label() {
+        let svg = render(
+            Options::new()
+                .with("image_mode", "none")
+                .with("role", "img"),
+        );
+        assert!(svg.contains(r#"role="img""#), "{svg}");
+        assert!(svg.contains(r#"aria-label="Hello World""#), "{svg}");
+    }
+
+    #[test]
+    fn the_caller_is_announced_whatever_the_role() {
+        for role in Role::CHOICES {
+            let said = render(
+                Options::new()
+                    .with("image_mode", "none")
+                    .with("role", *role)
+                    .with("aria_label", "A scanned receipt")
+                    .with("title", "Receipt"),
+            );
+            assert!(said.contains(r#"aria-label="A scanned receipt""#), "{said}");
+            assert!(said.contains("<title>Receipt</title>"), "{said}");
+        }
     }
 
     #[test]
     fn a_long_text_is_cut_to_a_label_that_can_be_read_out() {
         let mut layout = sample();
-        layout.lines[0].text = "word ".repeat(100);
-        let svg = render_layout(&layout, Options::new().with("image_mode", "none"));
+        layout.lines[0].text = "sesquipedalian ".repeat(40);
+        let svg = render_layout(
+            &layout,
+            Options::new()
+                .with("image_mode", "none")
+                .with("role", "img"),
+        );
         let label = svg
             .split_once(r#"aria-label=""#)
             .and_then(|(_, rest)| rest.split_once('"'))
             .expect("the document has a label")
             .0;
-        assert_eq!(label.chars().count(), ARIA_LABEL_CHARS);
+        assert!(label.chars().count() <= ARIA_LABEL_CHARS, "{label}");
+        assert!(label.ends_with("sesquipedalian…"), "{label}");
+    }
+
+    #[test]
+    fn a_label_is_cut_at_a_word_boundary() {
+        let short = "a ".repeat(ARIA_LABEL_CHARS);
+        assert_eq!(cut_to_label("Hello World"), "Hello World");
+        assert_eq!(
+            cut_to_label(&short).chars().count(),
+            ARIA_LABEL_CHARS,
+            "the label fills the room it has"
+        );
+        assert!(cut_to_label(&short).ends_with("a…"), "{short}");
+
+        let unbroken = "z".repeat(ARIA_LABEL_CHARS + 1);
+        assert_eq!(
+            cut_to_label(&unbroken),
+            format!("{}…", "z".repeat(ARIA_LABEL_CHARS - 1))
+        );
     }
 
     #[test]
@@ -2178,7 +2318,12 @@ mod tests {
         let mut layout = sample();
         layout.lines[0].words = vec![word("<a & b>\u{7}", 10.0, 45.0, None)];
         layout.lines[0].text = "\"quoted\"\ttabbed".to_string();
-        let svg = render_layout(&layout, Options::new().with("image_mode", "none"));
+        let svg = render_layout(
+            &layout,
+            Options::new()
+                .with("image_mode", "none")
+                .with("role", "img"),
+        );
         assert!(svg.contains(">&lt;a &amp; b&gt;</tspan>"), "{svg}");
         assert!(
             svg.contains(r#"aria-label="&quot;quoted&quot; tabbed""#),

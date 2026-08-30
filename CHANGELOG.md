@@ -33,24 +33,30 @@ Versioning](https://semver.org/spec/v2.0.0.html).
   transparent, visible or drawn with the boxes it came from; the image
   embedded, linked or left out; and the fit of the layer to the glyphs beneath
   it settled by font size mode, baseline mode, per-character placement, length
-  adjustment and separator elements. Words a layout scores below a threshold
-  are left out, and a word with no score at all is kept unless it is asked to
-  go the same way; the recogniser scribe reads images with hands back no
-  score, so a layout it wrote loses nothing either way. The document opts into
-  both colour schemes and draws selected text in the reader's own system
+  adjustment and separator elements. Nothing on the root element stands between
+  a screen reader and that layer: no ARIA role is written unless one is asked
+  for, so the `<text>` elements are reached and read in the order they were
+  written, `role=img` announces the document as a picture carrying a label
+  instead — the caller's own, or the recognised text cut at a word boundary to
+  a length that can be read out — and `role=group` reads the text with a
+  boundary around it that can be stepped past. Words a layout scores below a
+  threshold are left out, and a word with no score at all is kept unless it is
+  asked to go the same way; the recogniser scribe reads images with hands back
+  no score, so a layout it wrote loses nothing either way. The document opts
+  into both colour schemes and draws selected text in the reader's own system
   colours, so that a selection, and the canvas a document opened on its own
   sits on, follow light and dark mode without the document naming a colour for
   either. It is written to be placed inside another document: every class name
-  and every id carries a token setting it apart from anything else in the
-  page, worked out from the layout, given by the caller or left out; every
-  rule in its stylesheet hangs off the root element rather than reaching the
-  page around it; the text layer holds its own against whatever that page
-  styles its text with; the names and colours it is given are checked rather
-  than escaped; a number it cannot be written with — a font scale at zero, a
-  ratio past one, more decimals than a coordinate has to give — is refused
-  naming the range it fell outside of, rather than quietly clamped or written
-  into a document no browser will honour; and the stylesheet can carry a nonce
-  for a page whose content security policy asks for one.
+  and every id carries a token setting it apart from anything else in the page,
+  worked out from the layout, given by the caller or left out; every rule in
+  its stylesheet hangs off the root element rather than reaching the page
+  around it; the text layer holds its own against whatever that page styles its
+  text with; the names and colours it is given are checked rather than escaped;
+  a number it cannot be written with — a font scale at zero, a ratio past one,
+  more decimals than a coordinate has to give — is refused naming the range it
+  fell outside of, rather than quietly clamped or written into a document no
+  browser will honour; and the stylesheet can carry a nonce for a page whose
+  content security policy asks for one.
 - The `template` renderer, writing whatever a Jinja template describes, with
   callers' own templates and values accepted and twelve built in: text layers
   to lay over an image, written as positioned HTML or as SVG; transcripts an
