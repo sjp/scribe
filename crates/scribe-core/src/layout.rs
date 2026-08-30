@@ -261,6 +261,10 @@ pub struct Line {
     #[serde(default)]
     pub words: Vec<Word>,
     /// How sure the recogniser is of this line, from 0 to 1, when it says.
+    ///
+    /// The engine this crate reads images with says nothing, so this is
+    /// `null` in every layout it produced; a layout from elsewhere may
+    /// carry a score.
     #[serde(default)]
     pub confidence: Option<f32>,
 }
@@ -283,6 +287,10 @@ pub struct Word {
     #[serde(default)]
     pub chars: Vec<Char>,
     /// How sure the recogniser is of this word, from 0 to 1, when it says.
+    ///
+    /// The engine this crate reads images with says nothing, so this is
+    /// `null` in every layout it produced; a layout from elsewhere may
+    /// carry a score.
     #[serde(default)]
     pub confidence: Option<f32>,
 }
@@ -297,6 +305,10 @@ pub struct Char {
     pub bbox: Rect,
     /// How sure the recogniser is of this character, from 0 to 1, when it
     /// says.
+    ///
+    /// The engine this crate reads images with says nothing, so this is
+    /// `null` in every layout it produced; a layout from elsewhere may
+    /// carry a score.
     #[serde(default)]
     pub confidence: Option<f32>,
 }

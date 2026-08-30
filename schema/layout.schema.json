@@ -81,7 +81,7 @@
           "default": []
         },
         "confidence": {
-          "description": "How sure the recogniser is of this line, from 0 to 1, when it says.",
+          "description": "How sure the recogniser is of this line, from 0 to 1, when it says.\n\nThe engine this crate reads images with says nothing, so this is\n`null` in every layout it produced; a layout from elsewhere may\ncarry a score.",
           "type": [
             "number",
             "null"
@@ -194,7 +194,7 @@
           "default": []
         },
         "confidence": {
-          "description": "How sure the recogniser is of this word, from 0 to 1, when it says.",
+          "description": "How sure the recogniser is of this word, from 0 to 1, when it says.\n\nThe engine this crate reads images with says nothing, so this is\n`null` in every layout it produced; a layout from elsewhere may\ncarry a score.",
           "type": [
             "number",
             "null"
@@ -223,7 +223,7 @@
           "$ref": "#/$defs/Rect"
         },
         "confidence": {
-          "description": "How sure the recogniser is of this character, from 0 to 1, when it\nsays.",
+          "description": "How sure the recogniser is of this character, from 0 to 1, when it\nsays.\n\nThe engine this crate reads images with says nothing, so this is\n`null` in every layout it produced; a layout from elsewhere may\ncarry a score.",
           "type": [
             "number",
             "null"

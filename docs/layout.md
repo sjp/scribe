@@ -59,7 +59,10 @@ with `include_chars` off drops them deliberately, since they are the bulk of a
 serialised layout. A renderer that wants them has to cope with their absence.
 
 `confidence` is how sure the recogniser is, from 0 to 1, and is `null` when it
-does not say.
+does not say. The engine scribe reads images with never says, so every layout
+scribe produced carries `null` at every level; a layout written by some other
+tool, or edited by hand, may carry real scores, and the
+[`min_confidence`](formats.md#svg) option is there for those.
 
 ## Coordinates
 

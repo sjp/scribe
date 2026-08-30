@@ -236,6 +236,9 @@ pub struct RenderArgs {
     pub link_href: Option<String>,
 
     /// Leave out words the recogniser is less sure of than this, from 0 to 1.
+    ///
+    /// The recogniser scribe reads images with reports no confidence, so this
+    /// filters only a layout that came from somewhere else.
     #[arg(long, value_name = "CONFIDENCE")]
     pub min_confidence: Option<f64>,
 }

@@ -237,7 +237,8 @@ How closely the text layer follows the glyphs under it is a choice:
 | `space_mode` | `none`, `tspan` | `none` | Whether the gap between two words holds a `<tspan>` of its own carrying the space, or the words are parted by a plain space character. |
 | `line_break_mode` | `none`, `tspan` | `none` | Whether one line is parted from the next by a `<tspan>` carrying a newline, so that copying several lines out keeps them on separate lines. |
 | `axis_align_tolerance` | a number | `0.5` | How many degrees off level a line may be before it is given a rotation. |
-| `min_confidence` | a number | `0` | Leave out words the recogniser is less sure of than this, from 0 to 1. |
+| `min_confidence` | a number | `0` | Leave out words the recogniser is less sure of than this, from 0 to 1. The recogniser scribe reads images with reports no confidence, so this filters only a layout that came from somewhere else. |
+| `unscored_words` | `keep`, `drop` | `keep` | Whether a word carrying no confidence at all is kept or left out once `min_confidence` is above zero. |
 | `text_fill` | text | `#000` | The colour drawn text is filled with. |
 | `selection_fill` | text | `HighlightText` | The colour selected text shows in; a system colour follows the reader's own. |
 | `selection_background` | text | `color-mix(in srgb, Highlight 35%, transparent)` | The colour behind selected text, so that selecting invisible text shows. |

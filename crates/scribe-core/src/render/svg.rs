@@ -161,8 +161,15 @@ impl Renderer for SvgRenderer {
                 "min_confidence",
                 OptionKind::Float,
                 OptionValue::Float(0.0),
-                "Leave out words the recogniser is less sure of than this, from 0 to 1.",
+                "Leave out words the recogniser is less sure of than this, from 0 to 1. The recogniser scribe reads images with reports no confidence, so this filters only a layout that came from somewhere else.",
             ),
+            OptionSpec::new(
+                "unscored_words",
+                OptionKind::Str,
+                OptionValue::Str(UnscoredWords::CHOICES[0].to_string()),
+                "Whether a word carrying no confidence at all is kept or left out once `min_confidence` is above zero.",
+            )
+            .with_choices(UnscoredWords::CHOICES),
             OptionSpec::new(
                 "text_fill",
                 OptionKind::Str,
@@ -451,6 +458,30 @@ impl SeparatorMode {
     }
 }
 
+/// What becomes of a word the recogniser gave no confidence for, once a
+/// threshold is set for the ones it did.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum UnscoredWords {
+    /// It is kept: a score nobody gave is not a low one.
+    Keep,
+    /// It is left out, so that what is left is only what cleared the
+    /// threshold.
+    Drop,
+}
+
+impl UnscoredWords {
+    /// The words this choice is made in, the first being the default.
+    const CHOICES: &'static [&'static str] = &["keep", "drop"];
+
+    /// Reads one of [`UnscoredWords::CHOICES`], as [`TextMode::read`] does.
+    fn read(text: &str) -> Self {
+        match text {
+            "drop" => Self::Drop,
+            _ => Self::Keep,
+        }
+    }
+}
+
 /// The characters taken to fall below the baseline when a baseline is
 /// estimated: a rule of thumb for text in the Latin script rather than a fact
 /// about any one font.
@@ -663,6 +694,7 @@ struct Settings<'a> {
     line_break_mode: SeparatorMode,
     axis_align_tolerance: f32,
     min_confidence: f32,
+    unscored_words: UnscoredWords,
     text_fill: &'a str,
     selection_fill: &'a str,
     selection_background: &'a str,
@@ -743,6 +775,7 @@ impl<'a> Settings<'a> {
             line_break_mode: SeparatorMode::read(options.str("line_break_mode")),
             axis_align_tolerance: options.float("axis_align_tolerance") as f32,
             min_confidence: options.float("min_confidence") as f32,
+            unscored_words: UnscoredWords::read(options.str("unscored_words")),
             text_fill: options.str("text_fill"),
             selection_fill: options.str("selection_fill"),
             selection_background: options.str("selection_background"),
@@ -758,6 +791,19 @@ impl<'a> Settings<'a> {
             style_nonce,
             xml_declaration: options.bool("xml_declaration"),
         })
+    }
+
+    /// Whether a box the recogniser scored this well earns a place in the
+    /// text layer.
+    ///
+    /// A box with no score at all is kept, since a score nobody gave says
+    /// nothing about the reading, unless a threshold is in force and
+    /// `unscored_words` asks for it to be held to that threshold too.
+    fn confident_enough(&self, confidence: Option<f32>) -> bool {
+        match confidence {
+            Some(confidence) => confidence >= self.min_confidence,
+            None => self.min_confidence <= 0.0 || self.unscored_words == UnscoredWords::Keep,
+        }
     }
 
     /// A name of the document's own, under the caller's prefix and whatever
@@ -1219,8 +1265,7 @@ fn placed_words<'a>(line: &'a Line, settings: &Settings<'_>) -> Vec<Placed<'a>> 
         .into_iter()
         .enumerate()
         .filter(|(_, (text, _, confidence, _))| {
-            !text.trim().is_empty()
-                && !confidence.is_some_and(|confidence| confidence < settings.min_confidence)
+            !text.trim().is_empty() && settings.confident_enough(*confidence)
         })
         .map(|(index, (text, box_, _, chars))| {
             let (cx, cy) = rotate_point((box_.cx, box_.cy), -angle, centre);
@@ -1911,6 +1956,53 @@ mod tests {
         );
         assert!(svg.contains(">Hello<"), "{svg}");
         assert!(!svg.contains(">World<"), "{svg}");
+    }
+
+    #[test]
+    fn words_with_no_confidence_are_kept_when_a_threshold_is_set() {
+        // Scribe's own recogniser scores nothing, so a threshold must leave
+        // the layouts it wrote alone rather than emptying them.
+        let mut layout = sample();
+        for word in &mut layout.lines[0].words {
+            word.confidence = None;
+        }
+        let svg = render_layout(
+            &layout,
+            Options::new()
+                .with("image_mode", "none")
+                .with("min_confidence", 0.9),
+        );
+        assert!(svg.contains(">Hello<"), "{svg}");
+        assert!(svg.contains(">World<"), "{svg}");
+    }
+
+    #[test]
+    fn words_with_no_confidence_can_be_left_out_along_with_the_unsure_ones() {
+        let mut layout = sample();
+        layout.lines[0].words[0].confidence = None;
+        let svg = render_layout(
+            &layout,
+            Options::new()
+                .with("image_mode", "none")
+                .with("min_confidence", 0.5)
+                .with("unscored_words", "drop"),
+        );
+        assert!(!svg.contains(">Hello<"), "{svg}");
+        assert!(!svg.contains(">World<"), "{svg}");
+    }
+
+    #[test]
+    fn dropping_unscored_words_takes_no_one_without_a_threshold() {
+        let mut layout = sample();
+        layout.lines[0].words[0].confidence = None;
+        let svg = render_layout(
+            &layout,
+            Options::new()
+                .with("image_mode", "none")
+                .with("unscored_words", "drop"),
+        );
+        assert!(svg.contains(">Hello<"), "{svg}");
+        assert!(svg.contains(">World<"), "{svg}");
     }
 
     #[test]

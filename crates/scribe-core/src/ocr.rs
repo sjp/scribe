@@ -408,6 +408,9 @@ impl Engine {
     /// no text at all gives a layout with no lines, which is still enough for
     /// a renderer to reproduce the image.
     ///
+    /// No line, word or character comes back with a confidence: the engine
+    /// reports no score for what it read.
+    ///
     /// # Errors
     ///
     /// Returns an error if the buffer does not describe an image of the size
@@ -462,6 +465,8 @@ fn convert_line(line: &TextLine, include_chars: bool) -> Line {
             .words()
             .map(|word| convert_word(&word, include_chars))
             .collect(),
+        // The engine keeps its per-step probabilities to itself: nothing it
+        // hands back carries a score, at any granularity.
         confidence: None,
     }
 }
