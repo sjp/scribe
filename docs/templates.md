@@ -130,6 +130,7 @@ Each of these is both a filter and a function, so `{{ x | round(2) }}` and
 | `points(box, precision=2)` | An oriented box's four corners as the `x,y` pairs an SVG `<polygon>` takes, clockwise from the corner that is the top left before rotation. |
 | `data_uri()` | The source image as a `data:` URI, or none. |
 | `svg(options, **overrides)` | The layout as an SVG document, written by the [`svg` renderer](formats.md#svg) with its own options, ready to be put inside the page the template is writing. |
+| `scope()` | The token the `svg` renderer works out for this layout, so a template can name what it puts around a layer what the layer itself is named. |
 
 `svg` takes the renderer's options as a mapping, as keywords, or as both with
 the keywords winning, so a template can pass the caller's own values straight
@@ -140,6 +141,17 @@ result is markup rather than text to be escaped into the page.
 ```jinja
 {{ svg(vars, image_mode="none") }}
 {{ svg({"char_positions": true}, image_mode="none", text_mode="visible") }}
+```
+
+`scope` is the same token the renderer would work out for itself under
+[`scope_mode=content`](formats.md#naming-what-the-document-writes-scope_mode-scope-class_prefix),
+so a template can name its wrapper, its transcript and the layer inside it all
+alike, and two of them in one page collide over nothing:
+
+```jinja
+{%- set prefix = vars.class_prefix | default("scribe-") -%}
+{%- set ns = prefix ~ scope() ~ "-" -%}
+<div class="{{ ns }}overlay">{{ svg(vars, image_mode="none", scope_mode="fixed", scope=scope()) }}</div>
 ```
 
 Everything minijinja itself provides — `default`, `join`, `map`, `length`,
@@ -192,17 +204,19 @@ renderer](formats.md#svg) instead of by positioned spans, so that a turned
 line turns with its box and a word is fitted to the pixels it was read from.
 Its `var.` options are the SVG renderer's own — every one of them, by the same
 name — save that the image is never carried in the layer, since the page's own
-`<img>` is underneath it.
+`<img>` is underneath it. `var.class_prefix`, `var.scope_mode` and `var.scope`
+name the wrapper and the layer inside it alike, so that two of these in one
+page share nothing.
 
 ```html
-<div class="scribe-overlay">
+<div class="scribe-g923no-overlay">
   <style>
-    .scribe-overlay { position: relative; display: inline-block; line-height: 0 }
-    .scribe-overlay img { display: block; max-width: 100% }
-    .scribe-overlay svg { position: absolute; left: 0; top: 0; width: 100%; height: 100% }
+    .scribe-g923no-overlay { position: relative; display: inline-block; line-height: 0 }
+    .scribe-g923no-overlay img { display: block; max-width: 100% }
+    .scribe-g923no-overlay svg { position: absolute; left: 0; top: 0; width: 100%; height: 100% }
   </style>
   <img src="hello.png" width="284" height="96" alt="" />
-  <svg xmlns="http://www.w3.org/2000/svg" class="scribe-root" width="284" height="96" viewBox="0 0 284 96" role="img" aria-label="Hello World">
+  <svg xmlns="http://www.w3.org/2000/svg" id="scribe-g923no" class="scribe-g923no-root" width="284" height="96" viewBox="0 0 284 96" role="img" aria-label="Hello World">
     …
   </svg>
 </div>
@@ -222,18 +236,19 @@ is not yours to know.
 Takes `var.overlay`, `spans` (the default) or `svg`, for whether the layer is
 positioned HTML or the SVG renderer's own; `var.id`, the id of the transcript;
 and the options of the templates it says the same as — `var.class_prefix`,
-`var.selection_fill`, `var.selection_background`, `var.char_positions`,
-`var.font_size_mode` and `var.cap_height_ratio`.
+`var.scope_mode`, `var.scope`, `var.selection_fill`,
+`var.selection_background`, `var.char_positions`, `var.font_size_mode` and
+`var.cap_height_ratio`.
 
 ```html
-<figure class="scribe-figure">
+<figure class="scribe-g923no-figure">
   <style>…</style>
-  <div class="scribe-overlay">
-    <img src="hello.png" width="284" height="96" alt="Hello World" aria-describedby="scribe-transcript" />
+  <div class="scribe-g923no-overlay">
+    <img src="hello.png" width="284" height="96" alt="Hello World" aria-describedby="scribe-g923no-transcript" />
     <span style="left: 26px; top: 29px; width: 105px; height: 33px; font-size: 33px; transform: rotate(0deg)">Hello</span>
     <span style="left: 146px; top: 28px; width: 111px; height: 35px; font-size: 35px; transform: rotate(0deg)">World</span>
   </div>
-  <div class="scribe-sr-only" id="scribe-transcript">
+  <div class="scribe-g923no-sr-only" id="scribe-g923no-transcript">
     <p>Hello World</p>
   </div>
 </figure>
@@ -247,16 +262,18 @@ exactly as it did, and a reader of a long document hears its lines in order
 instead of a single breathless `alt`.
 
 Takes `var.id`, the id the transcript carries and the image points at;
-`var.class_prefix`, what every class name starts with; and `var.alt`, the
-short label the image itself carries, the transcript being the long one.
+`var.class_prefix`, `var.scope_mode` and `var.scope`, which name it when
+`var.id` is left alone, so that `aria-describedby` on two images in one page
+addresses two transcripts rather than one; and `var.alt`, the short label the
+image itself carries, the transcript being the long one.
 
 ```html
-<div class="scribe-transcript">
+<div class="scribe-g923no-transcript">
   <style>
-    .scribe-sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; border: 0; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: normal }
+    .scribe-g923no-sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; border: 0; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: normal }
   </style>
-  <img src="hello.png" width="284" height="96" alt="An image of text, transcribed after it." aria-describedby="scribe-transcript" />
-  <div class="scribe-sr-only" id="scribe-transcript">
+  <img src="hello.png" width="284" height="96" alt="An image of text, transcribed after it." aria-describedby="scribe-g923no-transcript" />
+  <div class="scribe-g923no-sr-only" id="scribe-g923no-transcript">
     <p>Hello World</p>
   </div>
 </div>
@@ -318,13 +335,17 @@ from it lazily, or feed the site's own search, without asking a server for
 anything.
 
 Takes `var.id`, the id the script carries and the image points at;
-`var.image`, true by default, for whether the image is written before it; and
-`var.class_prefix`, what the class name and the `data-` attribute start with.
+`var.image`, true by default, for whether the image is written before it;
+`var.class_prefix`, what the class name and the `data-` attribute start with;
+and `var.scope_mode` and `var.scope`, the token in the id when `var.id` is
+left alone. The `data-` attribute keeps the plain prefix and none of the
+token, since a script looking for a layout has to know the name it is looking
+for; the id it holds is what tells one layout from another.
 
 ```html
-<div class="scribe-layout">
-  <img src="hello.png" width="284" height="96" alt="Hello World" data-scribe-layout="scribe-layout" />
-  <script type="application/json" id="scribe-layout">{"version":1,"image":{"width":284,"height":96},"lines":[…]}</script>
+<div class="scribe-g923no-layout">
+  <img src="hello.png" width="284" height="96" alt="Hello World" data-scribe-layout="scribe-g923no-layout" />
+  <script type="application/json" id="scribe-g923no-layout">{"version":1,"image":{"width":284,"height":96},"lines":[…]}</script>
 </div>
 ```
 

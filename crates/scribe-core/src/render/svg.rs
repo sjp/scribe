@@ -12,6 +12,12 @@
 //! `<img>` somewhere else; and the font, the classes, the ids, the number of
 //! decimals and the stylesheet are all the caller's to choose.
 //!
+//! The document is written to be placed inside another one. Every class name
+//! and every id is built from a prefix and a token that sets one document
+//! apart from the others in a page, every rule in the stylesheet hangs off
+//! the root element rather than reaching the whole of that page, and the
+//! layer holds its own against whatever the page styles its text with.
+//!
 //! How closely the text layer follows the glyphs under it is a caller's
 //! choice too: a word can be stretched to fill its box or set out character
 //! by character, its baseline can be estimated from what the line says, its
@@ -194,10 +200,23 @@ impl Renderer for SvgRenderer {
                 "What every class name in the document starts with; a valid CSS identifier prefix.",
             ),
             OptionSpec::new(
+                "scope_mode",
+                OptionKind::Str,
+                OptionValue::Str(ScopeMode::CHOICES[0].to_string()),
+                "Whether the class names, the ids and the stylesheet carry a token setting this document apart from anything around it: one worked out from what the document says, one of your own, or none at all.",
+            )
+            .with_choices(ScopeMode::CHOICES),
+            OptionSpec::new(
+                "scope",
+                OptionKind::Str,
+                OptionValue::Str(String::new()),
+                "The token to set this document apart, when `scope_mode` is `fixed`; a valid CSS identifier part.",
+            ),
+            OptionSpec::new(
                 "ids",
                 OptionKind::Bool,
                 OptionValue::Bool(false),
-                "Give every line and word an id, such as `line-3` and `word-3-1`.",
+                "Give every line and word an id, such as `line-3` and `word-3-1`, under the same prefix and token as the classes.",
             ),
             OptionSpec::new(
                 "title",
@@ -224,6 +243,12 @@ impl Renderer for SvgRenderer {
                 "Carry a stylesheet making the text selectable and its selection visible.",
             ),
             OptionSpec::new(
+                "style_nonce",
+                OptionKind::Str,
+                OptionValue::Str(String::new()),
+                "The nonce the stylesheet is written with, for a page whose content security policy does not allow inline styles outright.",
+            ),
+            OptionSpec::new(
                 "xml_declaration",
                 OptionKind::Bool,
                 OptionValue::Bool(true),
@@ -239,7 +264,7 @@ impl Renderer for SvgRenderer {
         options: &Options,
     ) -> Result<RenderOutput, RenderError> {
         let options = self.resolve_options(options)?;
-        let settings = Settings::read(&options);
+        let settings = Settings::read(&options, layout)?;
         Ok(RenderOutput::text(
             document(layout, image, &settings)?,
             "image/svg+xml",
@@ -300,6 +325,35 @@ impl ImageMode {
             "link" => Self::Link,
             "none" => Self::None,
             _ => Self::Embed,
+        }
+    }
+}
+
+/// Where the token setting one document apart from another comes from.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum ScopeMode {
+    /// Worked out from what the document says, so that the same layout always
+    /// yields the same names and two different layouts do not.
+    Content,
+    /// The caller's own, which is what two copies of one image in a page need,
+    /// since a token worked out from the content would be the same for both.
+    Fixed,
+    /// None at all, leaving the prefix to carry the whole of a name. This is
+    /// the document that stands on its own, with nothing around it to collide
+    /// with.
+    None,
+}
+
+impl ScopeMode {
+    /// The words this mode is chosen by, the first being the default.
+    const CHOICES: &'static [&'static str] = &["content", "fixed", "none"];
+
+    /// Reads one of [`ScopeMode::CHOICES`], as [`TextMode::read`] does.
+    fn read(text: &str) -> Self {
+        match text {
+            "fixed" => Self::Fixed,
+            "none" => Self::None,
+            _ => Self::Content,
         }
     }
 }
@@ -410,6 +464,188 @@ const LENGTH_ADJUST: &[&str] = &["spacingAndGlyphs", "spacing"];
 /// without breaking the line the element is written on.
 const NEWLINE: &str = "&#10;";
 
+/// How many characters the token worked out from a layout is written in.
+///
+/// Six is short enough to read in a name and long enough that two documents
+/// in one page are not expected to collide; a caller who knows there are two
+/// of one image names them itself.
+const TOKEN_LENGTH: usize = 6;
+
+/// The characters a token after its first is written in.
+const TOKEN_DIGITS: &[u8] = b"0123456789abcdefghijklmnopqrstuvwxyz";
+
+/// The starting state of the hash a token is written from.
+const HASH_OFFSET: u64 = 0xcbf2_9ce4_8422_2325;
+
+/// What that hash multiplies by as it goes.
+const HASH_PRIME: u64 = 0x0000_0100_0000_01b3;
+
+/// The characters a value written into the stylesheet may not hold, each of
+/// which could end the declaration, the rule or the element it sits in.
+///
+/// A value holding none of them means the same thing to the XML parser
+/// reading a standalone document and to the HTML parser reading an inlined
+/// one, which is what makes escaping the stylesheet unnecessary rather than
+/// merely awkward.
+const FORBIDDEN_IN_CSS: &[char] = &['<', '>', '&', '{', '}', ';', '@', '\\'];
+
+/// The token that sets a document written from this layout apart from every
+/// other, worked out from what the layout says and how large the image is.
+///
+/// It is derived rather than random so that rendering the same layout twice
+/// gives the same document, and it is hashed here rather than through
+/// `std::hash::DefaultHasher`, whose output is not promised to be the same
+/// from one release of Rust to the next.
+pub(crate) fn scope_token(layout: &Layout) -> String {
+    let mut hash = HASH_OFFSET;
+    hash = hashed(hash, layout.text().as_bytes());
+    hash = hashed(hash, &layout.image.width.to_le_bytes());
+    hash = hashed(hash, &layout.image.height.to_le_bytes());
+
+    // The first character is a letter, so that the token can begin an
+    // identifier when the prefix before it is empty.
+    let mut token = String::with_capacity(TOKEN_LENGTH);
+    token.push((b'a' + (hash % 26) as u8) as char);
+    let mut rest = hash / 26;
+    for _ in 1..TOKEN_LENGTH {
+        token.push(TOKEN_DIGITS[(rest % TOKEN_DIGITS.len() as u64) as usize] as char);
+        rest /= TOKEN_DIGITS.len() as u64;
+    }
+    token
+}
+
+/// One more run of bytes folded into the hash.
+fn hashed(mut hash: u64, bytes: &[u8]) -> u64 {
+    for byte in bytes {
+        hash ^= u64::from(*byte);
+        hash = hash.wrapping_mul(HASH_PRIME);
+    }
+    hash
+}
+
+/// Checks that a value can be written into a name, rather than escaping it:
+/// escaping is what a document does to text, and a name lands in a selector,
+/// where the escaped form would name something else.
+///
+/// # Errors
+///
+/// Returns an error naming the option when the value holds a character a CSS
+/// identifier cannot.
+fn check_ident(name: &'static str, value: &str) -> Result<(), RenderError> {
+    match value
+        .chars()
+        .find(|character| !(character.is_ascii_alphanumeric() || matches!(character, '-' | '_')))
+    {
+        Some(character) => Err(RenderError::unusable_option(
+            NAME,
+            name,
+            value,
+            format!("a CSS identifier cannot hold {character:?}"),
+        )),
+        None => Ok(()),
+    }
+}
+
+/// Checks that a name a document actually writes begins the way a CSS
+/// identifier must: not with a digit, and not with a hyphen followed by one.
+///
+/// # Errors
+///
+/// Returns an error against `name`, the option that supplies the start of the
+/// composed name.
+fn check_ident_start(name: &'static str, value: &str, composed: &str) -> Result<(), RenderError> {
+    let mut characters = composed.chars();
+    let first = characters.next();
+    let starts = match (first, characters.next()) {
+        (Some('-'), Some(second)) => !second.is_ascii_digit(),
+        (Some('-'), None) => false,
+        (Some(first), _) => !first.is_ascii_digit(),
+        (None, _) => true,
+    };
+    if starts {
+        return Ok(());
+    }
+    Err(RenderError::unusable_option(
+        NAME,
+        name,
+        value,
+        format!("`{composed}` is not a valid CSS identifier, which cannot begin with a digit"),
+    ))
+}
+
+/// Checks that a value can stand in a declaration without ending it, so that
+/// no colour and no font family can write a rule of its own into a stylesheet
+/// that reaches the whole of the page the document is placed in.
+///
+/// # Errors
+///
+/// Returns an error naming the option when the value holds a character that
+/// could close what it is written into, opens a comment, or leaves a bracket
+/// or a quote unclosed.
+fn check_css_value(name: &'static str, value: &str) -> Result<(), RenderError> {
+    let refuse = |reason: String| RenderError::unusable_option(NAME, name, value, reason);
+    if let Some(character) = value
+        .chars()
+        .find(|character| FORBIDDEN_IN_CSS.contains(character) || (*character as u32) < 0x20)
+    {
+        return Err(refuse(format!(
+            "a value written into a stylesheet cannot hold {character:?}"
+        )));
+    }
+    if value.contains("/*") || value.contains("*/") {
+        return Err(refuse(
+            "a value written into a stylesheet cannot open or close a comment".to_string(),
+        ));
+    }
+    let mut depth = 0_i32;
+    for character in value.chars() {
+        match character {
+            '(' => depth += 1,
+            ')' => depth -= 1,
+            _ => {}
+        }
+        if depth < 0 {
+            return Err(refuse(
+                "a value written into a stylesheet cannot close a bracket it did not open"
+                    .to_string(),
+            ));
+        }
+    }
+    if depth != 0 {
+        return Err(refuse(
+            "a value written into a stylesheet has to close every bracket it opens".to_string(),
+        ));
+    }
+    for quote in ['"', '\''] {
+        if value.matches(quote).count() % 2 != 0 {
+            return Err(refuse(format!(
+                "a value written into a stylesheet has to close the {quote} it opens"
+            )));
+        }
+    }
+    Ok(())
+}
+
+/// Checks that a nonce is one: the base64 a content security policy is
+/// written with, and nothing that could end the attribute or the element.
+///
+/// # Errors
+///
+/// Returns an error when the value holds anything else.
+fn check_nonce(value: &str) -> Result<(), RenderError> {
+    match value.chars().find(|character| {
+        !(character.is_ascii_alphanumeric() || matches!(character, '+' | '/' | '=' | '-' | '_'))
+    }) {
+        Some(character) => Err(RenderError::unusable_option(
+            NAME,
+            "style_nonce",
+            value,
+            format!("a nonce is base64, which cannot hold {character:?}"),
+        )),
+        None => Ok(()),
+    }
+}
+
 /// The options, read once into the shapes the writing wants them in.
 struct Settings<'a> {
     text_mode: TextMode,
@@ -433,20 +669,68 @@ struct Settings<'a> {
     debug_line_stroke: &'a str,
     debug_word_stroke: &'a str,
     class_prefix: &'a str,
+    token: String,
     ids: bool,
     title: &'a str,
     aria_label: &'a str,
     precision: usize,
     include_style: bool,
+    style_nonce: &'a str,
     xml_declaration: bool,
 }
 
 impl<'a> Settings<'a> {
-    fn read(options: &'a ResolvedOptions) -> Self {
-        Self {
+    /// Reads the options, having refused any of them that cannot be written
+    /// into a name, a selector or a declaration.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error naming the first option whose value the document
+    /// cannot carry.
+    fn read(options: &'a ResolvedOptions, layout: &Layout) -> Result<Self, RenderError> {
+        let class_prefix = options.str("class_prefix");
+        let scope = options.str("scope");
+        check_ident("class_prefix", class_prefix)?;
+        check_ident("scope", scope)?;
+        let token = match ScopeMode::read(options.str("scope_mode")) {
+            ScopeMode::Content => scope_token(layout),
+            ScopeMode::Fixed if scope.is_empty() => {
+                return Err(RenderError::unusable_option(
+                    NAME,
+                    "scope",
+                    scope,
+                    "a fixed scope needs a token of its own; \
+                     leave `scope_mode` at `content` to have one worked out, \
+                     or set it to `none` to go without",
+                ));
+            }
+            ScopeMode::Fixed => scope.to_string(),
+            ScopeMode::None => String::new(),
+        };
+        check_ident_start(
+            "class_prefix",
+            class_prefix,
+            &format!("{class_prefix}{token}"),
+        )?;
+
+        let font_family = options.str("font_family");
+        check_css_value("font_family", font_family)?;
+        for name in [
+            "text_fill",
+            "selection_fill",
+            "selection_background",
+            "debug_line_stroke",
+            "debug_word_stroke",
+        ] {
+            check_css_value(name, options.str(name))?;
+        }
+        let style_nonce = options.str("style_nonce");
+        check_nonce(style_nonce)?;
+
+        Ok(Self {
             text_mode: TextMode::read(options.str("text_mode")),
             image_mode: ImageMode::read(options.str("image_mode")),
-            font_family: options.str("font_family"),
+            font_family,
             font_size_scope: Scope::read(options.str("font_size_scope")),
             font_scale: options.float("font_scale") as f32,
             font_size_mode: FontSizeMode::read(options.str("font_size_mode")),
@@ -464,19 +748,58 @@ impl<'a> Settings<'a> {
             selection_background: options.str("selection_background"),
             debug_line_stroke: options.str("debug_line_stroke"),
             debug_word_stroke: options.str("debug_word_stroke"),
-            class_prefix: options.str("class_prefix"),
+            class_prefix,
+            token,
             ids: options.bool("ids"),
             title: options.str("title"),
             aria_label: options.str("aria_label"),
             precision: options.int("precision").clamp(0, MAX_PRECISION) as usize,
             include_style: options.bool("include_style"),
+            style_nonce,
             xml_declaration: options.bool("xml_declaration"),
+        })
+    }
+
+    /// A name of the document's own, under the caller's prefix and whatever
+    /// token sets this document apart from the others around it.
+    fn named(&self, name: &str) -> String {
+        if self.token.is_empty() {
+            format!("{}{name}", self.class_prefix)
+        } else {
+            format!("{}{}-{name}", self.class_prefix, self.token)
         }
     }
 
-    /// A class name of the document's own, under the caller's prefix.
+    /// A class name of the document's own.
     fn class(&self, name: &str) -> String {
-        format!("{}{name}", self.class_prefix)
+        self.named(name)
+    }
+
+    /// An id of the document's own. Ids are the names most likely to collide
+    /// with a page's own, so they carry the prefix and the token exactly as
+    /// the classes do.
+    fn id(&self, name: &str) -> String {
+        self.named(name)
+    }
+
+    /// The id the root element carries, or `None` when no token is in force
+    /// and the document claims no name of its own in the page.
+    fn root_id(&self) -> Option<String> {
+        (!self.token.is_empty()).then(|| format!("{}{}", self.class_prefix, self.token))
+    }
+
+    /// What every rule in the stylesheet hangs off: the root element's own id
+    /// when it has one, and its class when it does not.
+    ///
+    /// Either way no rule of this document's is written as a bare class
+    /// selector, so that a page holding one cannot have its own elements
+    /// styled by it, and so that the specificity the selector gains is enough
+    /// to hold the layer against the page's own rules.
+    fn root_selector(&self) -> String {
+        match self.root_id() {
+            Some(id) => format!("#{id}"),
+            None => format!(".{}", self.class(ROOT_CLASS)),
+        }
     }
 
     /// A number as the document writes it.
@@ -503,6 +826,9 @@ fn document(
     if href.is_some() {
         root = root.attr("xmlns:xlink", XLINK_NS);
     }
+    if let Some(id) = settings.root_id() {
+        root = root.attr("id", &id);
+    }
     root = root
         .attr("class", &settings.class(ROOT_CLASS))
         .attr("width", &width.to_string())
@@ -519,7 +845,11 @@ fn document(
         out.line(&Tag::new("title").with_text(settings.title));
     }
     if settings.include_style {
-        out.open(&Tag::new("style").open());
+        let mut style = Tag::new("style");
+        if !settings.style_nonce.is_empty() {
+            style = style.attr("nonce", settings.style_nonce);
+        }
+        out.open(&style.open());
         for rule in style_rules(settings) {
             out.line(&rule);
         }
@@ -574,24 +904,88 @@ fn image_href(image: &ImageSource<'_>, mode: ImageMode) -> Result<Option<String>
     }
 }
 
+/// The declarations that make the text layer behave like text however the
+/// page around it is styled, written into the stylesheet or, when there is
+/// none, into a `style` attribute on the group itself.
+///
+/// `fill` is among them rather than a presentation attribute because a
+/// presentation attribute is the weakest thing in the cascade: a host page
+/// saying no more than `svg text { fill: currentColor }` would beat it and
+/// turn an invisible layer into a visible one stacked over the picture.
+///
+/// `all: revert` takes back everything the page said about the group itself,
+/// down to the `display` and the `opacity` nothing here names. It cannot take
+/// back what the page said further up, since reverting an inherited property
+/// leaves the value inherited, so the properties the layer is read and copied
+/// by are named as well: a page setting `text-transform` on its `<svg>` would
+/// otherwise change what selecting the text yields. What the fitting itself
+/// is written in — where a word sits, the size it is set at, the length it is
+/// stretched to and the turn of its line — is left alone.
+fn layer_declarations(settings: &Settings<'_>) -> String {
+    let fill = if settings.text_mode.is_drawn() {
+        settings.text_fill
+    } else {
+        "transparent"
+    };
+    format!(
+        "all: revert; fill: {fill}; stroke: none; font-family: {}; {SETTLED}",
+        settings.font_family,
+    )
+}
+
+/// The properties the layer is laid out, read and copied by, each pinned to
+/// what it would be had the page around the document said nothing at all.
+const SETTLED: &str = "font-style: normal; font-weight: normal; \
+     font-variant: normal; font-stretch: normal; letter-spacing: normal; \
+     word-spacing: normal; text-anchor: start; text-decoration: none; \
+     text-transform: none; direction: ltr; user-select: text; \
+     -webkit-user-select: text; white-space: pre;";
+
+/// The properties a line or a word takes from the group above it rather than
+/// from the page around it.
+///
+/// The group's own declarations are not enough on their own: they reach a
+/// `<text>` by inheritance, and a page rule naming `text` outright beats an
+/// inherited value. This is the same list under a selector the page cannot
+/// outweigh, which is what keeps a layer fitted to its glyphs fitted to them.
+const INHERITED: &str = "fill: inherit; stroke: inherit; font-family: inherit; \
+     font-style: inherit; font-weight: inherit; font-variant: inherit; \
+     font-stretch: inherit; letter-spacing: inherit; word-spacing: inherit; \
+     text-anchor: inherit; text-decoration: inherit; text-transform: inherit; \
+     direction: inherit; unicode-bidi: isolate; white-space: inherit; \
+     user-select: inherit; -webkit-user-select: inherit;";
+
 /// The stylesheet that makes a transparent text layer behave like text.
+///
+/// Every rule hangs off the root element, which is what keeps a document
+/// placed inline in a page from styling anything else there: a `<style>`
+/// inside an `<svg>` is not scoped by being inside it, and a bare
+/// `.scribe-text` would reach every element of the page carrying that class.
+/// The specificity the root selector adds is not a cost but the point, since
+/// it is also what holds the layer against the page's own rules.
 ///
 /// The document opts into both colour schemes, so that the system colours the
 /// selection is drawn in resolve to whichever one the reader is in, and so
 /// that a document opened on its own is drawn on a canvas of the same scheme
-/// rather than on white. The opt-in is hung off the root element's class
-/// rather than the element itself, leaving the colour scheme of a page the
-/// document is placed inline in alone.
+/// rather than on white. The opt-in is hung off the root element rather than
+/// the document, leaving the colour scheme of a page the document is placed
+/// inline in alone.
+///
+/// Nothing here is escaped, and nothing needs to be: a value that could close
+/// a declaration, a rule or the element itself has been refused already.
+/// Escaping would be wrong as well as unnecessary, since the XML parser
+/// reading a standalone document and the HTML parser reading an inlined one
+/// do not agree on what an escape inside a `<style>` means.
 fn style_rules(settings: &Settings<'_>) -> Vec<String> {
-    let root = escape(&settings.class(ROOT_CLASS), false);
-    let text = escape(&settings.class(TEXT_CLASS), false);
+    let root = settings.root_selector();
+    let text = format!("{root} .{}", settings.class(TEXT_CLASS));
     vec![
-        format!(".{root} {{ color-scheme: light dark; }}"),
-        format!(".{text} {{ user-select: text; -webkit-user-select: text; white-space: pre; }}"),
+        format!("{root} {{ color-scheme: light dark; }}"),
+        format!("{text} {{ {} }}", layer_declarations(settings)),
+        format!("{text} text, {text} tspan {{ {INHERITED} }}"),
         format!(
-            ".{text}::selection, .{text} ::selection {{ fill: {}; background: {}; }}",
-            escape(settings.selection_fill, false),
-            escape(settings.selection_background, false),
+            "{text}::selection, {text} ::selection {{ fill: {}; background: {}; }}",
+            settings.selection_fill, settings.selection_background,
         ),
     ]
 }
@@ -604,17 +998,14 @@ const TEXT_CLASS: &str = "text";
 
 /// Writes the group holding one `<text>` per line.
 fn write_text_layer(out: &mut Writer, layout: &Layout, settings: &Settings<'_>) {
-    let mut group = Tag::new("g")
-        .attr("class", &settings.class(TEXT_CLASS))
-        .attr("font-family", settings.font_family);
-    group = group.attr(
-        "fill",
-        if settings.text_mode.is_drawn() {
-            settings.text_fill
-        } else {
-            "transparent"
-        },
-    );
+    let mut group = Tag::new("g").attr("class", &settings.class(TEXT_CLASS));
+    // With no stylesheet the same declarations go on the element itself, so
+    // that turning the stylesheet off costs the selection colours and nothing
+    // else. Those cannot follow it: `::selection` is a pseudo-element, and
+    // there is nowhere but a stylesheet to write one.
+    if !settings.include_style {
+        group = group.attr("style", &layer_declarations(settings));
+    }
 
     let lines: Vec<_> = layout
         .lines
@@ -658,7 +1049,7 @@ fn text_element(
 ) -> String {
     let mut tag = Tag::new("text").attr("class", &settings.class("line"));
     if settings.ids {
-        tag = tag.attr("id", &format!("line-{index}"));
+        tag = tag.attr("id", &settings.id(&format!("line-{index}")));
     }
     let angle = rotation(line.rotated_box, settings);
     if angle != 0.0 {
@@ -765,7 +1156,7 @@ impl Placed<'_> {
     fn tspan(&self, line: usize, settings: &Settings<'_>) -> String {
         let mut tag = Tag::new("tspan").attr("class", &settings.class("word"));
         if settings.ids {
-            tag = tag.attr("id", &format!("word-{line}-{}", self.index));
+            tag = tag.attr("id", &settings.id(&format!("word-{line}-{}", self.index)));
         }
         tag = match &self.char_x {
             Some(starts) => tag.attr(
@@ -911,7 +1302,9 @@ fn write_debug_layer(out: &mut Writer, layout: &Layout, settings: &Settings<'_>)
         out.line(&outline(
             line.rotated_box,
             &settings.class("line-box"),
-            settings.ids.then(|| format!("line-box-{index}")),
+            settings
+                .ids
+                .then(|| settings.id(&format!("line-box-{index}"))),
             settings.debug_line_stroke,
             settings,
         ));
@@ -919,7 +1312,9 @@ fn write_debug_layer(out: &mut Writer, layout: &Layout, settings: &Settings<'_>)
             out.line(&outline(
                 word.rotated_box,
                 &settings.class("word-box"),
-                settings.ids.then(|| format!("word-box-{index}-{position}")),
+                settings
+                    .ids
+                    .then(|| settings.id(&format!("word-box-{index}-{position}"))),
                 settings.debug_word_stroke,
                 settings,
             ));
@@ -1194,17 +1589,27 @@ mod tests {
         render_layout(&sample(), options)
     }
 
+    /// Renders with no scope token unless the test asks for one, so that what
+    /// each of these is about is legible in the name it asserts on. What the
+    /// token does is asserted on its own, below.
     fn render_layout(layout: &Layout, options: Options) -> String {
+        let mut settings = Options::new().with("scope_mode", "none");
+        for (name, value) in options.iter() {
+            settings.set(name, value.clone());
+        }
+        try_render(layout, &settings).expect("the sample layout renders")
+    }
+
+    fn try_render(layout: &Layout, options: &Options) -> Result<String, RenderError> {
         let image = ImageSource::new(layout.image.width, layout.image.height)
             .with_mime("image/png")
             .with_bytes(PIXEL_PNG)
             .with_href("scan.png");
-        SvgRenderer
-            .render(layout, &image, &options)
-            .expect("the sample layout renders")
+        Ok(SvgRenderer
+            .render(layout, &image, options)?
             .as_str()
             .expect("SVG is text")
-            .to_string()
+            .to_string())
     }
 
     #[test]
@@ -1243,9 +1648,11 @@ mod tests {
 
     #[test]
     fn the_text_is_transparent_until_it_is_asked_for() {
-        assert!(
-            render(Options::new().with("image_mode", "none")).contains(r#"fill="transparent""#)
-        );
+        // The colour is a rule rather than a presentation attribute, so that
+        // a page styling `text` cannot make an invisible layer visible.
+        let hidden = render(Options::new().with("image_mode", "none"));
+        assert!(hidden.contains("fill: transparent;"), "{hidden}");
+        assert!(!hidden.contains(r#"fill=""#), "{hidden}");
 
         let visible = render(
             Options::new()
@@ -1253,7 +1660,7 @@ mod tests {
                 .with("text_mode", "visible")
                 .with("text_fill", "#123456"),
         );
-        assert!(visible.contains(r##"fill="#123456""##), "{visible}");
+        assert!(visible.contains("fill: #123456;"), "{visible}");
         assert!(!visible.contains("scribe-debug"), "{visible}");
     }
 
@@ -1300,7 +1707,7 @@ mod tests {
         layout.lines[0].rotated_box = RotatedBox::new(60.0, 20.0, 100.0, 20.0, 0.4);
         assert!(
             !render_layout(&layout, Options::new().with("image_mode", "none"))
-                .contains("transform"),
+                .contains("transform=\"rotate"),
         );
 
         layout.lines[0].rotated_box = RotatedBox::new(60.0, 20.0, 100.0, 20.0, 0.6);
@@ -1518,10 +1925,10 @@ mod tests {
     fn ids_name_each_line_and_word_by_its_place_in_the_layout() {
         let svg = render(Options::new().with("image_mode", "none").with("ids", true));
         assert!(
-            svg.contains(r#"<text class="scribe-line" id="line-0""#),
+            svg.contains(r#"<text class="scribe-line" id="scribe-line-0""#),
             "{svg}"
         );
-        assert!(svg.contains(r#"id="word-0-1""#), "{svg}");
+        assert!(svg.contains(r#"id="scribe-word-0-1""#), "{svg}");
     }
 
     #[test]
@@ -1610,10 +2017,7 @@ mod tests {
             svg.contains(r#"<image href="data:image/png;base64,"#),
             "{svg}"
         );
-        assert!(
-            svg.contains(r#"<g class="scribe-text" font-family="sans-serif" fill="transparent"/>"#),
-            "{svg}"
-        );
+        assert!(svg.contains(r#"<g class="scribe-text"/>"#), "{svg}");
         assert!(!svg.contains("aria-label"), "{svg}");
     }
 
@@ -1706,6 +2110,215 @@ mod tests {
                 .with("precision", 3_i64),
         );
         assert!(svg.contains(r#"x="10.125""#), "{svg}");
+    }
+
+    #[test]
+    fn a_name_is_worked_out_from_what_the_document_says() {
+        let scoped = try_render(&sample(), &Options::new().with("image_mode", "none"))
+            .expect("the sample layout renders");
+        let token = scope_token(&sample());
+        assert_eq!(token.len(), TOKEN_LENGTH, "{token}");
+        assert!(
+            scoped.contains(&format!(
+                r#"id="scribe-{token}" class="scribe-{token}-root""#
+            )),
+            "{scoped}"
+        );
+        assert!(
+            scoped.contains(&format!(r#"<g class="scribe-{token}-text">"#)),
+            "{scoped}"
+        );
+
+        // The same layout twice gives the same document, which is what any
+        // caching of this output, and every snapshot of it, rests on.
+        assert_eq!(
+            scoped,
+            try_render(&sample(), &Options::new().with("image_mode", "none")).unwrap()
+        );
+
+        // A different layout gives a different name, which is the whole point
+        // of working one out.
+        let mut other = sample();
+        other.lines[0].text = "Goodbye World".to_string();
+        assert_ne!(scope_token(&other), token);
+        assert_ne!(scope_token(&Layout::empty(120, 40)), token);
+    }
+
+    #[test]
+    fn a_name_of_the_callers_own_stands_in_for_the_worked_out_one() {
+        let named = try_render(
+            &sample(),
+            &Options::new()
+                .with("image_mode", "none")
+                .with("scope_mode", "fixed")
+                .with("scope", "left")
+                .with("ids", true),
+        )
+        .expect("a named scope renders");
+        assert!(named.contains(r#"id="scribe-left""#), "{named}");
+        assert!(named.contains(r#"id="scribe-left-line-0""#), "{named}");
+        assert!(named.contains("#scribe-left .scribe-left-text"), "{named}");
+
+        // Naming the scope and then not saying what it is says nothing.
+        let error = try_render(
+            &sample(),
+            &Options::new()
+                .with("image_mode", "none")
+                .with("scope_mode", "fixed"),
+        )
+        .unwrap_err();
+        assert!(error.to_string().contains("a fixed scope needs"), "{error}");
+    }
+
+    #[test]
+    fn every_rule_hangs_off_the_root_rather_than_a_bare_class() {
+        for mode in ScopeMode::CHOICES {
+            let svg = try_render(
+                &sample(),
+                &Options::new()
+                    .with("image_mode", "none")
+                    .with("scope_mode", *mode)
+                    .with("scope", "here"),
+            )
+            .expect("every scope mode renders");
+            let rules: Vec<_> = svg
+                .lines()
+                .map(str::trim)
+                .filter(|line| line.ends_with('}'))
+                .collect();
+            assert_eq!(rules.len(), 4, "{svg}");
+            for rule in rules {
+                assert!(
+                    rule.starts_with('#') || rule.starts_with(".scribe-root "),
+                    "{rule}"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn a_name_that_is_not_a_css_identifier_is_refused() {
+        let refuse = |name: &str, value: &str| {
+            try_render(
+                &sample(),
+                &Options::new().with("image_mode", "none").with(name, value),
+            )
+            .unwrap_err()
+            .to_string()
+        };
+
+        assert!(
+            refuse("class_prefix", "a b-").contains("cannot hold ' '"),
+            "{}",
+            refuse("class_prefix", "a b-")
+        );
+        let composed = refuse("class_prefix", "9-");
+        assert!(
+            composed.contains("not a valid CSS identifier"),
+            "{composed}"
+        );
+
+        let error = try_render(
+            &sample(),
+            &Options::new()
+                .with("image_mode", "none")
+                .with("scope_mode", "fixed")
+                .with("scope", "one two"),
+        )
+        .unwrap_err()
+        .to_string();
+        assert!(error.contains("`scope`"), "{error}");
+    }
+
+    #[test]
+    fn a_colour_that_could_close_its_rule_is_refused() {
+        let refuse = |name: &str, value: &str| {
+            try_render(
+                &sample(),
+                &Options::new().with("image_mode", "none").with(name, value),
+            )
+            .unwrap_err()
+            .to_string()
+        };
+
+        let closed = refuse("selection_background", "red } * { display: none } .x {");
+        assert!(closed.contains("cannot hold '}'"), "{closed}");
+        assert!(
+            refuse("text_fill", "</style><script>").contains("cannot hold '<'"),
+            "{}",
+            refuse("text_fill", "</style><script>")
+        );
+        assert!(
+            refuse("font_family", "serif /* out").contains("comment"),
+            "{}",
+            refuse("font_family", "serif /* out")
+        );
+        assert!(
+            refuse("selection_fill", "rgb(0 0 0").contains("close every bracket"),
+            "{}",
+            refuse("selection_fill", "rgb(0 0 0")
+        );
+        assert!(
+            refuse("font_family", "\"Times New").contains("close the \""),
+            "{}",
+            refuse("font_family", "\"Times New")
+        );
+
+        // What a colour is actually written as goes through untouched.
+        let kept = render(
+            Options::new()
+                .with("image_mode", "none")
+                .with("selection_background", "rgb(0 90 255 / 35%)")
+                .with("font_family", "\"Times New Roman\", serif"),
+        );
+        assert!(kept.contains("background: rgb(0 90 255 / 35%);"), "{kept}");
+        assert!(
+            kept.contains("font-family: \"Times New Roman\", serif;"),
+            "{kept}"
+        );
+    }
+
+    #[test]
+    fn a_stylesheet_can_carry_the_nonce_a_page_demands() {
+        let svg = render(
+            Options::new()
+                .with("image_mode", "none")
+                .with("style_nonce", "r4nd0m+t0ken="),
+        );
+        assert!(svg.contains(r#"<style nonce="r4nd0m+t0ken=">"#), "{svg}");
+
+        let error = try_render(
+            &sample(),
+            &Options::new()
+                .with("image_mode", "none")
+                .with("style_nonce", "not a nonce"),
+        )
+        .unwrap_err()
+        .to_string();
+        assert!(error.contains("base64"), "{error}");
+    }
+
+    #[test]
+    fn the_layer_is_still_selectable_with_no_stylesheet() {
+        let bare = render(
+            Options::new()
+                .with("image_mode", "none")
+                .with("include_style", false),
+        );
+        assert!(!bare.contains("<style"), "{bare}");
+        let style = bare
+            .split_once(r#"<g class="scribe-text" style=""#)
+            .and_then(|(_, rest)| rest.split_once('"'))
+            .expect("the layer carries its own declarations")
+            .0;
+        for declaration in [
+            "fill: transparent;",
+            "font-family: sans-serif;",
+            "user-select: text;",
+            "white-space: pre;",
+        ] {
+            assert!(style.contains(declaration), "{style}");
+        }
     }
 
     #[test]

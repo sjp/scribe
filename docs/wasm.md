@@ -172,4 +172,8 @@ describeOptions('svg')[0].name;              // "text_mode"
 
 render(layout, 'template', { template: 'text' }).text;
 render(layout, 'svg', { text_mode: 'debug', image_mode: 'none' }).text;
+
+// Two copies of one image in a page need a name each, since the token the
+// renderer works out for itself is the same for both.
+render(layout, 'svg', { scope_mode: 'fixed', scope: 'left' }).text;
 ```

@@ -62,14 +62,15 @@ scribe render page.layout.json --no-image --opt precision=1
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" class="scribe-root" width="284" height="96" viewBox="0 0 284 96" role="img" aria-label="Hello World">
+<svg xmlns="http://www.w3.org/2000/svg" id="scribe-g923no" class="scribe-g923no-root" width="284" height="96" viewBox="0 0 284 96" role="img" aria-label="Hello World">
   <style>
-    .scribe-root { color-scheme: light dark; }
-    .scribe-text { user-select: text; -webkit-user-select: text; white-space: pre; }
-    .scribe-text::selection, .scribe-text ::selection { fill: HighlightText; background: color-mix(in srgb, Highlight 35%, transparent); }
+    #scribe-g923no { color-scheme: light dark; }
+    #scribe-g923no .scribe-g923no-text { all: revert; fill: transparent; font-family: sans-serif; white-space: pre; … }
+    #scribe-g923no .scribe-g923no-text text, #scribe-g923no .scribe-g923no-text tspan { fill: inherit; font-family: inherit; white-space: inherit; … }
+    #scribe-g923no .scribe-g923no-text::selection, #scribe-g923no .scribe-g923no-text ::selection { fill: HighlightText; background: color-mix(in srgb, Highlight 35%, transparent); }
   </style>
-  <g class="scribe-text" font-family="sans-serif" fill="transparent">
-    <text class="scribe-line"><tspan class="scribe-word" x="26" y="55.4" font-size="33" textLength="105" lengthAdjust="spacingAndGlyphs">Hello</tspan> <tspan class="scribe-word" x="146" y="56" font-size="35" textLength="111" lengthAdjust="spacingAndGlyphs">World</tspan></text>
+  <g class="scribe-g923no-text">
+    <text class="scribe-g923no-line"><tspan class="scribe-g923no-word" x="26" y="55.4" font-size="33" textLength="105" lengthAdjust="spacingAndGlyphs">Hello</tspan> <tspan class="scribe-g923no-word" x="146" y="56" font-size="35" textLength="111" lengthAdjust="spacingAndGlyphs">World</tspan></text>
   </g>
 </svg>
 ```
@@ -77,6 +78,81 @@ scribe render page.layout.json --no-image --opt precision=1
 An SVG loaded through `<img src="page.svg">` is treated as a picture and none
 of this works. The document has to be inline in the page, or in an `<object>`
 or `<iframe>`.
+
+### Naming what the document writes: `scope_mode`, `scope`, `class_prefix`
+
+A standalone `.svg` file, and one loaded through `<object>` or `<iframe>`, is
+its own document: nothing it declares can reach anything else. Inline in
+somebody else's page it is not, and three things stop being local to it — the
+class names, the ids, and every rule in the `<style>`, which a browser applies
+to the whole of the page rather than to the `<svg>` it sits in.
+
+So every name the document writes is built from three parts: `class_prefix`,
+a token that sets this document apart from the others in the page, and the
+name itself.
+
+```
+class="scribe-g923no-text"    id="scribe-g923no-line-3"
+```
+
+- `scope_mode=content`, the default, works the token out from what the layout
+  says and how large the image is. It is derived rather than random, so the
+  same layout rendered twice gives the same document, byte for byte — which is
+  what makes the output worth caching and worth keeping under version control.
+  The consequence to know about is the other side of the same coin: the *same
+  image twice in one page collides with itself*.
+- `scope_mode=fixed` takes the token from `scope`. This is what the page with
+  two copies of one image wants, since it is the page, and not the renderer,
+  that knows there are two.
+- `scope_mode=none` writes nothing but the prefix, which suits a document that
+  is going to stand on its own with nothing around it to collide with.
+
+The root element carries the prefix and the token as its id — `scribe-g923no`
+above — both because the stylesheet needs something to hang off and because a
+script given one image needs a way to find the layer over it.
+
+`class_prefix` and `scope` are checked rather than escaped, and a value that
+is not a valid CSS identifier is refused by name: escaping is what a document
+does to text, and these land in a selector, where an escaped form would name
+something else. The colours and `font_family` are checked the same way, so
+that none of them can carry a `}` into a stylesheet that reaches the whole
+page.
+
+### Holding the layer against the page: `include_style`, `style_nonce`
+
+Every rule the document writes hangs off the root element:
+
+```css
+#scribe-g923no .scribe-g923no-text { all: revert; fill: transparent; … }
+```
+
+That keeps the rules from reaching anything else in the page, and the
+specificity it costs is the point rather than the price: it is what stops the
+page's own rules from winning against the layer. A page saying no more than
+`svg text { fill: currentColor }` would otherwise turn an invisible layer into
+a visible one stacked over the picture, and one setting `font-family` on
+`text` would shift the fitting out from under the pixels it was fitted to.
+
+`all: revert` takes back everything the page said about the group itself, down
+to the `display` and the `opacity` nothing else names. It cannot take back
+what the page said further up, since reverting an inherited property leaves
+the value inherited, so the properties the layer is read and copied by —
+`font-style`, `letter-spacing`, `text-transform` and the rest — are named as
+well; each line and word then takes that same list from the group rather than
+from the page. Where a word sits, the size it is set at, the length it is
+stretched to and the turn of its line are left alone, since those are the
+fitting itself.
+
+`include_style=false` leaves the `<style>` out. The layer stays selectable and
+keeps its spaces — the same declarations go onto the group as a `style`
+attribute instead — and what is given up is the selection colours and nothing
+else, `::selection` being a pseudo-element with nowhere but a stylesheet to
+live. Without a stylesheet the page's own rules can still reach the lines and
+words inside the group, so `include_style=false` is for a page you know.
+
+`style_nonce` is written as `nonce="…"` on the `<style>` element. A page whose
+Content Security Policy is not `style-src 'unsafe-inline'` drops the
+stylesheet otherwise, and nothing outside the renderer can put it back.
 
 ### What the text layer looks like: `text_mode`
 
@@ -168,11 +244,14 @@ How closely the text layer follows the glyphs under it is a choice:
 | `debug_line_stroke` | text | `#06c` | The colour line boxes are outlined in. |
 | `debug_word_stroke` | text | `#c00` | The colour word boxes are outlined in. |
 | `class_prefix` | text | `scribe-` | What every class name in the document starts with; a valid CSS identifier prefix. |
-| `ids` | `true` or `false` | `false` | Give every line and word an id, such as `line-3` and `word-3-1`. |
+| `scope_mode` | `content`, `fixed`, `none` | `content` | Whether the class names, the ids and the stylesheet carry a token setting this document apart from anything around it: one worked out from what the document says, one of your own, or none at all. |
+| `scope` | text | empty | The token to set this document apart, when `scope_mode` is `fixed`; a valid CSS identifier part. |
+| `ids` | `true` or `false` | `false` | Give every line and word an id, such as `line-3` and `word-3-1`, under the same prefix and token as the classes. |
 | `title` | text | empty | A title for the document; left out when empty. |
 | `aria_label` | text | empty | What assistive technology announces; the recognised text when empty. |
 | `precision` | a whole number | `2` | How many decimals coordinates are written to. |
 | `include_style` | `true` or `false` | `true` | Carry a stylesheet making the text selectable and its selection visible. |
+| `style_nonce` | text | empty | The nonce the stylesheet is written with, for a page whose content security policy does not allow inline styles outright. |
 | `xml_declaration` | `true` or `false` | `true` | Begin the document with an XML declaration. |
 <!-- end options -->
 

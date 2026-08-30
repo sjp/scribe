@@ -5,24 +5,31 @@
   instead of a single breathless `alt`.
 
   Takes `var.id`, the id the transcript carries and the image points at;
-  `var.class_prefix`, what every class name starts with; and `var.alt`, the
-  short label the image itself carries, the transcript being the long one.
+  `var.class_prefix`, what every name starts with, with `var.scope_mode` and
+  `var.scope` settling the token that follows it so that two transcripts in
+  one page are two rather than one; and `var.alt`, the short label the image
+  itself carries, the transcript being the long one.
 
   The `<img>` is left out when neither the image's bytes nor an href were
   given, which leaves a bare transcript to place beside an image already in
   the page.
 -#}
 {%- set source = image.data_uri or image.href -%}
-{%- set id = vars.id | default("scribe-transcript") -%}
 {%- set prefix = vars.class_prefix | default("scribe-") -%}
-<div class="{{ prefix }}transcript">
+{%- set mode = vars.scope_mode | default("content") -%}
+{%- set token = (vars.scope | default("")) if mode == "fixed" else ("" if mode == "none" else scope()) -%}
+{#- What every name in this document starts with: the prefix, and the token
+    after it when there is one. -#}
+{%- set ns = prefix ~ token ~ "-" if token else prefix -%}
+{%- set id = vars.id | default(ns ~ "transcript") -%}
+<div class="{{ ns }}transcript">
   <style>
-    .{{ prefix }}sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; border: 0; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: normal }
+    .{{ ns }}sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; border: 0; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: normal }
   </style>
 {%- if source %}
   <img src="{{ source }}" width="{{ image.width }}" height="{{ image.height }}" alt="{{ vars.alt | default("An image of text, transcribed after it.") }}" aria-describedby="{{ id }}" />
 {%- endif %}
-  <div class="{{ prefix }}sr-only" id="{{ id }}">
+  <div class="{{ ns }}sr-only" id="{{ id }}">
 {%- for line in layout.lines %}
     <p>{{ line.text }}</p>
 {%- endfor %}

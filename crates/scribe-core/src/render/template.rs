@@ -11,7 +11,10 @@
 //!
 //! A template building a page around an image can ask for the SVG renderer's
 //! own text layer rather than writing a second one: `svg` is a function here
-//! as well as a renderer, taking the same options by the same names.
+//! as well as a renderer, taking the same options by the same names. `scope`
+//! is the token that renderer works out for the layout in hand, so that a
+//! template can name the wrapper it puts around a layer, and the transcript
+//! it puts beside one, what the layer itself is named.
 //!
 //! Templates are read strictly: naming something that is not there is an
 //! error rather than an empty string, and the error says where in the
@@ -30,7 +33,7 @@ use minijinja::{AutoEscape, Environment, Error, ErrorKind, Output, State, Undefi
 
 use super::{
     Layout, OptionKind, OptionSpec, OptionValue, Options, RenderError, RenderOutput, Renderer,
-    SvgRenderer, number, parse_bool,
+    SvgRenderer, number, parse_bool, scope_token,
 };
 use crate::image_source::ImageSource;
 use crate::layout::RotatedBox;
@@ -407,6 +410,10 @@ fn prepare(
     // gone. The context beside it already holds a copy of the layout, so this
     // is the second rather than the first.
     let layout = Arc::new(layout.clone());
+
+    let scoped = Arc::clone(&layout);
+    environment.add_function("scope", move || scope_token(&scoped));
+
     let image = Arc::clone(image);
     let layer = move |options: Option<Value>, overrides: Kwargs| {
         svg_layer(&layout, &image, options.as_ref(), &overrides)
@@ -1194,13 +1201,13 @@ mod tests {
         // A mapping is what a template passes the caller's own values
         // through as; keywords are what it settles for itself, and they win.
         let both = rendered(
-            r#"{{ svg({"image_mode": "none", "text_mode": "visible"}, text_mode="invisible", ids=true) }}"#,
+            r#"{{ svg({"image_mode": "none", "text_mode": "visible"}, text_mode="invisible", ids=true, scope_mode="none") }}"#,
         );
-        assert!(both.contains(r#"fill="transparent""#), "{both}");
-        assert!(both.contains(r#"id="line-0""#), "{both}");
+        assert!(both.contains("fill: transparent;"), "{both}");
+        assert!(both.contains(r#"id="scribe-line-0""#), "{both}");
         assert_eq!(
             both,
-            rendered(r#"{{ {"image_mode": "none", "ids": true} | svg }}"#)
+            rendered(r#"{{ {"image_mode": "none", "ids": true, "scope_mode": "none"} | svg }}"#)
         );
     }
 

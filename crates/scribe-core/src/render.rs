@@ -41,6 +41,7 @@ mod template;
 
 pub use json::JsonRenderer;
 pub use svg::SvgRenderer;
+pub(crate) use svg::scope_token;
 pub use template::{TemplateRenderer, list_templates};
 
 use std::borrow::Cow;
@@ -510,6 +511,21 @@ pub enum RenderError {
         actual: String,
     },
 
+    /// An option was set to a value of the right kind that the renderer
+    /// cannot write, such as a name that is not a valid CSS identifier or a
+    /// colour that would close the rule it is written into.
+    #[error("the {renderer} renderer cannot use {actual:?} as its `{name}`: {reason}")]
+    UnusableOption {
+        /// The renderer the options were meant for.
+        renderer: String,
+        /// The option that was set.
+        name: &'static str,
+        /// The value it was given.
+        actual: String,
+        /// Why it cannot be written, in a sentence that follows the value.
+        reason: String,
+    },
+
     /// The renderer was asked for an output needing something about the
     /// source image that the caller did not supply.
     #[error("the {renderer} renderer was asked to {intent}, but {missing}")]
@@ -558,6 +574,21 @@ impl RenderError {
         Self::Write {
             renderer: renderer.to_string(),
             source: source.into(),
+        }
+    }
+
+    /// A renderer's refusal of a value it was given but cannot write.
+    pub fn unusable_option(
+        renderer: &str,
+        name: &'static str,
+        actual: impl Into<String>,
+        reason: impl Into<String>,
+    ) -> Self {
+        Self::UnusableOption {
+            renderer: renderer.to_string(),
+            name,
+            actual: actual.into(),
+            reason: reason.into(),
         }
     }
 

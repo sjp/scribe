@@ -270,6 +270,52 @@ fn fixture(stem: &str) -> &'static Fixture {
 }
 
 #[test]
+fn two_fixtures_in_one_page_share_no_name() {
+    support::prepare();
+    // Everything written here is meant to be placed inside somebody else's
+    // HTML, where an id is the most collision-prone name there is: two of
+    // these in a page must not resolve to one another.
+    let svg = Options::new().with("ids", true).with("image_mode", "link");
+    let template = |name: &str| Options::new().with("template", name);
+    for (renderer, options) in [
+        ("svg", svg),
+        ("template", template("svg-overlay")),
+        ("template", template("html-figure")),
+        ("template", template("sr-only-transcript")),
+        ("template", template("layout-json")),
+    ] {
+        let mut seen: Vec<(String, String)> = Vec::new();
+        for fixture in FIXTURES {
+            for id in ids(&render_linked(fixture, renderer, options.clone())) {
+                if let Some((stem, _)) = seen.iter().find(|(_, other)| *other == id) {
+                    panic!(
+                        "{} and {} both write `{id}` through {renderer}",
+                        stem, fixture.stem
+                    );
+                }
+                seen.push((fixture.stem.to_string(), id));
+            }
+        }
+        assert!(
+            !seen.is_empty(),
+            "{renderer} should write ids, or this promises nothing"
+        );
+    }
+}
+
+/// Every id in a document, however deeply it is nested.
+fn ids(text: &str) -> Vec<String> {
+    let mut found = Vec::new();
+    let mut rest = text;
+    while let Some((_, after)) = rest.split_once(" id=\"") {
+        let (id, tail) = after.split_once('"').expect("an attribute is closed");
+        found.push(id.to_string());
+        rest = tail;
+    }
+    found
+}
+
+#[test]
 fn template_output() {
     support::prepare();
     for fixture in FIXTURES {

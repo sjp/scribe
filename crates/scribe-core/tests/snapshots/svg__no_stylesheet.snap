@@ -1,0 +1,11 @@
+---
+source: crates/scribe-core/tests/svg.rs
+expression: "linked(&hello_world(), Options::new().with(\"include_style\", false))"
+---
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="scribe-g923no" class="scribe-g923no-root" width="284" height="96" viewBox="0 0 284 96" role="img" aria-label="Hello World">
+  <image href="hello.png" width="284" height="96"/>
+  <g class="scribe-g923no-text" style="all: revert; fill: transparent; stroke: none; font-family: sans-serif; font-style: normal; font-weight: normal; font-variant: normal; font-stretch: normal; letter-spacing: normal; word-spacing: normal; text-anchor: start; text-decoration: none; text-transform: none; direction: ltr; user-select: text; -webkit-user-select: text; white-space: pre;">
+    <text class="scribe-g923no-line"><tspan class="scribe-g923no-word" x="28" y="56.6" font-size="32" textLength="98" lengthAdjust="spacingAndGlyphs">Hello</tspan> <tspan class="scribe-g923no-word" x="143" y="56.6" font-size="32" textLength="113" lengthAdjust="spacingAndGlyphs">World</tspan></text>
+  </g>
+</svg>

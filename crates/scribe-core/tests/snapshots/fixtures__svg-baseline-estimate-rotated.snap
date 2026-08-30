@@ -3,17 +3,18 @@ source: crates/scribe-core/tests/fixtures.rs
 expression: output
 ---
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="scribe-root" width="420" height="320" viewBox="0 0 420 320" role="img" aria-label="Tilted line S 2 i">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="scribe-hlv5aw" class="scribe-hlv5aw-root" width="420" height="320" viewBox="0 0 420 320" role="img" aria-label="Tilted line S 2 i">
   <style>
-    .scribe-root { color-scheme: light dark; }
-    .scribe-text { user-select: text; -webkit-user-select: text; white-space: pre; }
-    .scribe-text::selection, .scribe-text ::selection { fill: HighlightText; background: color-mix(in srgb, Highlight 35%, transparent); }
+    #scribe-hlv5aw { color-scheme: light dark; }
+    #scribe-hlv5aw .scribe-hlv5aw-text { all: revert; fill: transparent; stroke: none; font-family: sans-serif; font-style: normal; font-weight: normal; font-variant: normal; font-stretch: normal; letter-spacing: normal; word-spacing: normal; text-anchor: start; text-decoration: none; text-transform: none; direction: ltr; user-select: text; -webkit-user-select: text; white-space: pre; }
+    #scribe-hlv5aw .scribe-hlv5aw-text text, #scribe-hlv5aw .scribe-hlv5aw-text tspan { fill: inherit; stroke: inherit; font-family: inherit; font-style: inherit; font-weight: inherit; font-variant: inherit; font-stretch: inherit; letter-spacing: inherit; word-spacing: inherit; text-anchor: inherit; text-decoration: inherit; text-transform: inherit; direction: inherit; unicode-bidi: isolate; white-space: inherit; user-select: inherit; -webkit-user-select: inherit; }
+    #scribe-hlv5aw .scribe-hlv5aw-text::selection, #scribe-hlv5aw .scribe-hlv5aw-text ::selection { fill: HighlightText; background: color-mix(in srgb, Highlight 35%, transparent); }
   </style>
   <image href="rotated.png" width="420" height="320"/>
-  <g class="scribe-text" font-family="sans-serif" fill="transparent">
-    <text class="scribe-line" transform="rotate(13.84 109.14 96.94)"><tspan class="scribe-word" x="32.87" y="116.27" font-size="38" textLength="94.29" lengthAdjust="spacingAndGlyphs">Tilted</tspan> <tspan class="scribe-word" x="131.41" y="112.78" font-size="32.28" textLength="51.81" lengthAdjust="spacingAndGlyphs">line</tspan></text>
-    <text class="scribe-line"><tspan class="scribe-word" x="368" y="176" font-size="26" textLength="24" lengthAdjust="spacingAndGlyphs">S</tspan></text>
-    <text class="scribe-line"><tspan class="scribe-word" x="368" y="194" font-size="20" textLength="25" lengthAdjust="spacingAndGlyphs">2</tspan></text>
-    <text class="scribe-line"><tspan class="scribe-word" x="362" y="286" font-size="91" textLength="25" lengthAdjust="spacingAndGlyphs">i</tspan></text>
+  <g class="scribe-hlv5aw-text">
+    <text class="scribe-hlv5aw-line" transform="rotate(13.84 109.14 96.94)"><tspan class="scribe-hlv5aw-word" x="32.87" y="116.27" font-size="38" textLength="94.29" lengthAdjust="spacingAndGlyphs">Tilted</tspan> <tspan class="scribe-hlv5aw-word" x="131.41" y="112.78" font-size="32.28" textLength="51.81" lengthAdjust="spacingAndGlyphs">line</tspan></text>
+    <text class="scribe-hlv5aw-line"><tspan class="scribe-hlv5aw-word" x="368" y="176" font-size="26" textLength="24" lengthAdjust="spacingAndGlyphs">S</tspan></text>
+    <text class="scribe-hlv5aw-line"><tspan class="scribe-hlv5aw-word" x="368" y="194" font-size="20" textLength="25" lengthAdjust="spacingAndGlyphs">2</tspan></text>
+    <text class="scribe-hlv5aw-line"><tspan class="scribe-hlv5aw-word" x="362" y="286" font-size="91" textLength="25" lengthAdjust="spacingAndGlyphs">i</tspan></text>
   </g>
 </svg>

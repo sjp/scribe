@@ -41,6 +41,7 @@ pub fn exit_code(error: &anyhow::Error) -> ExitCode {
                     RenderError::UnknownOption { .. }
                         | RenderError::InvalidOption { .. }
                         | RenderError::InvalidChoice { .. }
+                        | RenderError::UnusableOption { .. }
                 )
             )
     });

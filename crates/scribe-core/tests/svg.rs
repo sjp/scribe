@@ -166,6 +166,168 @@ fn empty_layout() {
 }
 
 #[test]
+fn scoped_names() {
+    insta::assert_snapshot!(linked(&hello_world(), Options::new().with("ids", true)));
+}
+
+#[test]
+fn fixed_scope() {
+    insta::assert_snapshot!(linked(
+        &hello_world(),
+        Options::new()
+            .with("scope_mode", "fixed")
+            .with("scope", "second")
+            .with("ids", true)
+    ));
+}
+
+#[test]
+fn unscoped_names() {
+    insta::assert_snapshot!(linked(
+        &hello_world(),
+        Options::new().with("scope_mode", "none").with("ids", true)
+    ));
+}
+
+#[test]
+fn style_nonce() {
+    insta::assert_snapshot!(linked(
+        &hello_world(),
+        Options::new().with("style_nonce", "rAnd0m/nonce+FromTheServer=")
+    ));
+}
+
+#[test]
+fn no_stylesheet() {
+    insta::assert_snapshot!(linked(
+        &hello_world(),
+        Options::new().with("include_style", false)
+    ));
+}
+
+#[test]
+fn the_same_layout_and_options_give_the_same_bytes() {
+    // Every test here is a snapshot, and a caller may well be keeping this
+    // output beside the image it came from; both need the document to be a
+    // function of the layout and the options and of nothing else.
+    for options in [
+        Options::new(),
+        Options::new().with("ids", true).with("text_mode", "debug"),
+        Options::new().with("scope_mode", "none"),
+    ] {
+        let once = linked(&hello_world(), options.clone());
+        assert_eq!(once, linked(&hello_world(), options));
+    }
+}
+
+#[test]
+fn two_layouts_in_one_page_share_no_name() {
+    let scoped = |layout: &Layout| {
+        let text = linked(layout, Options::new().with("ids", true));
+        let document = roxmltree::Document::parse(&text).expect("the document parses");
+        let names: Vec<String> = document
+            .descendants()
+            .filter_map(|node| node.attribute("id"))
+            .chain(
+                document
+                    .descendants()
+                    .filter_map(|node| node.attribute("class")),
+            )
+            .map(str::to_string)
+            .collect();
+        assert!(!names.is_empty(), "{text}");
+        names
+    };
+
+    let one = scoped(&hello_world());
+    let other = scoped(&turned(other_layout(), 0.0));
+    for name in &one {
+        assert!(!other.contains(name), "both documents write `{name}`");
+    }
+}
+
+/// A second layout, of a different size and saying something else, standing
+/// for the other picture on a page this one is placed in.
+fn other_layout() -> Layout {
+    let words = vec![word("Second", 20.0, 140.0), word("page", 150.0, 240.0)];
+    let bbox = Rect::new(
+        words[0].bbox.x,
+        TOP,
+        words[1].bbox.right() - words[0].bbox.x,
+        BOTTOM - TOP,
+    );
+    Layout::new(
+        SIZE.0 + 10,
+        SIZE.1,
+        vec![Line {
+            text: "Second page".to_string(),
+            bbox,
+            rotated_box: RotatedBox::from_rect(bbox),
+            words,
+            confidence: Some(0.99),
+        }],
+    )
+}
+
+#[test]
+fn no_rule_reaches_past_the_document_it_is_written_in() {
+    // A `<style>` inside an inline `<svg>` styles the whole of the page
+    // around it, so a rule that begins with a bare class would reach every
+    // element there carrying that class.
+    let text = render(&hello_world(), Options::new().with("image_mode", "none"));
+    let document = roxmltree::Document::parse(&text).expect("the document parses");
+    let stylesheet = document
+        .descendants()
+        .find(|node| node.has_tag_name("style"))
+        .and_then(|node| node.text())
+        .expect("the document carries a stylesheet");
+    let rules: Vec<_> = stylesheet
+        .lines()
+        .map(str::trim)
+        .filter(|line| !line.is_empty())
+        .collect();
+    assert!(!rules.is_empty(), "{stylesheet}");
+    for rule in rules {
+        assert!(
+            rule.starts_with(&format!("#{}", root_id(&text))),
+            "every rule should hang off the root element, but one is `{rule}`"
+        );
+    }
+}
+
+/// The id the root element carries, which every rule is written under.
+fn root_id(text: &str) -> String {
+    let document = roxmltree::Document::parse(text).expect("the document parses");
+    document
+        .root_element()
+        .attribute("id")
+        .expect("the root element is named")
+        .to_string()
+}
+
+#[test]
+fn a_layer_with_no_stylesheet_is_still_text() {
+    let text = render(
+        &hello_world(),
+        Options::new()
+            .with("image_mode", "none")
+            .with("include_style", false),
+    );
+    assert!(!text.contains("<style"), "{text}");
+    let document = roxmltree::Document::parse(&text).expect("the document parses");
+    let group = document
+        .descendants()
+        .find(|node| node.has_tag_name("g"))
+        .expect("the text layer is written");
+    let style = group
+        .attribute("style")
+        .expect("the layer carries its own declarations");
+    for declaration in ["fill: transparent", "user-select: text", "white-space: pre"] {
+        assert!(style.contains(declaration), "{style}");
+    }
+}
+
+#[test]
 fn every_variant_is_well_formed_xml() {
     // The checking is in `render`; this walks the options that change the
     // shape of the document so that none of them can produce a document no
@@ -183,6 +345,8 @@ fn every_variant_is_well_formed_xml() {
         ("space_mode", "tspan"),
         ("line_break_mode", "tspan"),
         ("class_prefix", "a-"),
+        ("scope_mode", "none"),
+        ("style_nonce", "n0nce="),
         ("title", "A <fixture> & its \"text\""),
         ("aria_label", "A <fixture> & its \"text\""),
     ] {

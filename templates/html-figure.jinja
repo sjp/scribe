@@ -7,7 +7,9 @@
 
   Takes `var.overlay`, `spans` or `svg`, for whether the layer is positioned
   HTML or the SVG renderer's own; `var.id`, the id of the transcript;
-  `var.class_prefix`, what every class name starts with; `var.selection_fill`
+  `var.class_prefix`, what every name starts with, with `var.scope_mode` and
+  `var.scope` settling the token that follows it so that two figures in one
+  page share no name between them; `var.selection_fill`
   and `var.selection_background`, the colours selected text is drawn in, both
   of them a system colour by default; `var.char_positions`, to place every
   character on its own pixels; and `var.font_size_mode`, `box_height` or
@@ -19,7 +21,12 @@
 -#}
 {%- set source = image.data_uri or image.href -%}
 {%- set prefix = vars.class_prefix | default("scribe-") -%}
-{%- set id = vars.id | default("scribe-transcript") -%}
+{%- set mode = vars.scope_mode | default("content") -%}
+{%- set token = (vars.scope | default("")) if mode == "fixed" else ("" if mode == "none" else scope()) -%}
+{#- What every name in this document starts with: the prefix, and the token
+    after it when there is one. -#}
+{%- set ns = prefix ~ token ~ "-" if token else prefix -%}
+{%- set id = vars.id | default(ns ~ "transcript") -%}
 {%- set as_svg = (vars.overlay | default("spans")) == "svg" -%}
 {%- set per_char = vars.char_positions | default(false) | flag -%}
 {%- set size_mode = vars.font_size_mode | default("box_height") -%}
@@ -28,21 +35,21 @@
 {%- set selection = vars.selection_background | default("color-mix(in srgb, Highlight 35%, transparent)") -%}
 {#- How much of an em the height of a box stands for. -#}
 {%- set box_em = cap_ratio if size_mode == "cap_height" and cap_ratio > 0 else 1 -%}
-<figure class="{{ prefix }}figure">
+<figure class="{{ ns }}figure">
   <style>
-    .{{ prefix }}overlay { position: relative; display: inline-block; line-height: 0; color-scheme: light dark }
-    .{{ prefix }}overlay img { display: block; max-width: 100% }
-    .{{ prefix }}overlay svg { position: absolute; left: 0; top: 0; width: 100%; height: 100% }
-    .{{ prefix }}overlay span { position: absolute; color: transparent; white-space: pre; line-height: 1; transform-origin: center }
-    .{{ prefix }}overlay span::selection { color: {{ selection_fill }}; background: {{ selection }} }
-    .{{ prefix }}sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; border: 0; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: normal }
+    .{{ ns }}overlay { position: relative; display: inline-block; line-height: 0; color-scheme: light dark }
+    .{{ ns }}overlay img { display: block; max-width: 100% }
+    .{{ ns }}overlay svg { position: absolute; left: 0; top: 0; width: 100%; height: 100% }
+    .{{ ns }}overlay span { position: absolute; color: transparent; white-space: pre; line-height: 1; transform-origin: center }
+    .{{ ns }}overlay span::selection { color: {{ selection_fill }}; background: {{ selection }} }
+    .{{ ns }}sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; border: 0; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: normal }
   </style>
-  <div class="{{ prefix }}overlay">
+  <div class="{{ ns }}overlay">
 {%- if source %}
     <img src="{{ source }}" width="{{ image.width }}" height="{{ image.height }}" alt="{{ text | replace("\n", " ") }}" aria-describedby="{{ id }}" />
 {%- endif %}
 {%- if as_svg %}
-    {{ svg({"char_positions": per_char, "font_size_mode": size_mode, "cap_height_ratio": cap_ratio, "selection_fill": selection_fill, "selection_background": selection, "class_prefix": prefix}, image_mode="none") | indent(4) | safe }}
+    {{ svg({"char_positions": per_char, "font_size_mode": size_mode, "cap_height_ratio": cap_ratio, "selection_fill": selection_fill, "selection_background": selection, "class_prefix": prefix}, image_mode="none", scope_mode=("fixed" if token else "none"), scope=token) | indent(4) | safe }}
 {%- else %}
 {%- for line in layout.lines %}
 {%- for word in line.words or [line] %}
@@ -62,7 +69,7 @@
 {%- endfor %}
 {%- endif %}
   </div>
-  <div class="{{ prefix }}sr-only" id="{{ id }}">
+  <div class="{{ ns }}sr-only" id="{{ id }}">
 {%- for line in layout.lines %}
     <p>{{ line.text }}</p>
 {%- endfor %}

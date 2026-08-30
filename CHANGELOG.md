@@ -28,7 +28,15 @@ Versioning](https://semver.org/spec/v2.0.0.html).
   adjustment and separator elements. The document opts into both colour
   schemes and draws selected text in the reader's own system colours, so that
   a selection, and the canvas a document opened on its own sits on, follow
-  light and dark mode without the document naming a colour for either.
+  light and dark mode without the document naming a colour for either. It is
+  written to be placed inside another document: every class name and every id
+  carries a token setting it apart from anything else in the page, worked out
+  from the layout, given by the caller or left out; every rule in its
+  stylesheet hangs off the root element rather than reaching the page around
+  it; the text layer holds its own against whatever that page styles its text
+  with; the names and colours it is given are checked rather than escaped;
+  and the stylesheet can carry a nonce for a page whose content security
+  policy asks for one.
 - The `template` renderer, writing whatever a Jinja template describes, with
   callers' own templates and values accepted and twelve built in: text layers
   to lay over an image, written as positioned HTML or as SVG; transcripts an

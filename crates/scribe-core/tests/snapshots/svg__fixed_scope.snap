@@ -1,0 +1,17 @@
+---
+source: crates/scribe-core/tests/svg.rs
+expression: "linked(&hello_world(),\nOptions::new().with(\"scope_mode\",\n\"fixed\").with(\"scope\", \"second\").with(\"ids\", true))"
+---
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="scribe-second" class="scribe-second-root" width="284" height="96" viewBox="0 0 284 96" role="img" aria-label="Hello World">
+  <style>
+    #scribe-second { color-scheme: light dark; }
+    #scribe-second .scribe-second-text { all: revert; fill: transparent; stroke: none; font-family: sans-serif; font-style: normal; font-weight: normal; font-variant: normal; font-stretch: normal; letter-spacing: normal; word-spacing: normal; text-anchor: start; text-decoration: none; text-transform: none; direction: ltr; user-select: text; -webkit-user-select: text; white-space: pre; }
+    #scribe-second .scribe-second-text text, #scribe-second .scribe-second-text tspan { fill: inherit; stroke: inherit; font-family: inherit; font-style: inherit; font-weight: inherit; font-variant: inherit; font-stretch: inherit; letter-spacing: inherit; word-spacing: inherit; text-anchor: inherit; text-decoration: inherit; text-transform: inherit; direction: inherit; unicode-bidi: isolate; white-space: inherit; user-select: inherit; -webkit-user-select: inherit; }
+    #scribe-second .scribe-second-text::selection, #scribe-second .scribe-second-text ::selection { fill: HighlightText; background: color-mix(in srgb, Highlight 35%, transparent); }
+  </style>
+  <image href="hello.png" width="284" height="96"/>
+  <g class="scribe-second-text">
+    <text class="scribe-second-line" id="scribe-second-line-0"><tspan class="scribe-second-word" id="scribe-second-word-0-0" x="28" y="56.6" font-size="32" textLength="98" lengthAdjust="spacingAndGlyphs">Hello</tspan> <tspan class="scribe-second-word" id="scribe-second-word-0-1" x="143" y="56.6" font-size="32" textLength="113" lengthAdjust="spacingAndGlyphs">World</tspan></text>
+  </g>
+</svg>

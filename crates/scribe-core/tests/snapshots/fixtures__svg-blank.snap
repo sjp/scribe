@@ -3,12 +3,13 @@ source: crates/scribe-core/tests/fixtures.rs
 expression: output
 ---
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="scribe-root" width="220" height="140" viewBox="0 0 220 140" role="img">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="scribe-v8i16z" class="scribe-v8i16z-root" width="220" height="140" viewBox="0 0 220 140" role="img">
   <style>
-    .scribe-root { color-scheme: light dark; }
-    .scribe-text { user-select: text; -webkit-user-select: text; white-space: pre; }
-    .scribe-text::selection, .scribe-text ::selection { fill: HighlightText; background: color-mix(in srgb, Highlight 35%, transparent); }
+    #scribe-v8i16z { color-scheme: light dark; }
+    #scribe-v8i16z .scribe-v8i16z-text { all: revert; fill: transparent; stroke: none; font-family: sans-serif; font-style: normal; font-weight: normal; font-variant: normal; font-stretch: normal; letter-spacing: normal; word-spacing: normal; text-anchor: start; text-decoration: none; text-transform: none; direction: ltr; user-select: text; -webkit-user-select: text; white-space: pre; }
+    #scribe-v8i16z .scribe-v8i16z-text text, #scribe-v8i16z .scribe-v8i16z-text tspan { fill: inherit; stroke: inherit; font-family: inherit; font-style: inherit; font-weight: inherit; font-variant: inherit; font-stretch: inherit; letter-spacing: inherit; word-spacing: inherit; text-anchor: inherit; text-decoration: inherit; text-transform: inherit; direction: inherit; unicode-bidi: isolate; white-space: inherit; user-select: inherit; -webkit-user-select: inherit; }
+    #scribe-v8i16z .scribe-v8i16z-text::selection, #scribe-v8i16z .scribe-v8i16z-text ::selection { fill: HighlightText; background: color-mix(in srgb, Highlight 35%, transparent); }
   </style>
   <image href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAANwAAACMCAAAAAAyv5iqAAACj0lEQVR4Ae3AA6AkWZbG8f937o3IzKdyS2Oubdu2bdu2bdu2bWmMnpZKr54yMyLu+Xa3anqmhztr1a+a/5MACP5vAiD4vwmA4P8mAIL/mwAI/m8CIPi/CYDg/yYAgv+bAAj+bwIg+L8JgOD/JgCC/5sACP5vAiD4vwmA4P8mAIL/mwAI/m8CIPi/CYDg/yYAgv+bAAj+bwIg+L8JgOD/JgCC/5sACP5vAiD4vwmA4P8mAIL/mwAI/m8CIPi/CYDg/yYAgv+bAAj+bwIg+L8JgOD/JgCC/5sACP5vAiD4vwmA4P8mAIL/mwAI/m8CIPi/CYDg/yYAgv+bAAj+bwIg+L8JgOD/JgCC/5sACP5vAiD4vwmA4P8mAIL/mwAI/m8CIPi/CYDg/yYAgv+bAAj+bwIg+L8JgOD/JgCC/5sACP5vAiD4vwmA4P8mAIL/mwAI/m8CIPi/CYDg/yYAgv+bAAj+bwIg+L8JgOD/JgCC/5sACP5vAiD4vwmA4P8mAIL/mwAI/m8CIPi/CYDg/yYAgv+bAAj+bwIg+L8JgOD/JgCC/5sACP5vAiD4vwmA4P8mAIL/mwAI/m8CIPi/CYDg/yYAgv+bAAj+bwIg+L8JgOD/JgCC/5sACP5vAiD4vwmA4P8mAIL/mwAI/m8CIPi/CYDg/yYAgv+bAAj+bwIg+L8JgOD/JgCC/5sACP5vAiD4vwmA4P8mAIL/mwAI/m8CIPi/CYDg/yYAgv+bAAj+bwIg+L8JgOD/JgCC/5sACP5vAiD4vwmA4P8mAIL/mwAI/m8CIPi/CYDg/yYAgv+bAAj+bwIg+L8JgOD/JgCC/5sACP5vAiD4vwmA4P8mAIL/mwAI/m8CIPi/CYDg/yYA/hFo6QIaftzMegAAAABJRU5ErkJggg==" width="220" height="140"/>
-  <g class="scribe-text" font-family="sans-serif" fill="transparent"/>
+  <g class="scribe-v8i16z-text"/>
 </svg>

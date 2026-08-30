@@ -5,17 +5,28 @@
   lazily, or feed the site's own search, without asking a server for anything.
 
   Takes `var.id`, the id the script carries and the image points at with a
-  `data-` attribute; `var.image`, whether the image is written before it; and
-  `var.class_prefix`, what the class name and that attribute start with.
+  `data-` attribute; `var.image`, whether the image is written before it;
+  `var.class_prefix`, what the class name and that attribute start with; and
+  `var.scope_mode` and `var.scope`, the token the id carries after the prefix,
+  so that two layouts in one page are two rather than one.
+
+  The `data-` attribute keeps the plain prefix and none of the token, since a
+  script looking for a layout has to know the name it is looking for; the id
+  it holds is what tells one layout from another.
 
   The layout goes through `json`, whose escaping of `<`, `>` and `&` is what
   keeps text read from an image from ending the element early.
 -#}
-{%- set id = vars.id | default("scribe-layout") -%}
 {%- set prefix = vars.class_prefix | default("scribe-") -%}
+{%- set mode = vars.scope_mode | default("content") -%}
+{%- set token = (vars.scope | default("")) if mode == "fixed" else ("" if mode == "none" else scope()) -%}
+{#- What every name in this document starts with: the prefix, and the token
+    after it when there is one. -#}
+{%- set ns = prefix ~ token ~ "-" if token else prefix -%}
+{%- set id = vars.id | default(ns ~ "layout") -%}
 {%- set source = image.data_uri or image.href -%}
 {%- set with_image = vars.image | default(true) | flag -%}
-<div class="{{ prefix }}layout">
+<div class="{{ ns }}layout">
 {%- if with_image and source %}
   <img src="{{ source }}" width="{{ image.width }}" height="{{ image.height }}" alt="{{ text | replace("\n", " ") }}" data-{{ prefix }}layout="{{ id }}" />
 {%- endif %}

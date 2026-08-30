@@ -7,21 +7,28 @@
   Its `var.` options are the SVG renderer's own — whatever `scribe formats`
   lists under `svg` — save that the image is never carried in the layer,
   since the page's own `<img>` is underneath it. `var.class_prefix` names the
-  classes in the layer and around it alike.
+  classes in the layer and around it alike, and `var.scope_mode` and
+  `var.scope` settle the token that follows the prefix, so that the wrapper
+  and the layer inside it carry one name between them.
 
   The image carries no `alt`: the layer over it is what a screen reader
   announces, and announcing the same text twice helps nobody.
 -#}
 {%- set source = image.data_uri or image.href -%}
 {%- set prefix = vars.class_prefix | default("scribe-") -%}
-<div class="{{ prefix }}overlay">
+{%- set mode = vars.scope_mode | default("content") -%}
+{%- set token = (vars.scope | default("")) if mode == "fixed" else ("" if mode == "none" else scope()) -%}
+{#- What every name in this document starts with: the prefix, and the token
+    after it when there is one. -#}
+{%- set ns = prefix ~ token ~ "-" if token else prefix -%}
+<div class="{{ ns }}overlay">
   <style>
-    .{{ prefix }}overlay { position: relative; display: inline-block; line-height: 0 }
-    .{{ prefix }}overlay img { display: block; max-width: 100% }
-    .{{ prefix }}overlay svg { position: absolute; left: 0; top: 0; width: 100%; height: 100% }
+    .{{ ns }}overlay { position: relative; display: inline-block; line-height: 0 }
+    .{{ ns }}overlay img { display: block; max-width: 100% }
+    .{{ ns }}overlay svg { position: absolute; left: 0; top: 0; width: 100%; height: 100% }
   </style>
 {%- if source %}
   <img src="{{ source }}" width="{{ image.width }}" height="{{ image.height }}" alt="" />
 {%- endif %}
-  {{ svg(vars, image_mode="none") | indent(2) | safe }}
+  {{ svg(vars, image_mode="none", scope_mode=("fixed" if token else "none"), scope=token) | indent(2) | safe }}
 </div>

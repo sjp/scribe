@@ -91,20 +91,26 @@ scribe render page.layout.json --no-image --opt precision=1
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" class="scribe-root" width="284" height="96" viewBox="0 0 284 96" role="img" aria-label="Hello World">
+<svg xmlns="http://www.w3.org/2000/svg" id="scribe-g923no" class="scribe-g923no-root" width="284" height="96" viewBox="0 0 284 96" role="img" aria-label="Hello World">
   <style>
-    .scribe-root { color-scheme: light dark; }
-    .scribe-text { user-select: text; -webkit-user-select: text; white-space: pre; }
-    .scribe-text::selection, .scribe-text ::selection { fill: HighlightText; background: color-mix(in srgb, Highlight 35%, transparent); }
+    #scribe-g923no { color-scheme: light dark; }
+    #scribe-g923no .scribe-g923no-text { all: revert; fill: transparent; font-family: sans-serif; white-space: pre; … }
+    #scribe-g923no .scribe-g923no-text text, #scribe-g923no .scribe-g923no-text tspan { fill: inherit; font-family: inherit; white-space: inherit; … }
+    #scribe-g923no .scribe-g923no-text::selection, #scribe-g923no .scribe-g923no-text ::selection { fill: HighlightText; background: color-mix(in srgb, Highlight 35%, transparent); }
   </style>
-  <g class="scribe-text" font-family="sans-serif" fill="transparent">
-    <text class="scribe-line"><tspan class="scribe-word" x="26" y="55.4" font-size="33" textLength="105" lengthAdjust="spacingAndGlyphs">Hello</tspan> <tspan class="scribe-word" x="146" y="56" font-size="35" textLength="111" lengthAdjust="spacingAndGlyphs">World</tspan></text>
+  <g class="scribe-g923no-text">
+    <text class="scribe-g923no-line"><tspan class="scribe-g923no-word" x="26" y="55.4" font-size="33" textLength="105" lengthAdjust="spacingAndGlyphs">Hello</tspan> <tspan class="scribe-g923no-word" x="146" y="56" font-size="35" textLength="111" lengthAdjust="spacingAndGlyphs">World</tspan></text>
   </g>
 </svg>
 ```
 
 That is the text layer alone, with `--no-image`; by default the picture is
 carried in the document beneath it and the output is one self-contained file.
+Every name in it carries a token worked out from what the layout says, so that
+the document can be dropped into somebody else's page without its classes, its
+ids or its stylesheet reaching anything else there — `--opt scope_mode=fixed
+--opt scope=left` names it yourself, and `--opt scope_mode=none` leaves the
+token out of a document that is going to stand alone.
 
 Three formats ship with scribe: `svg`, `json`, and `template` — the last
 rendering a Jinja template, of which twelve come built in and any number can be

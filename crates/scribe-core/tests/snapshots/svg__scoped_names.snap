@@ -1,22 +1,17 @@
 ---
 source: crates/scribe-core/tests/svg.rs
-expression: "linked(&hello_world(), Options::new().with(\"text_mode\", \"debug\"))"
+expression: "linked(&hello_world(), Options::new().with(\"ids\", true))"
 ---
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="scribe-g923no" class="scribe-g923no-root" width="284" height="96" viewBox="0 0 284 96" role="img" aria-label="Hello World">
   <style>
     #scribe-g923no { color-scheme: light dark; }
-    #scribe-g923no .scribe-g923no-text { all: revert; fill: #000; stroke: none; font-family: sans-serif; font-style: normal; font-weight: normal; font-variant: normal; font-stretch: normal; letter-spacing: normal; word-spacing: normal; text-anchor: start; text-decoration: none; text-transform: none; direction: ltr; user-select: text; -webkit-user-select: text; white-space: pre; }
+    #scribe-g923no .scribe-g923no-text { all: revert; fill: transparent; stroke: none; font-family: sans-serif; font-style: normal; font-weight: normal; font-variant: normal; font-stretch: normal; letter-spacing: normal; word-spacing: normal; text-anchor: start; text-decoration: none; text-transform: none; direction: ltr; user-select: text; -webkit-user-select: text; white-space: pre; }
     #scribe-g923no .scribe-g923no-text text, #scribe-g923no .scribe-g923no-text tspan { fill: inherit; stroke: inherit; font-family: inherit; font-style: inherit; font-weight: inherit; font-variant: inherit; font-stretch: inherit; letter-spacing: inherit; word-spacing: inherit; text-anchor: inherit; text-decoration: inherit; text-transform: inherit; direction: inherit; unicode-bidi: isolate; white-space: inherit; user-select: inherit; -webkit-user-select: inherit; }
     #scribe-g923no .scribe-g923no-text::selection, #scribe-g923no .scribe-g923no-text ::selection { fill: HighlightText; background: color-mix(in srgb, Highlight 35%, transparent); }
   </style>
   <image href="hello.png" width="284" height="96"/>
   <g class="scribe-g923no-text">
-    <text class="scribe-g923no-line"><tspan class="scribe-g923no-word" x="28" y="56.6" font-size="32" textLength="98" lengthAdjust="spacingAndGlyphs">Hello</tspan> <tspan class="scribe-g923no-word" x="143" y="56.6" font-size="32" textLength="113" lengthAdjust="spacingAndGlyphs">World</tspan></text>
-  </g>
-  <g class="scribe-g923no-debug" fill="none">
-    <rect class="scribe-g923no-line-box" x="28" y="31" width="228" height="32" stroke="#06c"/>
-    <rect class="scribe-g923no-word-box" x="28" y="31" width="98" height="32" stroke="#c00"/>
-    <rect class="scribe-g923no-word-box" x="143" y="31" width="113" height="32" stroke="#c00"/>
+    <text class="scribe-g923no-line" id="scribe-g923no-line-0"><tspan class="scribe-g923no-word" id="scribe-g923no-word-0-0" x="28" y="56.6" font-size="32" textLength="98" lengthAdjust="spacingAndGlyphs">Hello</tspan> <tspan class="scribe-g923no-word" id="scribe-g923no-word-0-1" x="143" y="56.6" font-size="32" textLength="113" lengthAdjust="spacingAndGlyphs">World</tspan></text>
   </g>
 </svg>

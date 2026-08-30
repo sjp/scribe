@@ -2,22 +2,23 @@
 source: crates/scribe-core/tests/template.rs
 expression: "render(\"svg-overlay\", Options::new())"
 ---
-<div class="scribe-overlay">
+<div class="scribe-g6patc-overlay">
   <style>
-    .scribe-overlay { position: relative; display: inline-block; line-height: 0 }
-    .scribe-overlay img { display: block; max-width: 100% }
-    .scribe-overlay svg { position: absolute; left: 0; top: 0; width: 100%; height: 100% }
+    .scribe-g6patc-overlay { position: relative; display: inline-block; line-height: 0 }
+    .scribe-g6patc-overlay img { display: block; max-width: 100% }
+    .scribe-g6patc-overlay svg { position: absolute; left: 0; top: 0; width: 100%; height: 100% }
   </style>
   <img src="page.png" width="284" height="140" alt="" />
-  <svg xmlns="http://www.w3.org/2000/svg" class="scribe-root" width="284" height="140" viewBox="0 0 284 140" role="img" aria-label="Hello World Tilted &amp; &lt;set&gt;">
+  <svg xmlns="http://www.w3.org/2000/svg" id="scribe-g6patc" class="scribe-g6patc-root" width="284" height="140" viewBox="0 0 284 140" role="img" aria-label="Hello World Tilted &amp; &lt;set&gt;">
     <style>
-      .scribe-root { color-scheme: light dark; }
-      .scribe-text { user-select: text; -webkit-user-select: text; white-space: pre; }
-      .scribe-text::selection, .scribe-text ::selection { fill: HighlightText; background: color-mix(in srgb, Highlight 35%, transparent); }
+      #scribe-g6patc { color-scheme: light dark; }
+      #scribe-g6patc .scribe-g6patc-text { all: revert; fill: transparent; stroke: none; font-family: sans-serif; font-style: normal; font-weight: normal; font-variant: normal; font-stretch: normal; letter-spacing: normal; word-spacing: normal; text-anchor: start; text-decoration: none; text-transform: none; direction: ltr; user-select: text; -webkit-user-select: text; white-space: pre; }
+      #scribe-g6patc .scribe-g6patc-text text, #scribe-g6patc .scribe-g6patc-text tspan { fill: inherit; stroke: inherit; font-family: inherit; font-style: inherit; font-weight: inherit; font-variant: inherit; font-stretch: inherit; letter-spacing: inherit; word-spacing: inherit; text-anchor: inherit; text-decoration: inherit; text-transform: inherit; direction: inherit; unicode-bidi: isolate; white-space: inherit; user-select: inherit; -webkit-user-select: inherit; }
+      #scribe-g6patc .scribe-g6patc-text::selection, #scribe-g6patc .scribe-g6patc-text ::selection { fill: HighlightText; background: color-mix(in srgb, Highlight 35%, transparent); }
     </style>
-    <g class="scribe-text" font-family="sans-serif" fill="transparent">
-      <text class="scribe-line"><tspan class="scribe-word" x="28" y="56.6" font-size="32" textLength="98" lengthAdjust="spacingAndGlyphs">Hello</tspan> <tspan class="scribe-word" x="143" y="56.6" font-size="32" textLength="113" lengthAdjust="spacingAndGlyphs">World</tspan></text>
-      <text class="scribe-line" transform="rotate(8 140 100)"><tspan class="scribe-word" x="30" y="106" font-size="20" textLength="90" lengthAdjust="spacingAndGlyphs">Tilted</tspan> <tspan class="scribe-word" x="128" y="106" font-size="20" textLength="12" lengthAdjust="spacingAndGlyphs">&amp;</tspan> <tspan class="scribe-word" x="150" y="106" font-size="20" textLength="100" lengthAdjust="spacingAndGlyphs">&lt;set&gt;</tspan></text>
+    <g class="scribe-g6patc-text">
+      <text class="scribe-g6patc-line"><tspan class="scribe-g6patc-word" x="28" y="56.6" font-size="32" textLength="98" lengthAdjust="spacingAndGlyphs">Hello</tspan> <tspan class="scribe-g6patc-word" x="143" y="56.6" font-size="32" textLength="113" lengthAdjust="spacingAndGlyphs">World</tspan></text>
+      <text class="scribe-g6patc-line" transform="rotate(8 140 100)"><tspan class="scribe-g6patc-word" x="30" y="106" font-size="20" textLength="90" lengthAdjust="spacingAndGlyphs">Tilted</tspan> <tspan class="scribe-g6patc-word" x="128" y="106" font-size="20" textLength="12" lengthAdjust="spacingAndGlyphs">&amp;</tspan> <tspan class="scribe-g6patc-word" x="150" y="106" font-size="20" textLength="100" lengthAdjust="spacingAndGlyphs">&lt;set&gt;</tspan></text>
     </g>
   </svg>
 </div>
