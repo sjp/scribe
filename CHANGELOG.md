@@ -13,7 +13,10 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 - The `Layout` model: a versioned, JSON-serialisable description of the text
   found in an image, at line, word and character granularity, with an
   axis-aligned and an oriented box for each. A JSON Schema is generated from it
-  and checked in at `schema/layout.schema.json`.
+  and checked in at `schema/layout.schema.json`. Every document says which
+  version of the model it was written against, and one written by a newer
+  scribe than the build reading it is refused, naming both versions, rather
+  than being read as something it may not be.
 - Recognition over [ocrs](https://github.com/robertknight/ocrs), taking model
   bytes and a pixel buffer rather than paths and files, so it runs anywhere the
   library does. Models are never downloaded.

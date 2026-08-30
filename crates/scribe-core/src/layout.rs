@@ -20,6 +20,10 @@
 //! writes it for a layout that has none — so it is read by
 //! [`LayoutDocument`], which hands back the layout and the picture separately.
 //!
+//! Every document states the [`LAYOUT_VERSION`] it was written against, and
+//! the two `from_json` readers refuse one that names a newer version than
+//! this build knows rather than guess at what it means.
+//!
 //! ```
 //! use scribe_core::layout::Layout;
 //!
@@ -32,6 +36,7 @@ use schemars::JsonSchema;
 use serde::de::Error as _;
 use serde::{Deserialize, Deserializer, Serialize};
 use serde_json::{Value, json};
+use thiserror::Error;
 
 use crate::image_source::EmbeddedImage;
 
@@ -46,7 +51,34 @@ pub const IMAGE_DATA_URI: &str = "image_data_uri";
 ///
 /// It changes only when the meaning or the shape of the model changes, so a
 /// consumer can decide whether it understands a document before reading it.
+///
+/// A document that names a higher version was written by a newer scribe and
+/// is refused by [`Layout::from_json`] and [`LayoutDocument::from_json`].
+/// Anything at or below it is read, and stands or falls on whether its fields
+/// match the model.
 pub const LAYOUT_VERSION: u32 = 1;
+
+/// Why a layout document could not be read.
+#[derive(Debug, Error)]
+#[non_exhaustive]
+pub enum LayoutError {
+    /// The document is not valid JSON, or does not match the model.
+    #[error(transparent)]
+    Json(#[from] serde_json::Error),
+
+    /// The document was written against a version of the model this build
+    /// does not know.
+    #[error(
+        "this layout document is version {found}, but this build of scribe understands \
+         version {supported}; it was written by a newer scribe"
+    )]
+    Version {
+        /// The version the document names.
+        found: u32,
+        /// The newest version this build understands, [`LAYOUT_VERSION`].
+        supported: u32,
+    },
+}
 
 /// Everything scribe knows about the text in one image.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, JsonSchema)]
@@ -119,12 +151,38 @@ impl Layout {
     /// A document carrying an [`IMAGE_DATA_URI`] is read as well as a bare
     /// layout; the image is dropped. [`LayoutDocument::from_json`] keeps it.
     ///
+    /// This is the checked path: it is where a document's `version` is looked
+    /// at. Deserialising a [`Layout`] straight through serde reads whatever
+    /// version it finds, so a caller doing that should call
+    /// [`Layout::check_version`] itself.
+    ///
     /// # Errors
     ///
-    /// Returns an error if the document is not valid JSON or does not match
-    /// the model, including when it carries fields the model does not know.
-    pub fn from_json(json: &str) -> Result<Self, serde_json::Error> {
+    /// Returns an error if the document is not valid JSON, does not match the
+    /// model — including when it carries fields the model does not know — or
+    /// names a version newer than [`LAYOUT_VERSION`].
+    pub fn from_json(json: &str) -> Result<Self, LayoutError> {
         Ok(LayoutDocument::from_json(json)?.layout)
+    }
+
+    /// Checks that this build understands the version the layout names.
+    ///
+    /// [`Layout::from_json`] does this for a document it reads. A caller that
+    /// deserialises a layout some other way — from another serde format, or
+    /// from a JavaScript object — does it for itself.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`LayoutError::Version`] if the version is newer than
+    /// [`LAYOUT_VERSION`].
+    pub fn check_version(&self) -> Result<(), LayoutError> {
+        if self.version > LAYOUT_VERSION {
+            return Err(LayoutError::Version {
+                found: self.version,
+                supported: LAYOUT_VERSION,
+            });
+        }
+        Ok(())
     }
 
     /// Writes the layout as compact JSON.
@@ -180,12 +238,17 @@ pub struct LayoutDocument {
 impl LayoutDocument {
     /// Reads a document from its JSON representation.
     ///
+    /// As with [`Layout::from_json`], this is where the document's `version`
+    /// is checked.
+    ///
     /// # Errors
     ///
     /// As [`Layout::from_json`], and additionally if the document carries an
     /// [`IMAGE_DATA_URI`] that is not a base64 `data:` URI.
-    pub fn from_json(json: &str) -> Result<Self, serde_json::Error> {
-        serde_json::from_str(json)
+    pub fn from_json(json: &str) -> Result<Self, LayoutError> {
+        let document: Self = serde_json::from_str(json)?;
+        document.layout.check_version()?;
+        Ok(document)
     }
 }
 
@@ -598,6 +661,45 @@ mod tests {
                 .expect("the schema requires the fields a layout must have")
                 .contains(&serde_json::Value::from(IMAGE_DATA_URI))
         );
+    }
+
+    #[test]
+    fn a_document_from_a_newer_scribe_is_refused() {
+        let json = r#"{"version":99,"image":{"width":8,"height":4}}"#;
+        let error = LayoutDocument::from_json(json).unwrap_err();
+        assert!(matches!(
+            error,
+            LayoutError::Version {
+                found: 99,
+                supported: LAYOUT_VERSION,
+            }
+        ));
+        let message = error.to_string();
+        assert!(message.contains("version 99"), "{message}");
+        assert!(
+            message.contains(&format!("version {LAYOUT_VERSION}")),
+            "{message}"
+        );
+        assert!(message.contains("newer scribe"), "{message}");
+
+        let error = Layout::from_json(json).unwrap_err();
+        assert!(matches!(error, LayoutError::Version { .. }));
+
+        // Deserialising through serde is the unchecked path: it takes the
+        // version as given, and leaves the checking to the caller.
+        let layout: Layout = serde_json::from_str(json).unwrap();
+        assert_eq!(layout.version, 99);
+        assert!(layout.check_version().is_err());
+    }
+
+    #[test]
+    fn a_document_at_or_below_the_current_version_is_read() {
+        for version in 0..=LAYOUT_VERSION {
+            let json = format!(r#"{{"version":{version},"image":{{"width":8,"height":4}}}}"#);
+            let layout = Layout::from_json(&json).expect("this build understands this version");
+            assert_eq!(layout.version, version);
+            assert!(layout.check_version().is_ok());
+        }
     }
 
     #[test]

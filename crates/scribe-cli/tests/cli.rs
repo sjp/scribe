@@ -350,6 +350,29 @@ fn a_document_that_is_not_a_layout_is_a_processing_error() {
 }
 
 #[test]
+fn a_layout_from_a_newer_scribe_is_a_processing_error() {
+    let newer = work_directory("render-a-newer-layout").join("hello.layout.json");
+    let layout = std::fs::read_to_string(fixture("hello.layout.json"))
+        .expect("the fixture layout is beside its image");
+    std::fs::write(
+        &newer,
+        layout.replacen("\"version\": 1", "\"version\": 99", 1),
+    )
+    .expect("the work directory is writable");
+
+    scribe()
+        .arg("render")
+        .arg(&newer)
+        .assert()
+        .code(FAILURE)
+        .stderr(predicate::str::contains("could not be read as a layout"))
+        .stderr(predicate::str::contains(
+            "this layout document is version 99, but this build of scribe understands version 1",
+        ))
+        .stderr(predicate::str::contains("newer scribe"));
+}
+
+#[test]
 fn a_layout_that_is_not_there_is_a_processing_error() {
     scribe()
         .args(["render", "nowhere/at/all.json"])

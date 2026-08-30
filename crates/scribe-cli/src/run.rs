@@ -200,7 +200,7 @@ fn render(command: RenderCommand) -> Result<()> {
             layout,
             image: carried,
         } = LayoutDocument::from_json(&json)
-            .with_context(|| format!("{name} is not a layout document"))?;
+            .with_context(|| format!("{name} could not be read as a layout"))?;
 
         // A document written with the image inside it renders on its own; an
         // image named on the command line is the one that was asked for, so

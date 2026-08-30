@@ -43,7 +43,11 @@ Schema](#json-schema) describes it for consumers in other languages.
 - `version` is the version of the model the document was written against. It
   changes only when the meaning or the shape of the model changes, so a
   consumer can decide whether it understands a document before reading it.
-  This build writes and reads version 1.
+  This build writes version 1. It is required: a document that leaves it out
+  is refused. A document that names a higher version was written by a newer
+  scribe and is refused too, naming both versions, rather than being read as
+  something it may not be. Anything at or below the current version is read,
+  and stands or falls on whether its fields match the model.
 - `image` is the raster the coordinates refer to.
 - `lines` are the lines of text, in reading order.
 
@@ -130,6 +134,13 @@ was read from, as a base64 `data:` URI. The [`json`](formats.md#json) format
 writes it when it is asked to embed the image, which makes a document that
 describes a picture and holds it. It is not part of a layout — nothing writes
 it for a layout that has none — so a reader takes the two apart.
+
+`Layout::from_json` and `LayoutDocument::from_json` are the checked path:
+they are where the version is looked at, and they fail with a `LayoutError`
+that tells a version it cannot read apart from JSON it cannot parse.
+Deserialising a `Layout` straight through serde reads whatever version it
+finds; a caller doing that calls `Layout::check_version()` itself. The
+JavaScript `render` checks whatever layout it is handed.
 
 In Rust:
 

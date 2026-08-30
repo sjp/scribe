@@ -138,9 +138,10 @@ impl Engine {
 ///
 /// # Errors
 ///
-/// Throws if the layout is not a layout document, if there is no format of
-/// that name, if the options are not ones the format takes, or if the
-/// document cannot be written.
+/// Throws if the layout is not a layout document, if it was written by a
+/// newer scribe than this build, if there is no format of that name, if the
+/// options are not ones the format takes, or if the document cannot be
+/// written.
 #[wasm_bindgen]
 pub fn render(
     layout: JsLayout,
@@ -153,6 +154,11 @@ pub fn render(
         image: carried,
     } = serde_wasm_bindgen::from_value(layout.into())
         .map_err(|error| JsError::new(&format!("that is not a layout document: {error}")))?;
+    // Coming from a JavaScript object rather than from `LayoutDocument::from_json`,
+    // this is the one path where the version has not been looked at yet.
+    layout
+        .check_version()
+        .map_err(|error| convert::exception(&error))?;
     let registry = registry();
     let renderer = choose(&registry, format)?;
     let options = convert::options(options.map(JsValue::from))?;

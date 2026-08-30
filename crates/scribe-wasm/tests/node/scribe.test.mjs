@@ -108,6 +108,10 @@ test('a mistake arrives as an exception saying what was wrong', () => {
   assert.throws(() => scribe.render(hello, 'svg', { nonsense: 1 }), /nonsense/);
   assert.throws(() => scribe.render({ version: 1 }, 'svg'), /not a layout document/);
   assert.throws(() => scribe.render(hello, 'svg', undefined, { width: 1 }), /`image\.height`/);
+  assert.throws(
+    () => scribe.render({ ...hello, version: 99 }, 'svg'),
+    /version 99, but this build of scribe understands version 1/,
+  );
 });
 
 test('the engine reads the text in an encoded image', async (t) => {
