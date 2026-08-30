@@ -7,20 +7,18 @@
 //!
 //! Two options trim or extend it. Dropping the per-character boxes makes for
 //! a far smaller document when a consumer works word by word, and adding the
-//! source image makes the document self-contained, at the cost of no longer
-//! being a bare layout.
+//! source image makes the document self-contained: one file that describes a
+//! picture and holds it, which [`LayoutDocument`](crate::layout::LayoutDocument)
+//! reads back into the layout and the image it was read from.
 
 use serde_json::Value;
 
 use super::{OptionKind, OptionSpec, OptionValue, Options, RenderError, RenderOutput, Renderer};
 use crate::image_source::ImageSource;
-use crate::layout::Layout;
+use crate::layout::{IMAGE_DATA_URI, Layout};
 
 /// The name this renderer is registered under.
 const NAME: &str = "json";
-
-/// The field the encoded source image is added under.
-const IMAGE_DATA_URI: &str = "image_data_uri";
 
 /// Writes the layout as JSON.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -49,7 +47,7 @@ impl Renderer for JsonRenderer {
                 "include_image",
                 OptionKind::Bool,
                 OptionValue::Bool(false),
-                "Add the source image as an `image_data_uri` field, if its bytes are known.",
+                "Add the source image as an `image_data_uri` field, if its bytes are known, so that the document can be rendered again without it.",
             ),
         ]
     }
@@ -105,7 +103,7 @@ fn strip_chars(document: &mut Value) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::layout::{Char, Line, Rect, RotatedBox, Word};
+    use crate::layout::{Char, LayoutDocument, Line, Rect, RotatedBox, Word};
 
     /// The smallest PNG that decoders accept: one opaque black pixel.
     const PIXEL_PNG: &[u8] = &[
@@ -216,6 +214,24 @@ mod tests {
             embedded.contains(r#""image_data_uri": "data:image/png;base64,iVBOR"#),
             "{embedded}"
         );
+    }
+
+    #[test]
+    fn an_embedded_image_reads_back_with_the_layout() {
+        let document =
+            LayoutDocument::from_json(&render(Options::new().with("include_image", true)))
+                .expect("a document with an image is still a layout document");
+        assert_eq!(document.layout, sample_layout());
+        let image = document.image.expect("the document carries the image");
+        assert_eq!(image.mime, "image/png");
+        assert_eq!(image.bytes, PIXEL_PNG);
+    }
+
+    #[test]
+    fn a_document_without_an_image_carries_none() {
+        let document = LayoutDocument::from_json(&render(Options::new())).unwrap();
+        assert_eq!(document.layout, sample_layout());
+        assert_eq!(document.image, None);
     }
 
     #[test]

@@ -21,6 +21,10 @@
         "$ref": "#/$defs/Line"
       },
       "default": []
+    },
+    "image_data_uri": {
+      "description": "The image the layout was read from, as a base64 `data:` URI, for a document that carries its own picture.",
+      "type": "string"
     }
   },
   "additionalProperties": false,

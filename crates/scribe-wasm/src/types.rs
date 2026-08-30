@@ -104,6 +104,13 @@ export interface Layout {
     image: ImageInfo;
     /** The lines of text, in reading order. */
     lines: Line[];
+    /**
+     * The image the layout was read from, as a base64 `data:` URI, for a
+     * document written by the `json` format with `include_image` set. A
+     * layout carrying one renders with that picture when `render` is passed
+     * no image of its own.
+     */
+    image_data_uri?: string;
 }
 
 /** How the engine is asked to read. */

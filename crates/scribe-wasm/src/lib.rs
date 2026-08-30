@@ -35,7 +35,7 @@ pub use types::{
 };
 
 use scribe_core::image_source::ImageSource;
-use scribe_core::layout::Layout;
+use scribe_core::layout::{Layout, LayoutDocument};
 use scribe_core::ocr::{Models, PixelImage};
 use scribe_core::render::{OptionKind, OptionValue, Registry, Renderer, list_templates, registry};
 use serde::Serialize;
@@ -132,6 +132,10 @@ impl Engine {
 /// left out when the format does not want it. Its dimensions then come from
 /// the layout.
 ///
+/// A layout that carries its own picture — one the `json` format was asked to
+/// embed the image in — supplies it when no image is passed, so a document
+/// kept as a single file renders again as it was.
+///
 /// # Errors
 ///
 /// Throws if the layout is not a layout document, if there is no format of
@@ -144,15 +148,22 @@ pub fn render(
     options: Option<JsRenderOptions>,
     image: Option<JsSourceImage>,
 ) -> Result<JsRendered, JsError> {
-    let layout: Layout = serde_wasm_bindgen::from_value(layout.into())
+    let LayoutDocument {
+        layout,
+        image: carried,
+    } = serde_wasm_bindgen::from_value(layout.into())
         .map_err(|error| JsError::new(&format!("that is not a layout document: {error}")))?;
     let registry = registry();
     let renderer = choose(&registry, format)?;
     let options = convert::options(options.map(JsValue::from))?;
     let described = convert::image(image.map(JsValue::from))?;
-    let source = match &described {
-        Some(image) => image.source(),
-        None => ImageSource::new(layout.image.width, layout.image.height),
+    let (width, height) = (layout.image.width, layout.image.height);
+    let source = match (&described, &carried) {
+        // An image passed in is the one that was asked for, so it wins over
+        // the one the layout happens to carry.
+        (Some(image), _) => image.source(),
+        (None, Some(carried)) => carried.source(width, height),
+        (None, None) => ImageSource::new(width, height),
     };
     let output = renderer
         .render(&layout, &source, &options)

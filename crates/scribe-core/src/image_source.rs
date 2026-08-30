@@ -23,6 +23,12 @@
 use base64::Engine as _;
 use base64::engine::general_purpose::STANDARD as BASE64;
 
+/// The scheme and the encoding a `data:` URI written here uses.
+const DATA_URI_PREFIX: &str = "data:";
+
+/// What separates a `data:` URI's media type from its base64 payload.
+const BASE64_SEPARATOR: &str = ";base64,";
+
 /// The raster a layout was read from, as much of it as the caller can offer.
 ///
 /// The dimensions are always known, since the layout's coordinates are in
@@ -83,7 +89,71 @@ impl<'a> ImageSource<'a> {
     /// encoded as standard base64 with padding, which every browser accepts.
     pub fn data_uri(&self) -> Option<String> {
         let (mime, bytes) = (self.mime?, self.bytes?);
-        Some(format!("data:{mime};base64,{}", BASE64.encode(bytes)))
+        Some(format!(
+            "{DATA_URI_PREFIX}{mime}{BASE64_SEPARATOR}{}",
+            BASE64.encode(bytes)
+        ))
+    }
+}
+
+/// An encoded image that arrived inside a document rather than beside it,
+/// its `data:` URI already decoded.
+///
+/// This is what [`ImageSource::data_uri`] writes, read back: a media type and
+/// the bytes it describes, owned, since the URI they came from is gone by the
+/// time anything renders from them.
+///
+/// ```
+/// use scribe_core::image_source::{EmbeddedImage, ImageSource};
+///
+/// let png = b"\x89PNG\r\n\x1a\n";
+/// let uri = ImageSource::new(8, 4)
+///     .with_mime("image/png")
+///     .with_bytes(png)
+///     .data_uri()
+///     .expect("the bytes and the type are known");
+///
+/// let image = EmbeddedImage::from_data_uri(&uri).expect("scribe wrote that URI");
+/// assert_eq!(image.mime, "image/png");
+/// assert_eq!(image.bytes, png);
+/// assert_eq!(image.source(8, 4).data_uri().as_deref(), Some(uri.as_str()));
+/// ```
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct EmbeddedImage {
+    /// The media type of the encoded image, such as `image/png`.
+    pub mime: String,
+    /// The encoded image itself.
+    pub bytes: Vec<u8>,
+}
+
+impl EmbeddedImage {
+    /// Reads a base64 `data:` URI into the image it carries.
+    ///
+    /// This is `None` unless the URI is one of the form scribe writes —
+    /// `data:<media type>;base64,<payload>`, with a media type and a payload
+    /// that decodes. A URI holding its data any other way is not one an
+    /// image was written as here.
+    pub fn from_data_uri(uri: &str) -> Option<Self> {
+        let (mime, payload) = uri
+            .strip_prefix(DATA_URI_PREFIX)?
+            .split_once(BASE64_SEPARATOR)?;
+        if mime.is_empty() {
+            return None;
+        }
+        Some(Self {
+            mime: mime.to_string(),
+            bytes: BASE64.decode(payload).ok()?,
+        })
+    }
+
+    /// The same image as a source for a raster of the given size.
+    ///
+    /// The size comes from elsewhere — the layout the image arrived with —
+    /// since a `data:` URI says nothing about the pixels it encodes.
+    pub fn source(&self, width: u32, height: u32) -> ImageSource<'_> {
+        ImageSource::new(width, height)
+            .with_mime(&self.mime)
+            .with_bytes(&self.bytes)
     }
 }
 
@@ -138,6 +208,35 @@ mod tests {
             ImageSource::new(1, 1).with_mime("image/png").data_uri(),
             None
         );
+    }
+
+    #[test]
+    fn a_data_uri_reads_back_into_the_image_it_carries() {
+        let uri = ImageSource::new(1, 1)
+            .with_mime("image/png")
+            .with_bytes(PIXEL_PNG)
+            .data_uri()
+            .expect("the bytes and the type are known");
+        let image = EmbeddedImage::from_data_uri(&uri).expect("scribe wrote that URI");
+        assert_eq!(image.mime, "image/png");
+        assert_eq!(image.bytes, PIXEL_PNG);
+
+        let source = image.source(640, 480);
+        assert_eq!((source.width, source.height), (640, 480));
+        assert_eq!(source.data_uri().as_deref(), Some(uri.as_str()));
+    }
+
+    #[test]
+    fn a_uri_that_carries_its_data_another_way_is_not_read() {
+        for uri in [
+            "",
+            "https://example.com/scan.png",
+            "data:image/png,notbase64",
+            "data:;base64,iVBORw0KGgo=",
+            "data:image/png;base64,not base64 at all",
+        ] {
+            assert_eq!(EmbeddedImage::from_data_uri(uri), None, "{uri}");
+        }
     }
 
     #[test]

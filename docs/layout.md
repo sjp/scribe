@@ -122,15 +122,26 @@ fails loudly rather than losing data quietly. Missing `words`, `chars` and
 `confidence` are the only omissions accepted on input; output always spells
 them out.
 
+One field beyond the model is accepted: `image_data_uri`, the image the layout
+was read from, as a base64 `data:` URI. The [`json`](formats.md#json) format
+writes it when it is asked to embed the image, which makes a document that
+describes a picture and holds it. It is not part of a layout — nothing writes
+it for a layout that has none — so a reader takes the two apart.
+
 In Rust:
 
 ```rust
-use scribe_core::layout::Layout;
+use scribe_core::layout::{Layout, LayoutDocument};
 
 let layout = Layout::empty(800, 600);
 let json = layout.to_json()?;               // to_json_pretty() for a readable one
 assert_eq!(Layout::from_json(&json)?, layout);
 assert_eq!(layout.text(), "");              // every line, joined with newlines
+
+// The same document, with the picture it may carry kept rather than dropped.
+let document = LayoutDocument::from_json(&json)?;
+assert_eq!(document.layout, layout);
+assert_eq!(document.image, None);           // the media type and bytes, when carried
 ```
 
 At the command line, `--layout-json` writes the layout beside the output of an
@@ -141,6 +152,17 @@ one back:
 scribe ocr page.png --out page.svg --layout-json page.layout.json
 scribe render page.layout.json --format template --opt template=hocr
 ```
+
+A document that carries its picture renders on its own, with no image named
+beside it:
+
+```sh
+scribe ocr page.png --format json --opt include_image=true -o page.json
+scribe render page.json -o page.svg
+```
+
+In JavaScript the same holds: a layout with an `image_data_uri` supplies the
+image when `render` is passed none.
 
 ## JSON Schema
 

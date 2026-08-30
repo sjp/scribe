@@ -20,7 +20,12 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 - A renderer abstraction and a registry, with every renderer publishing the
   options it takes so that a command line or a JavaScript caller can offer them
   without knowing what they mean.
-- The `json` renderer, writing the layout itself.
+- The `json` renderer, writing the layout itself, or — asked to embed the
+  image — a self-contained document that describes a picture and holds it.
+  Such a document reads back like any other: the layout comes out as it went
+  in and the picture comes with it, so `scribe render` and the WebAssembly
+  `render` draw it again with no image named alongside. An image that is
+  named wins over the carried one.
 - The `svg` renderer, writing the image with a selectable text layer over it:
   transparent, visible or drawn with the boxes it came from; the image
   embedded, linked or left out; and the fit of the layer to the glyphs beneath

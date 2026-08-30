@@ -10,7 +10,7 @@ use std::time::Instant;
 use anyhow::{Context, Result};
 use image::ImageFormat;
 use scribe_core::image_source::ImageSource;
-use scribe_core::layout::Layout;
+use scribe_core::layout::{Layout, LayoutDocument};
 use scribe_core::ocr::{DecodeMethod, Engine, OcrOptions, PixelImage};
 use scribe_core::render::{
     OptionSpec, Options, Registry, RenderOutput, Renderer, list_templates, registry,
@@ -196,14 +196,25 @@ fn render(command: RenderCommand) -> Result<()> {
     for path in &layouts {
         let name = io::shown(path);
         let json = io::read_text(path)?;
-        let layout =
-            Layout::from_json(&json).with_context(|| format!("{name} is not a layout document"))?;
+        let LayoutDocument {
+            layout,
+            image: carried,
+        } = LayoutDocument::from_json(&json)
+            .with_context(|| format!("{name} is not a layout document"))?;
 
+        // A document written with the image inside it renders on its own; an
+        // image named on the command line is the one that was asked for, so
+        // it wins over the one the document happens to carry.
+        let (mime, bytes) = match (encoded.as_deref(), carried.as_ref()) {
+            (Some(encoded), _) => (mime_of(encoded), Some(encoded)),
+            (None, Some(carried)) => (Some(carried.mime.as_str()), Some(carried.bytes.as_slice())),
+            (None, None) => (None, None),
+        };
         let source = ImageSource {
             width: layout.image.width,
             height: layout.image.height,
-            mime: encoded.as_deref().and_then(mime_of),
-            bytes: encoded.as_deref(),
+            mime,
+            bytes,
             href: href(&render, image.as_deref()),
         };
 

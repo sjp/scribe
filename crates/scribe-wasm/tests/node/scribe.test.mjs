@@ -49,6 +49,24 @@ test('a render embeds the image it is given', async () => {
   assert.match(svg.text, /<image[^>]*data:image\/png;base64,/);
 });
 
+test('a layout that carries its own image renders with it', async () => {
+  const bytes = await readFile(new URL('hello.png', fixtures));
+  const embedded = JSON.parse(
+    scribe.render(hello, 'json', { include_image: true }, {
+      width: hello.image.width,
+      height: hello.image.height,
+      mime: 'image/png',
+      bytes,
+    }).text,
+  );
+
+  assert.match(embedded.image_data_uri, /^data:image\/png;base64,/);
+
+  const svg = scribe.render(embedded, 'svg');
+
+  assert.match(svg.text, /<image[^>]*data:image\/png;base64,/);
+});
+
 test('a template renders through the same layout', () => {
   const overlay = scribe.render(hello, 'template', { template: 'html-overlay' });
 

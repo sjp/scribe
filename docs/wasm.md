@@ -69,6 +69,9 @@ enough to build a form or a menu for a format the page knows nothing about.
 `image` describes the raster the layout was read from: `width` and `height`
 always, and `mime`, `bytes` and `href` as far as they are known. Leave it out
 for a format that emits text alone; the dimensions then come from the layout.
+A layout that carries its own picture — one the `json` format wrote with
+`include_image` set, kept as a single object — supplies the image when none is
+passed, and an image passed in wins over the one it carries.
 
 Errors arrive as thrown exceptions carrying the message the core would have
 printed.

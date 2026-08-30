@@ -15,6 +15,11 @@
 //! confidences are the only omissions accepted on input; output always spells
 //! them out.
 //!
+//! One field beyond the model is accepted: a document may carry the image it
+//! was read from, as [`IMAGE_DATA_URI`]. It is not part of a layout — nothing
+//! writes it for a layout that has none — so it is read by
+//! [`LayoutDocument`], which hands back the layout and the picture separately.
+//!
 //! ```
 //! use scribe_core::layout::Layout;
 //!
@@ -24,7 +29,18 @@
 //! ```
 
 use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
+use serde::de::Error as _;
+use serde::{Deserialize, Deserializer, Serialize};
+use serde_json::{Value, json};
+
+use crate::image_source::EmbeddedImage;
+
+/// The field a layout document carries its source image in, as a base64
+/// `data:` URI.
+///
+/// The `json` renderer writes it when it is asked to embed the image, and
+/// [`LayoutDocument`] reads it back. A layout on its own never has one.
+pub const IMAGE_DATA_URI: &str = "image_data_uri";
 
 /// The schema version written to every [`Layout`] this build produces.
 ///
@@ -78,19 +94,37 @@ impl Layout {
     /// The JSON Schema describing this model.
     ///
     /// Consumers in other languages can generate their own types from it, and
-    /// documents can be validated against it before being read.
+    /// documents can be validated against it before being read. The optional
+    /// [`IMAGE_DATA_URI`] a document may carry is described alongside the
+    /// model's own fields, so a self-contained document validates too.
     pub fn json_schema() -> schemars::Schema {
-        schemars::schema_for!(Layout)
+        let mut schema = schemars::schema_for!(Layout);
+        let properties = schema
+            .get_mut("properties")
+            .and_then(Value::as_object_mut)
+            .expect("the layout schema describes an object with properties");
+        properties.insert(
+            IMAGE_DATA_URI.to_string(),
+            json!({
+                "description": "The image the layout was read from, as a base64 `data:` URI, \
+                    for a document that carries its own picture.",
+                "type": "string",
+            }),
+        );
+        schema
     }
 
     /// Reads a layout from its JSON representation.
+    ///
+    /// A document carrying an [`IMAGE_DATA_URI`] is read as well as a bare
+    /// layout; the image is dropped. [`LayoutDocument::from_json`] keeps it.
     ///
     /// # Errors
     ///
     /// Returns an error if the document is not valid JSON or does not match
     /// the model, including when it carries fields the model does not know.
     pub fn from_json(json: &str) -> Result<Self, serde_json::Error> {
-        serde_json::from_str(json)
+        Ok(LayoutDocument::from_json(json)?.layout)
     }
 
     /// Writes the layout as compact JSON.
@@ -110,6 +144,89 @@ impl Layout {
     /// As [`Layout::to_json`].
     pub fn to_json_pretty(&self) -> Result<String, serde_json::Error> {
         serde_json::to_string_pretty(self)
+    }
+}
+
+/// A layout document as it was written, with whatever it carries besides the
+/// layout itself.
+///
+/// The `json` renderer can be asked to embed the source image, which makes a
+/// document that both describes a picture and holds it. Read one back and the
+/// two come apart again: the layout exactly as it was recognised, and the
+/// image it was recognised from, ready to be rendered together without the
+/// picture being supplied a second time.
+///
+/// ```
+/// use scribe_core::layout::{Layout, LayoutDocument};
+///
+/// let json = r#"{
+///     "version": 1,
+///     "image": { "width": 8, "height": 4 },
+///     "image_data_uri": "data:image/png;base64,iVBORw0KGgo="
+/// }"#;
+///
+/// let document = LayoutDocument::from_json(json).unwrap();
+/// assert_eq!(document.layout, Layout::empty(8, 4));
+/// assert_eq!(document.image.unwrap().mime, "image/png");
+/// ```
+#[derive(Clone, Debug, PartialEq)]
+pub struct LayoutDocument {
+    /// The layout the document describes.
+    pub layout: Layout,
+    /// The image the layout was read from, when the document carries it.
+    pub image: Option<EmbeddedImage>,
+}
+
+impl LayoutDocument {
+    /// Reads a document from its JSON representation.
+    ///
+    /// # Errors
+    ///
+    /// As [`Layout::from_json`], and additionally if the document carries an
+    /// [`IMAGE_DATA_URI`] that is not a base64 `data:` URI.
+    pub fn from_json(json: &str) -> Result<Self, serde_json::Error> {
+        serde_json::from_str(json)
+    }
+}
+
+impl<'de> Deserialize<'de> for LayoutDocument {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        // The model's own fields, spelled out beside the one a document may
+        // carry, so that everything else is still refused. Building a layout
+        // from them below is what keeps this list honest: a field added to
+        // the model and not to this one does not compile.
+        #[derive(Deserialize)]
+        #[serde(deny_unknown_fields)]
+        struct Fields {
+            version: u32,
+            image: ImageInfo,
+            #[serde(default)]
+            lines: Vec<Line>,
+            #[serde(default)]
+            image_data_uri: Option<String>,
+        }
+
+        let fields = Fields::deserialize(deserializer)?;
+        let image = fields
+            .image_data_uri
+            .as_deref()
+            .map(|uri| {
+                EmbeddedImage::from_data_uri(uri).ok_or_else(|| {
+                    D::Error::custom(format!("`{IMAGE_DATA_URI}` is not a base64 `data:` URI"))
+                })
+            })
+            .transpose()?;
+        Ok(Self {
+            layout: Layout {
+                version: fields.version,
+                image: fields.image,
+                lines: fields.lines,
+            },
+            image,
+        })
     }
 }
 
@@ -410,6 +527,65 @@ mod tests {
 
         let stray = json.replacen("{\"version\":1,", "{\"version\":1,\"colour\":\"red\",", 1);
         assert!(Layout::from_json(&stray).is_err());
+    }
+
+    #[test]
+    fn a_document_may_carry_the_image_it_was_read_from() {
+        let json = r#"{
+            "version": 1,
+            "image": { "width": 8, "height": 4 },
+            "image_data_uri": "data:image/png;base64,iVBORw0KGgo="
+        }"#;
+
+        let document = LayoutDocument::from_json(json).unwrap();
+        assert_eq!(document.layout, Layout::empty(8, 4));
+        let image = document.image.expect("the document carries an image");
+        assert_eq!(image.mime, "image/png");
+        assert_eq!(image.bytes, b"\x89PNG\r\n\x1a\n");
+
+        // The layout alone reads the same document and leaves the image.
+        assert_eq!(Layout::from_json(json).unwrap(), Layout::empty(8, 4));
+    }
+
+    #[test]
+    fn a_document_that_carries_nothing_but_a_layout_carries_no_image() {
+        let json = sample_layout().to_json().unwrap();
+        let document = LayoutDocument::from_json(&json).unwrap();
+        assert_eq!(document.layout, sample_layout());
+        assert_eq!(document.image, None);
+    }
+
+    #[test]
+    fn an_image_that_is_not_a_data_uri_is_refused() {
+        let json = r#"{
+            "version": 1,
+            "image": { "width": 8, "height": 4 },
+            "image_data_uri": "scan.png"
+        }"#;
+        let error = LayoutDocument::from_json(json).unwrap_err();
+        assert!(
+            error
+                .to_string()
+                .starts_with("`image_data_uri` is not a base64 `data:` URI"),
+            "{error}"
+        );
+        assert!(Layout::from_json(json).is_err());
+    }
+
+    #[test]
+    fn the_schema_describes_the_image_a_document_may_carry() {
+        let schema = serde_json::to_value(Layout::json_schema()).unwrap();
+        assert_eq!(schema["properties"][IMAGE_DATA_URI]["type"], "string");
+        assert_eq!(
+            schema["additionalProperties"],
+            serde_json::Value::Bool(false)
+        );
+        assert!(
+            !schema["required"]
+                .as_array()
+                .expect("the schema requires the fields a layout must have")
+                .contains(&serde_json::Value::from(IMAGE_DATA_URI))
+        );
     }
 
     #[test]

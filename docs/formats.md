@@ -266,16 +266,24 @@ scribe ocr page.png --format json --opt include_chars=false
 ```
 
 With `include_image` set, and the image's bytes to hand, the document gains an
-`image_data_uri` field beside the layout's own. That field is not part of the
-layout model, so a document written with it is not one `scribe render` will
-read back.
+`image_data_uri` field beside the layout's own: one file that describes a
+picture and holds it. `scribe render` reads that field back and renders from
+the picture it carries, so a self-contained document needs no `--image`:
+
+```sh
+scribe ocr page.png --format json --opt include_image=true -o page.json
+scribe render page.json -o page.svg
+```
+
+An `--image` given as well is the one that is used; the carried picture is for
+when there is none.
 
 <!-- options: json -->
 | Option | Takes | Default | What it does |
 | --- | --- | --- | --- |
 | `pretty` | `true` or `false` | `true` | Indent the document over several lines instead of writing it on one. |
 | `include_chars` | `true` or `false` | `true` | Keep the per-character boxes, which are most of the document's size. |
-| `include_image` | `true` or `false` | `false` | Add the source image as an `image_data_uri` field, if its bytes are known. |
+| `include_image` | `true` or `false` | `false` | Add the source image as an `image_data_uri` field, if its bytes are known, so that the document can be rendered again without it. |
 <!-- end options -->
 
 ## `template`

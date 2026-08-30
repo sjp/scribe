@@ -143,6 +143,35 @@ fn a_layout_renders_as_a_text_layer_without_the_image() {
 }
 
 #[test]
+fn a_layout_that_carries_the_image_renders_with_it() {
+    let embedded = work_directory("render-a-self-contained-layout").join("hello.json");
+    scribe()
+        .args(["render", "--format", "json", "--opt", "include_image=true"])
+        .arg(fixture("hello.layout.json"))
+        .arg("--image")
+        .arg(fixture("hello.png"))
+        .arg("-o")
+        .arg(&embedded)
+        .assert()
+        .success();
+    assert!(
+        std::fs::read_to_string(&embedded)
+            .expect("the document was written")
+            .contains(r#""image_data_uri": "data:image/png;base64,"#)
+    );
+
+    scribe()
+        .arg("render")
+        .arg(&embedded)
+        .assert()
+        .success()
+        .stdout(predicate::str::contains(
+            r#"<image href="data:image/png;base64,"#,
+        ))
+        .stdout(predicate::str::contains(">Hello</tspan>"));
+}
+
+#[test]
 fn rendering_writes_where_it_is_told() {
     let out = work_directory("render-to-a-file").join("layout.txt");
     scribe()
