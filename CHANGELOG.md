@@ -81,7 +81,12 @@ Versioning](https://semver.org/spec/v2.0.0.html).
   stopping; a format asked outright for an image it was never given says which
   flags name one, an `--image` whose kind cannot be told from its bytes is
   refused before anything is rendered, and both leave with the status of a
-  mistake in the request rather than that of a failed run.
+  mistake in the request rather than that of a failed run. One bad file among
+  many does not stop the rest: it is named on standard error as it happens,
+  every other input is still read, and the run ends with a count of what did
+  not come out and a failing status. `--fail-fast` stops at the first failure
+  instead, and something wrong with the request itself ends the run where it
+  is noticed rather than being repeated for every input.
 - WebAssembly bindings packaged for the browser and for Node, with TypeScript
   declarations for the layout model, the renderer options and the rendered
   document.

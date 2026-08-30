@@ -104,6 +104,10 @@ pub struct OcrCommand {
     #[command(flatten)]
     pub output: OutputArgs,
 
+    /// What one image failing does to the rest.
+    #[command(flatten)]
+    pub batch: BatchArgs,
+
     /// What the results look like.
     #[command(flatten)]
     pub render: RenderArgs,
@@ -135,9 +139,22 @@ pub struct RenderCommand {
     #[arg(long, value_name = "DIR")]
     pub out_dir: Option<PathBuf>,
 
+    /// What one layout failing does to the rest.
+    #[command(flatten)]
+    pub batch: BatchArgs,
+
     /// What the results look like.
     #[command(flatten)]
     pub render: RenderArgs,
+}
+
+/// How a run of several inputs answers one of them failing.
+#[derive(Debug, Args)]
+pub struct BatchArgs {
+    /// Stop at the first input that fails, instead of going on through the
+    /// rest and ending with a count of the ones that did not come out.
+    #[arg(long)]
+    pub fail_fast: bool,
 }
 
 /// The trained models recognition runs.

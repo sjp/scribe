@@ -8,7 +8,7 @@ use std::borrow::Cow;
 use std::path::{Path, PathBuf};
 use std::time::Instant;
 
-use anyhow::{Context, Result};
+use anyhow::{Context, Result, bail};
 use image::ImageFormat;
 use scribe_core::image_source::ImageSource;
 use scribe_core::layout::{Layout, LayoutDocument};
@@ -20,7 +20,7 @@ use scribe_core::render::{
 use crate::cli::{
     Cli, Command, OcrCommand, OutputArgs, RecognitionArgs, RenderArgs, RenderCommand,
 };
-use crate::error::usage;
+use crate::error::{self, usage};
 use crate::io::{self, Destination};
 use crate::models;
 
@@ -51,6 +51,7 @@ fn ocr(command: OcrCommand) -> Result<()> {
         models: model_args,
         recognition,
         output,
+        batch,
         render,
     } = command;
 
@@ -83,8 +84,41 @@ fn ocr(command: OcrCommand) -> Result<()> {
     };
     log::info!("loaded the models in {:.1?}", started.elapsed());
 
-    for image in &images {
-        one_image(image, &engine, renderer, &options, &render, &output)?;
+    each_input(&images, "images", batch.fail_fast, |image| {
+        one_image(image, &engine, renderer, &options, &render, &output)
+    })
+}
+
+/// Does something to every input, and says at the end how much of it failed.
+///
+/// One unreadable file among many leaves the rest still worth doing, so a
+/// failure over one input is reported as it happens, named, and the run goes
+/// on; what did not come out is counted at the end and the run leaves with a
+/// failing status. A single input, or `--fail-fast`, stops at the first
+/// failure instead. So does a mistake in the request noticed only once an
+/// input is under way, since it is the same mistake for every one of them.
+fn each_input(
+    inputs: &[PathBuf],
+    kind: &str,
+    fail_fast: bool,
+    mut one: impl FnMut(&Path) -> Result<()>,
+) -> Result<()> {
+    if inputs.len() < 2 || fail_fast {
+        return inputs.iter().try_for_each(|path| one(path));
+    }
+
+    let mut failed = 0;
+    for path in inputs {
+        if let Err(error) = one(path) {
+            if error::is_usage(&error) {
+                return Err(error);
+            }
+            error::report_about(&io::shown(path), &error);
+            failed += 1;
+        }
+    }
+    if failed > 0 {
+        bail!("{failed} of {} {kind} could not be processed", inputs.len());
     }
     Ok(())
 }
@@ -178,6 +212,7 @@ fn render(command: RenderCommand) -> Result<()> {
         image,
         out,
         out_dir,
+        batch,
         render,
     } = command;
 
@@ -214,7 +249,7 @@ fn render(command: RenderCommand) -> Result<()> {
         && encoded.is_none()
         && options.get(IMAGE_MODE).is_none();
 
-    for path in &layouts {
+    each_input(&layouts, "layouts", batch.fail_fast, |path| {
         let name = io::shown(path);
         let json = io::read_text(path)?;
         let LayoutDocument {
@@ -269,8 +304,8 @@ fn render(command: RenderCommand) -> Result<()> {
         );
         destination.write(&document.bytes)?;
         log::debug!("{name}: wrote {}", destination.shown());
-    }
-    Ok(())
+        Ok(())
+    })
 }
 
 /// Lists every renderer this build knows and the options each one takes.

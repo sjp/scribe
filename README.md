@@ -87,6 +87,13 @@ scribe ocr scans/*.png --out-dir out/
 scribe ocr page.png --debug --out check.svg
 ```
 
+A run given more than one file reads them all: one that cannot be read is
+named on standard error and the rest are still written, and the run ends by
+saying how many did not come out and leaving with a failing status.
+`--fail-fast` stops at the first failure instead. Anything wrong with the
+request itself — a format nobody offers, an option it does not take — stops
+the run before any file is read, since it is wrong for all of them.
+
 `scribe formats` lists the output formats and every option each one takes;
 `scribe templates` lists the built-in templates; `scribe schema` prints the
 JSON Schema of the layout model.

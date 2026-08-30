@@ -478,7 +478,113 @@ fn a_document_that_is_not_a_layout_is_a_processing_error() {
         .arg(fixture("hello.png"))
         .assert()
         .code(FAILURE)
-        .stderr(predicate::str::contains("not UTF-8 text"));
+        .stderr(predicate::str::contains("not UTF-8 text"))
+        .stderr(predicate::str::contains("could not be processed").not());
+}
+
+/// A directory holding three layouts to render, of which the middle one is
+/// not a layout at all, and the directory their outputs go into.
+fn three_layouts(name: &str) -> (PathBuf, Vec<PathBuf>) {
+    let work = work_directory(name);
+    let broken = work.join("two.layout.json");
+    std::fs::write(&broken, "not a layout at all\n").expect("the work directory is writable");
+    let layouts = vec![
+        fixture("hello.layout.json"),
+        broken,
+        fixture("paragraph.layout.json"),
+    ];
+    (work.join("out"), layouts)
+}
+
+#[test]
+fn a_batch_goes_on_past_a_layout_it_cannot_read() {
+    let (out, layouts) = three_layouts("render-past-a-broken-layout");
+    scribe()
+        .arg("render")
+        .args(&layouts)
+        .arg("--out-dir")
+        .arg(&out)
+        .assert()
+        .code(FAILURE)
+        .stderr(predicate::str::contains(
+            "two.layout.json could not be read as a layout",
+        ))
+        .stderr(predicate::str::contains(
+            "1 of 3 layouts could not be processed",
+        ));
+
+    assert!(
+        out.join("hello.svg").exists(),
+        "the first output is written"
+    );
+    assert!(
+        out.join("paragraph.svg").exists(),
+        "the layouts after the failure are still rendered"
+    );
+}
+
+#[test]
+fn a_batch_stops_at_the_first_failure_when_it_is_told_to() {
+    let (out, layouts) = three_layouts("render-stopping-at-the-first-failure");
+    scribe()
+        .arg("render")
+        .args(&layouts)
+        .arg("--out-dir")
+        .arg(&out)
+        .arg("--fail-fast")
+        .assert()
+        .code(FAILURE)
+        .stderr(predicate::str::contains(
+            "two.layout.json could not be read as a layout",
+        ))
+        .stderr(predicate::str::contains("could not be processed").not());
+
+    assert!(
+        out.join("hello.svg").exists(),
+        "the first output is written"
+    );
+    assert!(
+        !out.join("paragraph.svg").exists(),
+        "nothing after the failure is rendered"
+    );
+}
+
+#[test]
+fn a_mistake_in_the_request_ends_a_batch_at_the_first_input() {
+    let (out, layouts) = three_layouts("render-a-batch-that-was-asked-the-impossible");
+    scribe()
+        .arg("render")
+        .args(&layouts)
+        .arg("--out-dir")
+        .arg(&out)
+        .arg("--embed")
+        .assert()
+        .code(USAGE)
+        .stderr(predicate::str::contains("--image PATH").count(1))
+        .stderr(predicate::str::contains("could not be processed").not());
+
+    assert!(
+        !out.join("hello.svg").exists(),
+        "nothing is rendered once the request itself is wrong"
+    );
+}
+
+#[test]
+fn a_layout_that_is_not_there_among_others_is_counted_and_named() {
+    let out = work_directory("render-past-a-missing-layout").join("out");
+    scribe()
+        .args(["render", "nowhere/at/all.json", "nor/here.json"])
+        .arg("--out-dir")
+        .arg(&out)
+        .assert()
+        .code(FAILURE)
+        .stderr(predicate::str::contains(
+            "nowhere/at/all.json cannot be read",
+        ))
+        .stderr(predicate::str::contains("nor/here.json cannot be read"))
+        .stderr(predicate::str::contains(
+            "2 of 2 layouts could not be processed",
+        ));
 }
 
 #[test]
