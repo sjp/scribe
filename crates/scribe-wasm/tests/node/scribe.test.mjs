@@ -96,7 +96,12 @@ test('the layout schema describes the layout that was just rendered', () => {
   const schema = scribe.layoutSchema();
 
   assert.equal(schema.title, 'Layout');
-  assert.deepEqual(Object.keys(schema.properties).sort(), ['image', 'lines', 'version']);
+  assert.deepEqual(Object.keys(schema.properties).sort(), [
+    'image',
+    'image_data_uri',
+    'lines',
+    'version',
+  ]);
 });
 
 test('the version is the one the package was built from', () => {

@@ -36,3 +36,25 @@ wasm-bindgen.workspace = true
 
 [lints]
 workspace = true
+
+# wasm-pack runs wasm-opt over the module it builds, asking it for no more than
+# `-O` by default. A browser downloads the module before it can run anything,
+# so size is what it is optimised for. `-Oz` works over machine code the
+# release profile still compiled at `opt-level = 3`, so recognition keeps its
+# speed.
+#
+# The WebAssembly features have to be named here. They are the ones rustc
+# enables for `wasm32-unknown-unknown` — `rustc --print cfg --target
+# wasm32-unknown-unknown` lists them — and a module normally carries a section
+# saying so, which the release profile's stripping takes with it. Without them
+# wasm-opt refuses instructions the module is entitled to use.
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = [
+    "-Oz",
+    "--enable-bulk-memory",
+    "--enable-multivalue",
+    "--enable-mutable-globals",
+    "--enable-nontrapping-float-to-int",
+    "--enable-reference-types",
+    "--enable-sign-ext",
+]

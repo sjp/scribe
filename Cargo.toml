@@ -47,3 +47,13 @@ missing_docs = "warn"
 # Optimising dependencies leaves this workspace's own crates debuggable.
 [profile.dev.package."*"]
 opt-level = 3
+
+# What ships is built once and run many times: the binary someone installs and
+# the module a browser downloads before it can do anything. Both are worth a
+# slower link. Nothing here unwinds out of a panic, so a release build aborts
+# instead of carrying the machinery to walk back out of one.
+[profile.release]
+lto = "fat"
+codegen-units = 1
+strip = true
+panic = "abort"

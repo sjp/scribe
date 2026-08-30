@@ -111,6 +111,12 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 - WebAssembly bindings packaged for the browser and for Node, with TypeScript
   declarations for the layout model, the renderer options and the rendered
   document.
+- Release builds tuned for what ships: link-time optimisation across the whole
+  program in a single codegen unit, symbols stripped, and a panic ending the
+  process rather than unwinding out of it, since nothing here catches one. The
+  WebAssembly module is optimised for size on top of that, the recognition code
+  in it staying fully optimised for speed, so what a browser downloads is
+  smaller without reading images any slower.
 - Fixture images and golden tests covering every built-in renderer.
 - User and developer documentation under `docs/`.
 

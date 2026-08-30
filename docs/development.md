@@ -29,6 +29,18 @@ The OCR engine and its tensor library are unusably slow when built without
 optimisation, so dependencies are compiled at `opt-level = 3` even in a debug
 profile. The workspace's own crates stay debuggable.
 
+A release build is what ships, so it is built for that: `lto = "fat"` and
+`codegen-units = 1` across the whole program, `strip = true`, and
+`panic = "abort"` — nothing in the workspace catches a panic, and a build that
+cannot unwind carries none of the machinery for it. The link takes longer than
+a default release build in return.
+
+The WebAssembly package is built from the same release profile and then run
+through `wasm-opt -Oz`, asked for in the wasm-pack metadata of
+`crates/scribe-wasm/Cargo.toml`: a browser downloads the module before it can
+run anything, so the module is optimised for size. The code inside it is still
+compiled at `opt-level = 3`, which is what keeps recognition fast.
+
 Rust stable, edition 2024. For the WebAssembly build you also want the target
 and wasm-pack:
 
