@@ -35,6 +35,7 @@
 //! );
 //! ```
 
+mod css;
 mod json;
 mod svg;
 mod template;

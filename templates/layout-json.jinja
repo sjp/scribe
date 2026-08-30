@@ -17,13 +17,13 @@
   The layout goes through `json`, whose escaping of `<`, `>` and `&` is what
   keeps text read from an image from ending the element early.
 -#}
-{%- set prefix = vars.class_prefix | default("scribe-") -%}
+{%- set prefix = vars.class_prefix | default("scribe-") | css_ident("class_prefix") -%}
 {%- set mode = vars.scope_mode | default("content") -%}
-{%- set token = (vars.scope | default("")) if mode == "fixed" else ("" if mode == "none" else scope()) -%}
+{%- set token = ((vars.scope | default("")) | css_ident("scope")) if mode == "fixed" else ("" if mode == "none" else scope()) -%}
 {#- What every name in this document starts with: the prefix, and the token
     after it when there is one. -#}
-{%- set ns = prefix ~ token ~ "-" if token else prefix -%}
-{%- set id = vars.id | default(ns ~ "layout") -%}
+{%- set ns = (prefix ~ token ~ "-" if token else prefix) | css_ident_start("class_prefix") -%}
+{%- set id = vars.id | default(ns ~ "layout") | css_ident("id") -%}
 {%- set source = image.data_uri or image.href -%}
 {%- set with_image = vars.image | default(true) | flag -%}
 <div class="{{ ns }}layout">

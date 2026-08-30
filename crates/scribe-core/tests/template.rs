@@ -129,6 +129,30 @@ fn render(template: &str, options: Options) -> String {
     output.as_str().expect("a template writes text").to_string()
 }
 
+/// Renders the sample through a template written for the test itself.
+fn render_source(source: &str, options: Options) -> String {
+    let registry = registry();
+    let renderer = registry.get("template").expect("template is built in");
+    let output = renderer
+        .render(
+            &sample(),
+            &ImageSource::new(SIZE.0, SIZE.1),
+            &options.with("template_source", source),
+        )
+        .unwrap_or_else(|error| panic!("the template should render: {error}"));
+    output.as_str().expect("a template writes text").to_string()
+}
+
+/// What was said about a render that should not have gone through.
+fn refused(options: Options) -> String {
+    let registry = registry();
+    let renderer = registry.get("template").expect("template is built in");
+    let error = renderer
+        .render(&sample(), &ImageSource::new(SIZE.0, SIZE.1), &options)
+        .expect_err("the value should have been refused");
+    error.to_string()
+}
+
 /// The document, having checked that it parses as XML.
 ///
 /// A document type declaration is allowed, since hOCR is HTML and carries
@@ -270,6 +294,119 @@ fn an_option_the_svg_renderer_does_not_take_is_refused_by_name() {
     let message = error.to_string();
     assert!(message.contains("`nonsense`"), "{message}");
     assert!(message.contains("the `svg-overlay` template"), "{message}");
+}
+
+#[test]
+fn a_value_bound_for_a_stylesheet_is_refused_rather_than_escaped() {
+    // Escaping would leave the value meaning something else in a `<style>`,
+    // so a quoted font family comes through exactly as it was written.
+    assert_eq!(
+        render_source(
+            "{{ vars.family | css_value }}",
+            Options::new()
+                .with("autoescape", "html")
+                .with("var.family", "\"Times New Roman\", serif"),
+        ),
+        "\"Times New Roman\", serif"
+    );
+
+    let message = refused(
+        Options::new()
+            .with(
+                "template_source",
+                "{{ vars.fill | css_value(\"text_fill\") }}",
+            )
+            .with("var.fill", "red} body{display:none} x{"),
+    );
+    assert!(message.contains("`text_fill`"), "{message}");
+    assert!(message.contains("cannot hold '}'"), "{message}");
+}
+
+#[test]
+fn a_name_bound_for_a_selector_is_refused_rather_than_escaped() {
+    assert_eq!(
+        render_source(
+            "{{ vars.prefix | css_ident }}",
+            Options::new()
+                .with("autoescape", "html")
+                .with("var.prefix", "ocr_page-"),
+        ),
+        "ocr_page-"
+    );
+
+    let message = refused(
+        Options::new()
+            .with(
+                "template_source",
+                "{{ vars.prefix | css_ident(\"class_prefix\") }}",
+            )
+            .with("var.prefix", "ocr page"),
+    );
+    assert!(message.contains("`class_prefix`"), "{message}");
+    assert!(
+        message.contains("a CSS identifier cannot hold"),
+        "{message}"
+    );
+}
+
+#[test]
+fn a_name_a_selector_cannot_begin_with_is_refused() {
+    assert_eq!(
+        render_source(
+            "{{ (vars.prefix ~ \"text\") | css_ident_start }}",
+            Options::new().with("var.prefix", "-ocr-"),
+        ),
+        "-ocr-text"
+    );
+
+    let message = refused(
+        Options::new()
+            .with(
+                "template_source",
+                "{{ (vars.prefix ~ \"text\") | css_ident_start(\"class_prefix\") }}",
+            )
+            .with("var.prefix", "2-"),
+    );
+    assert!(message.contains("`class_prefix`"), "{message}");
+    assert!(message.contains("cannot begin with a digit"), "{message}");
+}
+
+#[test]
+fn a_built_in_template_refuses_a_prefix_it_cannot_name_with() {
+    for template in [
+        "html-figure",
+        "svg-overlay",
+        "sr-only-transcript",
+        "layout-json",
+        "figure-transcript",
+    ] {
+        let message = refused(
+            Options::new()
+                .with("template", template)
+                .with("var.class_prefix", "ocr } body {"),
+        );
+        assert!(message.contains("`class_prefix`"), "{template}: {message}");
+        assert!(
+            message.contains("a CSS identifier cannot hold"),
+            "{template}: {message}"
+        );
+    }
+}
+
+#[test]
+fn a_built_in_template_refuses_a_colour_that_would_reach_the_whole_page() {
+    for template in ["html-overlay", "html-figure"] {
+        let message = refused(
+            Options::new()
+                .with("template", template)
+                .with("var.selection_fill", "red} body{display:none} x{"),
+        );
+        assert!(
+            message.contains("`selection_fill`"),
+            "{template}: {message}"
+        );
+        assert!(message.contains("cannot hold '}'"), "{template}: {message}");
+    }
 }
 
 #[test]

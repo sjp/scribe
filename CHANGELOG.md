@@ -58,7 +58,13 @@ Versioning](https://semver.org/spec/v2.0.0.html).
   beneath the picture; all of those at once; the layout itself in a
   `<script>`; JSON-LD for a crawler; and `hocr`, `alto`, `markdown`, `text`
   and `alt-text`. A template can ask the SVG renderer for its text layer
-  rather than writing a second one.
+  rather than writing a second one, and checks a caller's own values the way
+  that renderer checks its options: `css_value`, `css_ident` and
+  `css_ident_start` refuse a colour that would close the declaration it is
+  written into and open a rule over the whole page, or a name that a selector
+  could not carry, saying which value was refused and why. The built-in
+  templates put every value they write into a stylesheet, a class or an id
+  through them.
 - The `scribe` command line tool: `ocr`, `render`, `formats`, `templates` and
   `schema`, over one image or many, with the layout kept beside the output. An
   output that links to its image rather than carrying it points at the image

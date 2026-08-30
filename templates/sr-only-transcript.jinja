@@ -15,13 +15,13 @@
   the page.
 -#}
 {%- set source = image.data_uri or image.href -%}
-{%- set prefix = vars.class_prefix | default("scribe-") -%}
+{%- set prefix = vars.class_prefix | default("scribe-") | css_ident("class_prefix") -%}
 {%- set mode = vars.scope_mode | default("content") -%}
-{%- set token = (vars.scope | default("")) if mode == "fixed" else ("" if mode == "none" else scope()) -%}
+{%- set token = ((vars.scope | default("")) | css_ident("scope")) if mode == "fixed" else ("" if mode == "none" else scope()) -%}
 {#- What every name in this document starts with: the prefix, and the token
     after it when there is one. -#}
-{%- set ns = prefix ~ token ~ "-" if token else prefix -%}
-{%- set id = vars.id | default(ns ~ "transcript") -%}
+{%- set ns = (prefix ~ token ~ "-" if token else prefix) | css_ident_start("class_prefix") -%}
+{%- set id = vars.id | default(ns ~ "transcript") | css_ident("id") -%}
 <div class="{{ ns }}transcript">
   <style>
     .{{ ns }}sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; border: 0; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: normal }

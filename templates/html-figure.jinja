@@ -20,19 +20,19 @@
   under the same option names, so that what is learnt about one carries over.
 -#}
 {%- set source = image.data_uri or image.href -%}
-{%- set prefix = vars.class_prefix | default("scribe-") -%}
+{%- set prefix = vars.class_prefix | default("scribe-") | css_ident("class_prefix") -%}
 {%- set mode = vars.scope_mode | default("content") -%}
-{%- set token = (vars.scope | default("")) if mode == "fixed" else ("" if mode == "none" else scope()) -%}
+{%- set token = ((vars.scope | default("")) | css_ident("scope")) if mode == "fixed" else ("" if mode == "none" else scope()) -%}
 {#- What every name in this document starts with: the prefix, and the token
     after it when there is one. -#}
-{%- set ns = prefix ~ token ~ "-" if token else prefix -%}
-{%- set id = vars.id | default(ns ~ "transcript") -%}
+{%- set ns = (prefix ~ token ~ "-" if token else prefix) | css_ident_start("class_prefix") -%}
+{%- set id = vars.id | default(ns ~ "transcript") | css_ident("id") -%}
 {%- set as_svg = (vars.overlay | default("spans")) == "svg" -%}
 {%- set per_char = vars.char_positions | default(false) | flag -%}
 {%- set size_mode = vars.font_size_mode | default("box_height") -%}
 {%- set cap_ratio = vars.cap_height_ratio | default(0.7) | number -%}
-{%- set selection_fill = vars.selection_fill | default("HighlightText") -%}
-{%- set selection = vars.selection_background | default("color-mix(in srgb, Highlight 35%, transparent)") -%}
+{%- set selection_fill = vars.selection_fill | default("HighlightText") | css_value("selection_fill") -%}
+{%- set selection = vars.selection_background | default("color-mix(in srgb, Highlight 35%, transparent)") | css_value("selection_background") -%}
 {#- How much of an em the height of a box stands for. -#}
 {%- set box_em = cap_ratio if size_mode == "cap_height" and cap_ratio > 0 else 1 -%}
 <figure class="{{ ns }}figure">

@@ -15,12 +15,12 @@
   announces, and announcing the same text twice helps nobody.
 -#}
 {%- set source = image.data_uri or image.href -%}
-{%- set prefix = vars.class_prefix | default("scribe-") -%}
+{%- set prefix = vars.class_prefix | default("scribe-") | css_ident("class_prefix") -%}
 {%- set mode = vars.scope_mode | default("content") -%}
-{%- set token = (vars.scope | default("")) if mode == "fixed" else ("" if mode == "none" else scope()) -%}
+{%- set token = ((vars.scope | default("")) | css_ident("scope")) if mode == "fixed" else ("" if mode == "none" else scope()) -%}
 {#- What every name in this document starts with: the prefix, and the token
     after it when there is one. -#}
-{%- set ns = prefix ~ token ~ "-" if token else prefix -%}
+{%- set ns = (prefix ~ token ~ "-" if token else prefix) | css_ident_start("class_prefix") -%}
 <div class="{{ ns }}overlay">
   <style>
     .{{ ns }}overlay { position: relative; display: inline-block; line-height: 0 }

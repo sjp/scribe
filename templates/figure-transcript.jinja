@@ -10,7 +10,7 @@
   being the long one.
 -#}
 {%- set source = image.data_uri or image.href -%}
-{%- set prefix = vars.class_prefix | default("scribe-") -%}
+{%- set prefix = vars.class_prefix | default("scribe-") | css_ident("class_prefix") | css_ident_start("class_prefix") -%}
 {%- set collapsed = (vars.mode | default("caption")) == "details" -%}
 {#- A transcript the reader opens is one element deeper than one that is
     simply there. -#}

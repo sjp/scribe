@@ -30,7 +30,7 @@ use crate::layout::{Char, Line, Rect, RotatedBox};
 
 use super::{
     Layout, OptionKind, OptionSpec, OptionValue, Options, RenderError, RenderOutput, Renderer,
-    ResolvedOptions, number,
+    ResolvedOptions, css, number,
 };
 
 /// The name this renderer is registered under.
@@ -511,15 +511,6 @@ const HASH_OFFSET: u64 = 0xcbf2_9ce4_8422_2325;
 /// What that hash multiplies by as it goes.
 const HASH_PRIME: u64 = 0x0000_0100_0000_01b3;
 
-/// The characters a value written into the stylesheet may not hold, each of
-/// which could end the declaration, the rule or the element it sits in.
-///
-/// A value holding none of them means the same thing to the XML parser
-/// reading a standalone document and to the HTML parser reading an inlined
-/// one, which is what makes escaping the stylesheet unnecessary rather than
-/// merely awkward.
-const FORBIDDEN_IN_CSS: &[char] = &['<', '>', '&', '{', '}', ';', '@', '\\'];
-
 /// The token that sets a document written from this layout apart from every
 /// other, worked out from what the layout says and how large the image is.
 ///
@@ -554,59 +545,33 @@ fn hashed(mut hash: u64, bytes: &[u8]) -> u64 {
     hash
 }
 
-/// Checks that a value can be written into a name, rather than escaping it:
-/// escaping is what a document does to text, and a name lands in a selector,
-/// where the escaped form would name something else.
+/// Checks that an option's value can be written into a name rather than
+/// escaped into one.
 ///
 /// # Errors
 ///
 /// Returns an error naming the option when the value holds a character a CSS
 /// identifier cannot.
 fn check_ident(name: &'static str, value: &str) -> Result<(), RenderError> {
-    match value
-        .chars()
-        .find(|character| !(character.is_ascii_alphanumeric() || matches!(character, '-' | '_')))
-    {
-        Some(character) => Err(RenderError::unusable_option(
-            NAME,
-            name,
-            value,
-            format!("a CSS identifier cannot hold {character:?}"),
-        )),
-        None => Ok(()),
-    }
+    css::check_ident(value)
+        .map_err(|reason| RenderError::unusable_option(NAME, name, value, reason))
 }
 
-/// Checks that a name a document actually writes begins the way a CSS
-/// identifier must: not with a digit, and not with a hyphen followed by one.
+/// Checks that a name the document actually writes begins the way a CSS
+/// identifier must.
 ///
 /// # Errors
 ///
 /// Returns an error against `name`, the option that supplies the start of the
 /// composed name.
 fn check_ident_start(name: &'static str, value: &str, composed: &str) -> Result<(), RenderError> {
-    let mut characters = composed.chars();
-    let first = characters.next();
-    let starts = match (first, characters.next()) {
-        (Some('-'), Some(second)) => !second.is_ascii_digit(),
-        (Some('-'), None) => false,
-        (Some(first), _) => !first.is_ascii_digit(),
-        (None, _) => true,
-    };
-    if starts {
-        return Ok(());
-    }
-    Err(RenderError::unusable_option(
-        NAME,
-        name,
-        value,
-        format!("`{composed}` is not a valid CSS identifier, which cannot begin with a digit"),
-    ))
+    css::check_ident_start(composed)
+        .map_err(|reason| RenderError::unusable_option(NAME, name, value, reason))
 }
 
-/// Checks that a value can stand in a declaration without ending it, so that
-/// no colour and no font family can write a rule of its own into a stylesheet
-/// that reaches the whole of the page the document is placed in.
+/// Checks that an option's value can stand in a declaration without ending
+/// it, so that no colour and no font family can write a rule of its own into
+/// a stylesheet that reaches the whole of the page the document is placed in.
 ///
 /// # Errors
 ///
@@ -614,47 +579,8 @@ fn check_ident_start(name: &'static str, value: &str, composed: &str) -> Result<
 /// could close what it is written into, opens a comment, or leaves a bracket
 /// or a quote unclosed.
 fn check_css_value(name: &'static str, value: &str) -> Result<(), RenderError> {
-    let refuse = |reason: String| RenderError::unusable_option(NAME, name, value, reason);
-    if let Some(character) = value
-        .chars()
-        .find(|character| FORBIDDEN_IN_CSS.contains(character) || (*character as u32) < 0x20)
-    {
-        return Err(refuse(format!(
-            "a value written into a stylesheet cannot hold {character:?}"
-        )));
-    }
-    if value.contains("/*") || value.contains("*/") {
-        return Err(refuse(
-            "a value written into a stylesheet cannot open or close a comment".to_string(),
-        ));
-    }
-    let mut depth = 0_i32;
-    for character in value.chars() {
-        match character {
-            '(' => depth += 1,
-            ')' => depth -= 1,
-            _ => {}
-        }
-        if depth < 0 {
-            return Err(refuse(
-                "a value written into a stylesheet cannot close a bracket it did not open"
-                    .to_string(),
-            ));
-        }
-    }
-    if depth != 0 {
-        return Err(refuse(
-            "a value written into a stylesheet has to close every bracket it opens".to_string(),
-        ));
-    }
-    for quote in ['"', '\''] {
-        if value.matches(quote).count() % 2 != 0 {
-            return Err(refuse(format!(
-                "a value written into a stylesheet has to close the {quote} it opens"
-            )));
-        }
-    }
-    Ok(())
+    css::check_value(value)
+        .map_err(|reason| RenderError::unusable_option(NAME, name, value, reason))
 }
 
 /// Checks that a nonce is one: the base64 a content security policy is

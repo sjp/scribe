@@ -126,11 +126,35 @@ Each of these is both a filter and a function, so `{{ x | round(2) }}` and
 | `xml_escape(value)` | Escapes the five markup characters, spelling the apostrophe as `&apos;`. |
 | `html_escape(value)` | The same, spelling the apostrophe as `&#39;`. |
 | `base64(value)` | The value's text as standard base64 with padding. |
+| `css_value(value, name=None)` | The value if a stylesheet can carry it as it stands, and a failure if it could close a declaration or open a rule of its own. |
+| `css_ident(value, name=None)` | The value if a CSS identifier can hold it, which is what a class name, an id or a prefix for either is built from. |
+| `css_ident_start(value, name=None)` | A whole composed name, if an identifier may begin the way it does. |
 | `rotate_transform(box, precision=2)` | An oriented box's rotation as `rotate(angle cx cy)`, which is what both SVG and CSS take. |
 | `points(box, precision=2)` | An oriented box's four corners as the `x,y` pairs an SVG `<polygon>` takes, clockwise from the corner that is the top left before rotation. |
 | `data_uri()` | The source image as a `data:` URI, or none. |
 | `svg(options, **overrides)` | The layout as an SVG document, written by the [`svg` renderer](formats.md#svg) with its own options, ready to be put inside the page the template is writing. |
 | `scope()` | The token the `svg` renderer works out for this layout, so a template can name what it puts around a layer what the layer itself is named. |
+
+The three `css_` checks are what the [`svg` renderer](formats.md#svg) applies
+to the options of the same shape, so a template writing a `<style>`, a class
+or an id from a caller's value refuses what the renderer would refuse. They
+return the value rather than escaping it, and mark it as needing no escaping:
+a stylesheet is not text, an escape inside a `<style>` does not mean the same
+thing to the parser reading a page as to the one reading a standalone
+document, and an escaped name selects something other than what stands beside
+it in the rule. `name` is what the error calls the value, so that whoever
+passed it is told which one was refused:
+
+```text
+error: the template renderer could not use the `html-overlay` template, line 16 column 75: invalid operation: cannot use "red} body{display:none} x{" as `selection_fill`: a value written into a stylesheet cannot hold '}'
+```
+
+```jinja
+<style>.{{ ns }}text::selection { background: {{ vars.highlight | default("Highlight") | css_value("highlight") }} }</style>
+```
+
+A value that has been through `css_value` belongs in a `<style>`; anywhere
+else — an attribute, say — escape it as usual.
 
 `svg` takes the renderer's options as a mapping, as keywords, or as both with
 the keywords winning, so a template can pass the caller's own values straight
@@ -149,8 +173,8 @@ so a template can name its wrapper, its transcript and the layer inside it all
 alike, and two of them in one page collide over nothing:
 
 ```jinja
-{%- set prefix = vars.class_prefix | default("scribe-") -%}
-{%- set ns = prefix ~ scope() ~ "-" -%}
+{%- set prefix = vars.class_prefix | default("scribe-") | css_ident("class_prefix") -%}
+{%- set ns = (prefix ~ scope() ~ "-") | css_ident_start("class_prefix") -%}
 <div class="{{ ns }}overlay">{{ svg(vars, image_mode="none", scope_mode="fixed", scope=scope()) }}</div>
 ```
 

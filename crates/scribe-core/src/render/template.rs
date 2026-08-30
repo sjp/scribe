@@ -33,7 +33,7 @@ use minijinja::{AutoEscape, Environment, Error, ErrorKind, Output, State, Undefi
 
 use super::{
     Layout, OptionKind, OptionSpec, OptionValue, Options, RenderError, RenderOutput, Renderer,
-    SvgRenderer, number, parse_bool, scope_token,
+    SvgRenderer, css, number, parse_bool, scope_token,
 };
 use crate::image_source::ImageSource;
 use crate::layout::RotatedBox;
@@ -401,6 +401,12 @@ fn prepare(
     environment.add_function("points", points);
     environment.add_filter("base64", base64);
     environment.add_function("base64", base64);
+    environment.add_filter("css_value", css_value);
+    environment.add_function("css_value", css_value);
+    environment.add_filter("css_ident", css_ident);
+    environment.add_function("css_ident", css_ident);
+    environment.add_filter("css_ident_start", css_ident_start);
+    environment.add_function("css_ident_start", css_ident_start);
 
     let data_uri = Arc::clone(image);
     environment.add_function("data_uri", move || optional(data_uri.data_uri()));
@@ -684,6 +690,79 @@ fn points(box_: ViaDeserialize<RotatedBox>, precision: Option<usize>) -> String 
 /// The value's text as standard base64 with padding.
 fn base64(value: Value) -> String {
     BASE64.encode(text_of(&value).as_bytes())
+}
+
+/// The value, having refused it if it could not be written into a stylesheet
+/// as it stands.
+///
+/// A stylesheet is not text, so nothing in one is escaped: an escape inside a
+/// `<style>` does not mean the same thing to the parser reading a page as to
+/// the one reading a standalone document, and a colour that could close the
+/// declaration it sits in would open a rule of its own over the whole page.
+/// The value is refused instead, which is what the SVG renderer does with the
+/// options of the same names.
+///
+/// The result is marked as needing no escaping, since that is what the check
+/// bought. It belongs in a `<style>`; anywhere else, escape as usual.
+///
+/// # Errors
+///
+/// Returns an error naming the value, or `name` when one is given, and the
+/// character that cannot be written.
+fn css_value(value: Value, name: Option<&str>) -> Result<Value, Error> {
+    checked(&value, name, css::check_value)
+}
+
+/// The value, having refused it if it is not a part of a CSS identifier:
+/// what a class name, an id or a prefix for either is built from.
+///
+/// A name is not escaped either, for the plainer reason that the escaped form
+/// would name something else than the selector written beside it.
+///
+/// # Errors
+///
+/// Returns an error naming the value, or `name` when one is given, and the
+/// character an identifier cannot hold.
+fn css_ident(value: Value, name: Option<&str>) -> Result<Value, Error> {
+    checked(&value, name, css::check_ident)
+}
+
+/// The value, having refused it if a CSS identifier cannot begin the way it
+/// does: with a digit, or with a hyphen and then a digit.
+///
+/// This is for the whole of a name a document writes, once a prefix and a
+/// token have been put together, since it is the first character of that
+/// which has to be one an identifier can start with.
+///
+/// # Errors
+///
+/// Returns an error naming the value, or `name` when one is given.
+fn css_ident_start(value: Value, name: Option<&str>) -> Result<Value, Error> {
+    checked(&value, name, css::check_ident_start)
+}
+
+/// The value's text if `check` accepts it, marked as needing no escaping, and
+/// a failure carrying the check's own reason if it does not.
+///
+/// `name` is what the template calls the value, so that a caller reading the
+/// error is told which of the values they passed was refused.
+fn checked(
+    value: &Value,
+    name: Option<&str>,
+    check: impl Fn(&str) -> Result<(), String>,
+) -> Result<Value, Error> {
+    let text = text_of(value);
+    if let Err(reason) = check(&text) {
+        let as_what = match name {
+            Some(name) => format!("as `{name}`"),
+            None => "here".to_string(),
+        };
+        return Err(Error::new(
+            ErrorKind::InvalidOperation,
+            format!("cannot use {text:?} {as_what}: {reason}"),
+        ));
+    }
+    Ok(Value::from_safe_string(text.into_owned()))
 }
 
 /// A failure of the engine as this crate reports it, placed in the template

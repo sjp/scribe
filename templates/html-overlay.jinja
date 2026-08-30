@@ -13,6 +13,8 @@
   the height of a capital letter, which suits text written in capitals.
 -#}
 {%- set source = image.data_uri or image.href -%}
+{%- set selection_fill = vars.selection_fill | default("HighlightText") | css_value("selection_fill") -%}
+{%- set selection = vars.selection_background | default("color-mix(in srgb, Highlight 35%, transparent)") | css_value("selection_background") -%}
 {%- set per_char = vars.char_positions | default(false) | flag -%}
 {%- set cap_height = (vars.font_size_mode | default("box_height")) == "cap_height" -%}
 {%- set cap_ratio = vars.cap_height_ratio | default(0.7) | number -%}
@@ -23,7 +25,7 @@
     .scribe-overlay { position: relative; display: inline-block; line-height: 0; color-scheme: light dark }
     .scribe-overlay img { display: block; max-width: 100% }
     .scribe-overlay span { position: absolute; color: transparent; white-space: pre; line-height: 1; transform-origin: center }
-    .scribe-overlay span::selection { color: {{ vars.selection_fill | default("HighlightText") }}; background: {{ vars.selection_background | default("color-mix(in srgb, Highlight 35%, transparent)") }} }
+    .scribe-overlay span::selection { color: {{ selection_fill }}; background: {{ selection }} }
   </style>
 {%- if source %}
   <img src="{{ source }}" width="{{ image.width }}" height="{{ image.height }}" alt="{{ text | replace("\n", " ") }}" />
