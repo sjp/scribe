@@ -376,7 +376,7 @@ pub fn engine() -> Engine {
         })
     };
     let models = Models::new(read(DETECTION_VARIABLE), read(RECOGNITION_VARIABLE));
-    Engine::new(&models, OcrOptions::default()).expect("the models load")
+    Engine::new(models, OcrOptions::default()).expect("the models load")
 }
 
 /// How much of each pixel of an image the text drawn into it covers, from

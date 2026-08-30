@@ -76,12 +76,8 @@ fn ocr(command: OcrCommand) -> Result<()> {
     }
 
     let started = Instant::now();
-    let engine = {
-        // The engine keeps its own copy of the models, and they are large
-        // enough to be worth letting go of before any image is read.
-        let models = models::load(&model_args)?;
-        Engine::new(&models, ocr_options(&recognition)).context("the models could not be loaded")?
-    };
+    let engine = Engine::new(models::load(&model_args)?, ocr_options(&recognition))
+        .context("the models could not be loaded")?;
     log::info!("loaded the models in {:.1?}", started.elapsed());
 
     each_input(&images, "images", batch.fail_fast, |image| {

@@ -19,7 +19,10 @@ Versioning](https://semver.org/spec/v2.0.0.html).
   than being read as something it may not be.
 - Recognition over [ocrs](https://github.com/robertknight/ocrs), taking model
   bytes and a pixel buffer rather than paths and files, so it runs anywhere the
-  library does. Models are never downloaded.
+  library does. Models are never downloaded. An engine takes the bytes it is
+  given rather than copying them, and reads its weights in place out of them
+  for as long as it lives, so the tens of megabytes a pair of models comes to
+  are in memory once and not three times over.
 - A renderer abstraction and a registry, with every renderer publishing the
   options it takes so that a command line or a JavaScript caller can offer them
   without knowing what they mean.

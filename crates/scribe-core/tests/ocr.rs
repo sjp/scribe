@@ -51,7 +51,7 @@ fn hello_world() -> (u32, u32, Vec<u8>) {
 /// not available.
 fn analyze_hello_world(options: OcrOptions) -> Option<Layout> {
     let models = models()?;
-    let engine = Engine::new(&models, options).expect("the models load");
+    let engine = Engine::new(models, options).expect("the models load");
     let (width, height, pixels) = hello_world();
     let image = PixelImage::new(width, height, Channels::Rgb, &pixels);
     Some(engine.analyze(&image).expect("the fixture is analysed"))

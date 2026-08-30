@@ -12,7 +12,7 @@
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! # let (detection, recognition, pixels) = (Vec::new(), Vec::new(), Vec::new());
 //! let models = Models::new(detection, recognition);
-//! let engine = Engine::new(&models, OcrOptions::default())?;
+//! let engine = Engine::new(models, OcrOptions::default())?;
 //! let layout = engine.analyze(&PixelImage::new(640, 480, Channels::Rgb, &pixels))?;
 //! println!("{}", layout.text());
 //! # Ok(())
@@ -366,6 +366,11 @@ impl OwnedPixelImage {
 ///
 /// Building one is expensive and reading an image is not, so build the engine
 /// once and analyse as many images with it as you like.
+///
+/// An engine owns the bytes of both models for as long as it lives: the
+/// weights are read in place out of those buffers rather than copied into
+/// structures of their own. Tens of megabytes stay resident per engine, so
+/// drop one when there is nothing left to read.
 pub struct Engine {
     engine: OcrEngine,
     include_chars: bool,
@@ -375,16 +380,16 @@ impl Engine {
     /// Loads the models and starts an engine that runs them with the given
     /// options.
     ///
-    /// The model bytes are copied, so the caller is free to drop [`Models`]
-    /// afterwards.
+    /// The bytes are taken, not copied: the engine keeps them for its
+    /// lifetime.
     ///
     /// # Errors
     ///
     /// Returns an error if either model cannot be loaded or the engine
     /// rejects them.
-    pub fn new(models: &Models, options: OcrOptions) -> Result<Self, OcrError> {
-        let detection = load_model(ModelKind::Detection, &models.detection)?;
-        let recognition = load_model(ModelKind::Recognition, &models.recognition)?;
+    pub fn new(models: Models, options: OcrOptions) -> Result<Self, OcrError> {
+        let detection = load_model(ModelKind::Detection, models.detection)?;
+        let recognition = load_model(ModelKind::Recognition, models.recognition)?;
         let engine = OcrEngine::new(OcrEngineParams {
             detection_model: Some(detection),
             recognition_model: Some(recognition),
@@ -449,8 +454,8 @@ impl Engine {
 }
 
 /// Reads one model, saying which one it was if it will not load.
-fn load_model(kind: ModelKind, bytes: &[u8]) -> Result<rten::Model, OcrError> {
-    rten::Model::load(bytes.to_vec()).map_err(|error| OcrError::ModelLoad {
+fn load_model(kind: ModelKind, bytes: Vec<u8>) -> Result<rten::Model, OcrError> {
+    rten::Model::load(bytes).map_err(|error| OcrError::ModelLoad {
         model: kind,
         source: Box::new(error),
     })

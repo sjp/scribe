@@ -59,7 +59,8 @@ impl Engine {
     /// Loads the detection and recognition models and starts an engine that
     /// runs them.
     ///
-    /// The bytes are copied, so the buffers they came from may be reused.
+    /// The bytes are copied out of the buffers they came from, which may
+    /// then be reused; the engine holds that copy until it is freed.
     ///
     /// # Errors
     ///
@@ -67,13 +68,13 @@ impl Engine {
     /// either model cannot be loaded.
     #[wasm_bindgen(constructor)]
     pub fn new(
-        detection_model: &[u8],
-        recognition_model: &[u8],
+        detection_model: Vec<u8>,
+        recognition_model: Vec<u8>,
         options: Option<JsOcrOptions>,
     ) -> Result<Engine, JsError> {
-        let models = Models::new(detection_model.to_vec(), recognition_model.to_vec());
+        let models = Models::new(detection_model, recognition_model);
         let options = convert::ocr_options(options.map(JsValue::from))?;
-        let engine = scribe_core::ocr::Engine::new(&models, options)
+        let engine = scribe_core::ocr::Engine::new(models, options)
             .map_err(|error| convert::exception(&error))?;
         Ok(Self { engine })
     }
