@@ -705,4 +705,28 @@ mod tests {
             Err(OcrError::Decode { .. })
         ));
     }
+
+    /// One opaque black pixel as farbfeld: the magic, the width and height,
+    /// and four sixteen-bit channels. Farbfeld is not one of the formats a
+    /// build reads unless it is asked to, so it stands here for all of them.
+    #[cfg(feature = "decode")]
+    const FARBFELD_PIXEL: &[u8] =
+        b"farbfeld\x00\x00\x00\x01\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\xff\xff";
+
+    #[cfg(all(feature = "decode", not(feature = "decode-farbfeld")))]
+    #[test]
+    fn an_image_in_a_format_this_build_has_no_decoder_for_is_rejected() {
+        assert!(matches!(
+            PixelImage::decode(FARBFELD_PIXEL),
+            Err(OcrError::Decode { .. })
+        ));
+    }
+
+    #[cfg(feature = "decode-farbfeld")]
+    #[test]
+    fn an_image_in_a_format_this_build_was_asked_for_is_read() {
+        let image = PixelImage::decode(FARBFELD_PIXEL).expect("farbfeld is compiled in");
+        assert_eq!((image.width, image.height), (1, 1));
+        assert_eq!(image.channels, Channels::Rgba);
+    }
 }

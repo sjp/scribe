@@ -16,6 +16,17 @@ crate-type = ["cdylib", "rlib"]
 default = ["decode"]
 decode = ["scribe-core/decode"]
 
+# The formats `decode` leaves out, each of which a build can be asked for.
+decode-dds = ["scribe-core/decode-dds"]
+decode-farbfeld = ["scribe-core/decode-farbfeld"]
+decode-hdr = ["scribe-core/decode-hdr"]
+decode-ico = ["scribe-core/decode-ico"]
+decode-openexr = ["scribe-core/decode-openexr"]
+decode-pnm = ["scribe-core/decode-pnm"]
+decode-qoi = ["scribe-core/decode-qoi"]
+decode-tga = ["scribe-core/decode-tga"]
+decode-all = ["scribe-core/decode-all"]
+
 [dependencies]
 scribe-core.workspace = true
 js-sys.workspace = true

@@ -26,6 +26,8 @@ jobs:
 
       - run: cargo test --workspace
 
+      - run: cargo test -p scribe-core --features decode-all
+
   wasm:
     name: WebAssembly build and bindings
     runs-on: ubuntu-latest
@@ -40,6 +42,8 @@ jobs:
       - run: cargo check -p scribe-core -p scribe-wasm --target wasm32-unknown-unknown
 
       - run: cargo check -p scribe-core --features decode --target wasm32-unknown-unknown
+
+      - run: cargo check -p scribe-core -p scribe-wasm --features decode-all --target wasm32-unknown-unknown
 
       - uses: actions/setup-node@v6
         with:

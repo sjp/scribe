@@ -20,22 +20,10 @@ env_logger = { version = "0.11.11", default-features = false, features = [
     "auto-color",
     "humantime",
 ] }
-image = { version = "0.25.10", default-features = false, features = [
-    "bmp",
-    "dds",
-    "exr",
-    "ff",
-    "gif",
-    "hdr",
-    "ico",
-    "jpeg",
-    "png",
-    "pnm",
-    "qoi",
-    "tga",
-    "tiff",
-    "webp",
-] }
+# No decoder is asked for here. Which formats are compiled in is a decision
+# each crate makes through its own features, so a build carries only the
+# decoders it was asked for.
+image = { version = "0.25.10", default-features = false }
 insta = "1.48.0"
 js-sys = "0.3.104"
 log = "0.4.34"

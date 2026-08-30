@@ -9,7 +9,43 @@ repository.workspace = true
 [features]
 # Decoding of encoded images (PNG, JPEG, …) into pixel buffers. Off by
 # default so that callers who already have pixels do not pay for it.
-decode = ["dep:image"]
+#
+# What it brings are the formats a screenshot, a scan or a photograph arrives
+# in. Every other decoder the image crate can build is a feature of its own —
+# code a build carries, and untrusted bytes it will parse, so a caller who
+# reads such images asks for them and nobody else pays for them.
+decode = [
+    "dep:image",
+    "image?/bmp",
+    "image?/gif",
+    "image?/jpeg",
+    "image?/png",
+    "image?/tiff",
+    "image?/webp",
+]
+
+decode-dds = ["decode", "image?/dds"]
+decode-farbfeld = ["decode", "image?/ff"]
+decode-hdr = ["decode", "image?/hdr"]
+decode-ico = ["decode", "image?/ico"]
+decode-openexr = ["decode", "image?/exr"]
+decode-pnm = ["decode", "image?/pnm"]
+decode-qoi = ["decode", "image?/qoi"]
+decode-tga = ["decode", "image?/tga"]
+
+# Every format above at once, for a caller who would rather not name them one
+# at a time.
+decode-all = [
+    "decode",
+    "decode-dds",
+    "decode-farbfeld",
+    "decode-hdr",
+    "decode-ico",
+    "decode-openexr",
+    "decode-pnm",
+    "decode-qoi",
+    "decode-tga",
+]
 
 [dependencies]
 base64.workspace = true
@@ -25,7 +61,8 @@ thiserror.workspace = true
 
 [dev-dependencies]
 ab_glyph.workspace = true
-image.workspace = true
+# The fixtures are drawn, encoded and read back as PNG and JPEG.
+image = { workspace = true, features = ["jpeg", "png"] }
 insta.workspace = true
 roxmltree.workspace = true
 

@@ -98,6 +98,36 @@ the run before any file is read, since it is wrong for all of them.
 `scribe templates` lists the built-in templates; `scribe schema` prints the
 JSON Schema of the layout model.
 
+## Input images
+
+Images are read as PNG, JPEG, WebP, GIF, BMP and TIFF — what a screenshot, a
+scan or a photograph arrives in. Every other format the image library can read
+is a Cargo feature of its own, so a build carries only the decoders somebody
+asked for, and hands the bytes of an untrusted file to nothing else:
+
+| Feature | Reads |
+| --- | --- |
+| `decode-dds` | DirectDraw Surface |
+| `decode-farbfeld` | farbfeld |
+| `decode-hdr` | Radiance HDR |
+| `decode-ico` | Windows icons |
+| `decode-openexr` | OpenEXR |
+| `decode-pnm` | PBM, PGM, PPM, PAM |
+| `decode-qoi` | QOI |
+| `decode-tga` | Truevision TGA |
+
+`decode-all` is all of them at once. They belong to the library and are
+forwarded by the command line and by the WebAssembly package, so a build is
+asked for them wherever it is built:
+
+```sh
+cargo install --path crates/scribe-cli --features decode-pnm
+```
+
+An image in a format the build in front of you has no decoder for is refused
+by name, like anything else that cannot be read, and the rest of the run
+carries on.
+
 ## What comes out
 
 ```sh

@@ -23,6 +23,13 @@ Versioning](https://semver.org/spec/v2.0.0.html).
   given rather than copying them, and reads its weights in place out of them
   for as long as it lives, so the tens of megabytes a pair of models comes to
   are in memory once and not three times over.
+- Decoding of an encoded image into pixels, over the formats a screenshot, a
+  scan or a photograph arrives in: PNG, JPEG, WebP, GIF, BMP and TIFF. Every
+  other format the image library can read — DirectDraw Surface, farbfeld,
+  Radiance HDR, Windows icons, OpenEXR, PNM, QOI and Truevision TGA — is a
+  feature of its own, with `decode-all` for the lot, and both the command line
+  and the WebAssembly package forward each one. So a build carries only the
+  decoders somebody asked for, and hands untrusted bytes to nothing else.
 - A renderer abstraction and a registry, with every renderer publishing the
   options it takes so that a command line or a JavaScript caller can offer them
   without knowing what they mean.

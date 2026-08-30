@@ -10,6 +10,19 @@ repository.workspace = true
 name = "scribe"
 path = "src/main.rs"
 
+[features]
+# The binary reads the formats an image usually arrives in. The rest are a
+# build away, one format at a time or all of them together.
+decode-dds = ["scribe-core/decode-dds"]
+decode-farbfeld = ["scribe-core/decode-farbfeld"]
+decode-hdr = ["scribe-core/decode-hdr"]
+decode-ico = ["scribe-core/decode-ico"]
+decode-openexr = ["scribe-core/decode-openexr"]
+decode-pnm = ["scribe-core/decode-pnm"]
+decode-qoi = ["scribe-core/decode-qoi"]
+decode-tga = ["scribe-core/decode-tga"]
+decode-all = ["scribe-core/decode-all"]
+
 [dependencies]
 scribe-core = { workspace = true, features = ["decode"] }
 anyhow.workspace = true

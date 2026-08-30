@@ -127,9 +127,11 @@ Both are part of CI and both must be clean. rustfmt runs with its defaults.
 `.github/workflows/ci.yml` runs on pushes to `main` and on pull requests:
 
 - **Format, lint and test** — `cargo fmt --check`, `cargo clippy --all-targets
-  --all-features -D warnings`, `cargo test --workspace`.
+  --all-features -D warnings`, `cargo test --workspace`, and the library's
+  tests again with every image decoder turned on.
 - **WebAssembly build and bindings** — `cargo check` for
-  `wasm32-unknown-unknown` with and without the `decode` feature, then
-  `scripts/build-wasm.sh` and the Node tests against the package it writes.
+  `wasm32-unknown-unknown` without `decode`, with it, and with every image
+  decoder turned on, then `scripts/build-wasm.sh` and the Node tests against
+  the package it writes.
 
 Both jobs cache with `Swatinem/rust-cache`.

@@ -30,9 +30,12 @@ Both are npm packages called `scribe`, and both carry `scribe.d.ts`, which
 declares the whole layout model, the option shapes and the rendered document,
 so a TypeScript caller needs nothing generated.
 
-The `decode` feature is on by default and is what `analyzeEncoded` needs.
-Building without it drops the image decoders and leaves `analyzePixels`, which
-is enough for a caller working from a `<canvas>`.
+The `decode` feature is on by default and is what `analyzeEncoded` needs. It
+reads PNG, JPEG, WebP, GIF, BMP and TIFF; the other formats the image library
+can read are a feature each, listed in the [README](../README.md#input-images)
+and forwarded to the library by this crate. Building without `decode` drops
+the image decoders altogether and leaves `analyzePixels`, which is enough for
+a caller working from a `<canvas>` — and is the smallest module of the three.
 
 ## The API
 
