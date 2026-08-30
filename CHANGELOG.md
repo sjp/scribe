@@ -69,7 +69,12 @@ Versioning](https://semver.org/spec/v2.0.0.html).
   more decimals than a coordinate has to give — is refused naming the range it
   fell outside of, rather than quietly clamped or written into a document no
   browser will honour; and the stylesheet can carry a nonce for a page whose
-  content security policy asks for one.
+  content security policy asks for one. The image is pointed at with a plain
+  `href`, which is what SVG 2 and every browser reads; `xlink` writes the
+  `xlink:href` of SVG 1.1 beside it and declares the namespace, for the older
+  readers that show no picture without it. It is off by default, since both
+  attributes carry the same value and an embedded image would go into the
+  document twice.
 - The `template` renderer, writing whatever a Jinja template describes, with
   callers' own templates and values accepted and twelve built in: text layers
   to lay over an image, written as positioned HTML or as SVG; transcripts an

@@ -192,7 +192,7 @@ Note that the image underneath is unchanged either way: a scan of a white page
 stays white in dark mode. It is the selection and the canvas that follow the
 reader, not the picture.
 
-### Where the image comes from: `image_mode`
+### Where the image comes from: `image_mode`, `xlink`
 
 - `embed` — the image is carried in the document as a `data:` URI, so the SVG
   is one self-contained file. Needs the image's bytes and media type.
@@ -207,6 +207,17 @@ reader, not the picture.
 Asking to embed an image whose bytes were not supplied, or to link to one with
 no href, is an error rather than a silently empty document, and the command
 line answers it by naming `--image` and `--no-image`.
+
+However the image is pointed at, the `<image>` element carries a plain
+`href`, which is what SVG 2 and every browser reads. Inkscape 0.92, librsvg
+before 2.44 and a number of SVG-to-PDF converters still in use know only the
+`xlink:href` of SVG 1.1 and show no picture without it; `xlink` writes that
+attribute beside the plain one and declares the namespace it belongs to. A
+reader that understands both takes `href`. Both attributes carry the same
+value, so with `image_mode=embed` the base64 of the image goes into the
+document twice and roughly doubles its size — which is why the default is to
+write `href` alone, and why the namespace is not declared when nothing uses
+it.
 
 The library keeps `embed` as its default, since a caller that reached for a
 renderer usually has the picture in hand. `scribe render` is given a layout
@@ -275,6 +286,7 @@ How closely the text layer follows the glyphs under it is a choice:
 | --- | --- | --- | --- |
 | `text_mode` | `invisible`, `visible`, `debug` | `invisible` | Whether the text layer is transparent, drawn over the image, or drawn with the boxes it came from. |
 | `image_mode` | `embed`, `link`, `none` | `embed` | Whether the image is carried in the document, referenced by its path or URL, or left out. |
+| `xlink` | `true` or `false` | `false` | Point the image at its source with `xlink:href` as well as `href`, for readers predating SVG 2; both carry the same value, so an embedded image is written into the document twice. |
 | `font_family` | text | `sans-serif` | The CSS font family the text layer is set in. |
 | `font_size_scope` | `word`, `line` | `word` | Whether each word takes its font size from its own box or from the line's. |
 | `font_scale` | a number | `1` | What to multiply a box's height by to get its font size; above zero. |

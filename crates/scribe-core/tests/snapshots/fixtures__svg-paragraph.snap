@@ -3,7 +3,7 @@ source: crates/scribe-core/tests/fixtures.rs
 expression: output
 ---
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="scribe-xn3jur" class="scribe-xn3jur-root" width="480" height="280" viewBox="0 0 480 280">
+<svg xmlns="http://www.w3.org/2000/svg" id="scribe-xn3jur" class="scribe-xn3jur-root" width="480" height="280" viewBox="0 0 480 280">
   <style>
     #scribe-xn3jur { color-scheme: light dark; }
     #scribe-xn3jur .scribe-xn3jur-text { all: revert; fill: transparent; stroke: none; font-family: sans-serif; font-style: normal; font-weight: normal; font-variant: normal; font-stretch: normal; letter-spacing: normal; word-spacing: normal; text-anchor: start; text-decoration: none; text-transform: none; direction: ltr; user-select: text; -webkit-user-select: text; white-space: pre; }

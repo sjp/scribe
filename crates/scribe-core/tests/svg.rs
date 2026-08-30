@@ -206,6 +206,25 @@ fn no_stylesheet() {
 }
 
 #[test]
+fn the_older_way_of_pointing_at_an_image_is_a_namespace_a_reader_can_resolve() {
+    // A prefix used without being declared is not well-formed XML at all, so
+    // parsing this is the whole of the check that the declaration is there.
+    let text = linked(&hello_world(), Options::new().with("xlink", true));
+    let document = roxmltree::Document::parse(&text)
+        .unwrap_or_else(|error| panic!("the document should be well-formed XML: {error}\n{text}"));
+    let image = document
+        .descendants()
+        .find(|node| node.has_tag_name("image"))
+        .expect("the image is written");
+    assert_eq!(
+        image.attribute(("http://www.w3.org/1999/xlink", "href")),
+        Some("hello.png"),
+        "{text}"
+    );
+    assert_eq!(image.attribute("href"), Some("hello.png"), "{text}");
+}
+
+#[test]
 fn the_same_layout_and_options_give_the_same_bytes() {
     // Every test here is a snapshot, and a caller may well be keeping this
     // output beside the image it came from; both need the document to be a

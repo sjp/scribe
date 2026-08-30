@@ -45,8 +45,11 @@ const NAME: &str = "svg";
 /// The SVG namespace, without which nothing renders the document as a picture.
 const SVG_NS: &str = "http://www.w3.org/2000/svg";
 
-/// The namespace of the older `xlink:href`, declared alongside the image so
-/// that a document may be post-processed for renderers predating SVG 2.
+/// The namespace of `xlink:href`, which is how everything predating SVG 2
+/// finds the image: readers of that age know no plain `href` and show nothing
+/// without this. Declared on the root, and the attribute written beside the
+/// plain one, only when `xlink` asks for it, since both carry the same value
+/// and an embedded image is therefore written into the document twice.
 const XLINK_NS: &str = "http://www.w3.org/1999/xlink";
 
 /// How much of the text a derived `aria-label` carries, in characters. A
@@ -85,6 +88,12 @@ impl Renderer for SvgRenderer {
                 "Whether the image is carried in the document, referenced by its path or URL, or left out.",
             )
             .with_choices(ImageMode::CHOICES),
+            OptionSpec::new(
+                "xlink",
+                OptionKind::Bool,
+                OptionValue::Bool(false),
+                "Point the image at its source with `xlink:href` as well as `href`, for readers predating SVG 2; both carry the same value, so an embedded image is written into the document twice.",
+            ),
             OptionSpec::new(
                 "font_family",
                 OptionKind::Str,
@@ -714,6 +723,7 @@ fn check_precision(value: i64) -> Result<usize, RenderError> {
 struct Settings<'a> {
     text_mode: TextMode,
     image_mode: ImageMode,
+    xlink: bool,
     font_family: &'a str,
     font_size_scope: Scope,
     font_scale: f32,
@@ -839,6 +849,7 @@ impl<'a> Settings<'a> {
         Ok(Self {
             text_mode: TextMode::read(options.str("text_mode")),
             image_mode: ImageMode::read(options.str("image_mode")),
+            xlink: options.bool("xlink"),
             font_family,
             font_size_scope: Scope::read(options.str("font_size_scope")),
             font_scale,
@@ -947,7 +958,7 @@ fn document(
     }
 
     let mut root = Tag::new("svg").attr("xmlns", SVG_NS);
-    if href.is_some() {
+    if href.is_some() && settings.xlink {
         root = root.attr("xmlns:xlink", XLINK_NS);
     }
     if let Some(id) = settings.root_id() {
@@ -982,8 +993,12 @@ fn document(
         out.close("style");
     }
     if let Some(href) = href {
+        let mut element = Tag::new("image");
+        if settings.xlink {
+            element = element.attr("xlink:href", &href);
+        }
         out.line(
-            &Tag::new("image")
+            &element
                 .attr("href", &href)
                 .attr("width", &width.to_string())
                 .attr("height", &height.to_string())
@@ -2278,15 +2293,35 @@ mod tests {
             svg.contains(r#"<image href="scan.png" width="120" height="40"/>"#),
             "{svg}"
         );
+        assert!(!svg.contains("xlink"), "{svg}");
+    }
+
+    #[test]
+    fn an_image_can_be_pointed_at_the_older_way_as_well() {
+        let svg = render(
+            Options::new()
+                .with("image_mode", "link")
+                .with("xlink", true),
+        );
         assert!(
             svg.contains(r#"xmlns:xlink="http://www.w3.org/1999/xlink""#),
+            "{svg}"
+        );
+        assert!(
+            svg.contains(
+                r#"<image xlink:href="scan.png" href="scan.png" width="120" height="40"/>"#
+            ),
             "{svg}"
         );
     }
 
     #[test]
     fn leaving_the_image_out_leaves_out_its_namespace_too() {
-        let svg = render(Options::new().with("image_mode", "none"));
+        let svg = render(
+            Options::new()
+                .with("image_mode", "none")
+                .with("xlink", true),
+        );
         assert!(!svg.contains("<image"), "{svg}");
         assert!(!svg.contains("xlink"), "{svg}");
     }
