@@ -210,7 +210,7 @@ impl Renderer for SvgRenderer {
                 "class_prefix",
                 OptionKind::Str,
                 OptionValue::Str("scribe-".to_string()),
-                "What every class name in the document starts with; a valid CSS identifier prefix.",
+                "What every class name in the document starts with; a valid CSS identifier prefix. May be empty when a token follows it, since a token begins with a letter of its own.",
             ),
             OptionSpec::new(
                 "scope_mode",
@@ -769,6 +769,17 @@ impl<'a> Settings<'a> {
             ScopeMode::Fixed => scope.to_string(),
             ScopeMode::None => String::new(),
         };
+        if class_prefix.is_empty() && token.is_empty() {
+            return Err(RenderError::unusable_option(
+                NAME,
+                "class_prefix",
+                class_prefix,
+                "with no token the prefix is the whole of every name, \
+                 and a bare `root` is as likely to collide with a page as \
+                 a name can be; give a prefix, or leave `scope_mode` at \
+                 `content` so that a token follows it",
+            ));
+        }
         check_ident_start(
             "class_prefix",
             class_prefix,
@@ -2468,6 +2479,34 @@ mod tests {
         .unwrap_err()
         .to_string();
         assert!(error.contains("`scope`"), "{error}");
+    }
+
+    #[test]
+    fn a_prefix_of_nothing_needs_a_token_to_follow_it() {
+        let error = try_render(
+            &sample(),
+            &Options::new()
+                .with("image_mode", "none")
+                .with("class_prefix", "")
+                .with("scope_mode", "none"),
+        )
+        .unwrap_err()
+        .to_string();
+        assert!(error.contains("`class_prefix`"), "{error}");
+        assert!(error.contains("with no token"), "{error}");
+
+        // A token begins with a letter, so it can carry the names on its own.
+        let svg = try_render(
+            &sample(),
+            &Options::new()
+                .with("image_mode", "none")
+                .with("class_prefix", "")
+                .with("ids", true),
+        )
+        .expect("a token stands in for the prefix");
+        let token = scope_token(&sample());
+        assert!(svg.contains(&format!(r#"id="{token}""#)), "{svg}");
+        assert!(svg.contains(&format!(r#"class="{token}-root""#)), "{svg}");
     }
 
     #[test]

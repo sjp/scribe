@@ -111,6 +111,11 @@ The root element carries the prefix and the token as its id — `scribe-g923no`
 above — both because the stylesheet needs something to hang off and because a
 script given one image needs a way to find the layer over it.
 
+An empty `class_prefix` is fine when a token follows it, since a token begins
+with a letter; with no token at all — `scope_mode=none` — it is refused,
+because the prefix is then the whole of every name and a bare `.root` is as
+likely to collide with a page as a name can be.
+
 `class_prefix` and `scope` are checked rather than escaped, and a value that
 is not a valid CSS identifier is refused by name: escaping is what a document
 does to text, and these land in a selector, where an escaped form would name
@@ -287,7 +292,7 @@ How closely the text layer follows the glyphs under it is a choice:
 | `selection_background` | text | `color-mix(in srgb, Highlight 35%, transparent)` | The colour behind selected text, so that selecting invisible text shows. |
 | `debug_line_stroke` | text | `#06c` | The colour line boxes are outlined in. |
 | `debug_word_stroke` | text | `#c00` | The colour word boxes are outlined in. |
-| `class_prefix` | text | `scribe-` | What every class name in the document starts with; a valid CSS identifier prefix. |
+| `class_prefix` | text | `scribe-` | What every class name in the document starts with; a valid CSS identifier prefix. May be empty when a token follows it, since a token begins with a letter of its own. |
 | `scope_mode` | `content`, `fixed`, `none` | `content` | Whether the class names, the ids and the stylesheet carry a token setting this document apart from anything around it: one worked out from what the document says, one of your own, or none at all. |
 | `scope` | text | empty | The token to set this document apart, when `scope_mode` is `fixed`; a valid CSS identifier part. |
 | `ids` | `true` or `false` | `false` | Give every line and word an id, such as `line-3` and `word-3-1`, under the same prefix and token as the classes. |

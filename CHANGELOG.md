@@ -48,9 +48,10 @@ Versioning](https://semver.org/spec/v2.0.0.html).
   sits on, follow light and dark mode without the document naming a colour for
   either. It is written to be placed inside another document: every class name
   and every id carries a token setting it apart from anything else in the page,
-  worked out from the layout, given by the caller or left out; every rule in
-  its stylesheet hangs off the root element rather than reaching the page
-  around it; the text layer holds its own against whatever that page styles its
+  worked out from the layout, given by the caller or left out — and a prefix of
+  nothing with no token to follow it is refused, since the names would then be
+  as bare as `root`; every rule in its stylesheet hangs off the root element
+  rather than reaching the page around it; the text layer holds its own against whatever that page styles its
   text with; the names and colours it is given are checked rather than escaped;
   a number it cannot be written with — a font scale at zero, a ratio past one,
   more decimals than a coordinate has to give — is refused naming the range it
