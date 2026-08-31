@@ -112,7 +112,11 @@ Versioning](https://semver.org/spec/v2.0.0.html).
   every other input is still read, and the run ends with a count of what did
   not come out and a failing status. `--fail-fast` stops at the first failure
   instead, and something wrong with the request itself ends the run where it
-  is noticed rather than being repeated for every input.
+  is noticed rather than being repeated for every input. Every file is written
+  whole or not at all — through a file beside it, renamed over it once all of
+  it is on disk — so a run that is interrupted, or a disk that fills, leaves
+  the earlier result where it was rather than half of the new one in its
+  place.
 - WebAssembly bindings packaged for the browser and for Node, with TypeScript
   declarations for the layout model, the renderer options and the rendered
   document.

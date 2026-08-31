@@ -4,9 +4,11 @@
 //! terminal; everything below it works in bytes.
 
 use std::borrow::Cow;
+use std::ffi::OsString;
 use std::fs;
 use std::io::{self, Read, Write};
 use std::path::{Component, Path, PathBuf};
+use std::sync::atomic::{AtomicU64, Ordering};
 
 use anyhow::{Context, Result};
 
@@ -24,6 +26,12 @@ const LAYOUT_SUFFIX: &str = "layout.json";
 
 /// What that name leaves on the end of the layout's own stem.
 const LAYOUT_STEM_SUFFIX: &str = ".layout";
+
+/// What a document is called while it is still being written, before and
+/// after the name of the file it is going to become. A leading dot keeps it
+/// out of the way, and the tail is nothing a renderer would ever produce, so
+/// a file caught mid-write is not mistaken for an output.
+const TEMPORARY: (&str, &str) = (".", ".tmp-");
 
 /// Whether a path means standard input or standard output rather than a file.
 pub fn is_stream(path: &Path) -> bool {
@@ -106,10 +114,14 @@ pub enum Destination {
 
 impl Destination {
     /// Writes a document, replacing whatever was there before.
+    ///
+    /// A file arrives whole or not at all. Anything that goes wrong part way
+    /// through — a full disk, an interrupted run — leaves whatever was at the
+    /// path before still there, rather than half of what was on its way.
     pub fn write(&self, bytes: &[u8]) -> Result<()> {
         match self {
             Self::Stdout => print(bytes),
-            Self::File(path) => fs::write(path, bytes)
+            Self::File(path) => write_whole(path, bytes)
                 .with_context(|| format!("{} cannot be written", path.display())),
         }
     }
@@ -202,6 +214,55 @@ fn spelling(path: &Path) -> Vec<Component<'_>> {
     parts
 }
 
+/// Writes a file by writing another beside it and renaming that one over it.
+///
+/// The rename is the step that replaces the file, and it is one step: a
+/// reader of the path sees either what was there before or the whole of what
+/// is now there. Everything that can fail happens before it, and what has
+/// been written so far is taken away again when it does.
+///
+/// A rename is only that within one filesystem, which is why the file being
+/// written is a sibling of its target rather than something in the system's
+/// temporary directory.
+fn write_whole(path: &Path, bytes: &[u8]) -> io::Result<()> {
+    let temporary = beside(path)?;
+    let written = fill(&temporary, bytes).and_then(|()| fs::rename(&temporary, path));
+    if written.is_err() {
+        let _ = fs::remove_file(&temporary);
+    }
+    written
+}
+
+/// Writes the bytes of one file and waits for them to reach the disk, so that
+/// the rename that follows cannot land ahead of what it is publishing.
+fn fill(path: &Path, bytes: &[u8]) -> io::Result<()> {
+    let mut file = fs::File::create(path)?;
+    file.write_all(bytes)?;
+    file.sync_all()
+}
+
+/// The name a file takes while it is being written to become `path`: in the
+/// same directory, and shared with nothing else being written anywhere.
+fn beside(path: &Path) -> io::Result<PathBuf> {
+    static WRITES: AtomicU64 = AtomicU64::new(0);
+
+    let name = path.file_name().ok_or_else(|| {
+        io::Error::new(
+            io::ErrorKind::InvalidInput,
+            "a document needs a file to be written to",
+        )
+    })?;
+    let (before, after) = TEMPORARY;
+    let mut temporary = OsString::from(before);
+    temporary.push(name);
+    temporary.push(format!(
+        "{after}{}-{}",
+        std::process::id(),
+        WRITES.fetch_add(1, Ordering::Relaxed)
+    ));
+    Ok(path.with_file_name(temporary))
+}
+
 /// Makes sure a directory named for outputs exists.
 pub fn make_directory(directory: &Path) -> Result<()> {
     fs::create_dir_all(directory)
@@ -211,6 +272,69 @@ pub fn make_directory(directory: &Path) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// A directory of this test's own, emptied before it is used.
+    fn work_directory(name: &str) -> PathBuf {
+        let directory = std::env::temp_dir().join(format!("scribe-io-{name}"));
+        let _ = fs::remove_dir_all(&directory);
+        fs::create_dir_all(&directory).expect("a working directory can be made");
+        directory
+    }
+
+    /// The names in a directory, sorted.
+    fn names(directory: &Path) -> Vec<String> {
+        let mut names: Vec<String> = fs::read_dir(directory)
+            .expect("the directory can be read")
+            .map(|entry| entry.expect("the directory can be read").file_name())
+            .map(|name| name.to_string_lossy().into_owned())
+            .collect();
+        names.sort();
+        names
+    }
+
+    #[test]
+    fn a_file_takes_the_place_of_the_one_that_was_there() {
+        let directory = work_directory("replace");
+        let target = directory.join("page.svg");
+        Destination::File(target.clone())
+            .write(b"first")
+            .expect("the first document is written");
+        Destination::File(target.clone())
+            .write(b"second")
+            .expect("the second document is written");
+        assert_eq!(fs::read(&target).expect("the document is there"), b"second");
+        assert_eq!(names(&directory), ["page.svg"], "nothing is left over");
+    }
+
+    #[test]
+    fn a_write_that_fails_leaves_the_target_alone_and_nothing_beside_it() {
+        let directory = work_directory("failed-write");
+        let target = directory.join("page.svg");
+        fs::create_dir(&target).expect("the target can be made a directory");
+        fs::write(target.join("inside"), b"kept").expect("the directory can be written into");
+
+        let error = Destination::File(target.clone())
+            .write(b"anything")
+            .expect_err("a directory cannot be replaced by a file");
+        assert!(error.to_string().contains("cannot be written"));
+
+        assert_eq!(names(&target), ["inside"], "the target is untouched");
+        assert_eq!(names(&directory), ["page.svg"], "nothing is left behind");
+    }
+
+    #[test]
+    fn two_writes_to_one_path_are_never_written_through_the_same_file() {
+        let path = Path::new("out/page.svg");
+        assert_ne!(
+            beside(path).expect("a name is made"),
+            beside(path).expect("a name is made")
+        );
+    }
+
+    #[test]
+    fn a_path_that_names_no_file_is_refused_rather_than_written_beside() {
+        assert!(beside(Path::new("..")).is_err());
+    }
 
     #[test]
     fn an_image_below_the_output_is_reached_by_name() {
