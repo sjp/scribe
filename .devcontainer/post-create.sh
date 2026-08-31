@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 set -euo pipefail
 
 claude_dir=${CLAUDE_CONFIG_DIR:-$HOME/.claude}
