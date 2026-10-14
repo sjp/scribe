@@ -27,7 +27,7 @@ image = { version = "0.25.10", default-features = false }
 insta = "1.48.0"
 js-sys = "0.3.104"
 log = "0.4.34"
-minijinja = "3.0.0"
+minijinja = { version = "3.0.0", features = ["serde"] }
 predicates = "3.1.4"
 roxmltree = "0.21.1"
 schemars = "1.2.2"

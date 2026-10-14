@@ -28,7 +28,7 @@ use std::sync::{Arc, OnceLock};
 
 use base64::Engine as _;
 use base64::engine::general_purpose::STANDARD as BASE64;
-use minijinja::value::{Enumerator, Kwargs, Object, Value, ValueKind, ViaDeserialize};
+use minijinja::value::{Enumerator, Kwargs, Object, Serde, Value, ValueKind};
 use minijinja::{AutoEscape, Environment, Error, ErrorKind, Output, State, UndefinedBehavior};
 
 use super::{
@@ -294,7 +294,7 @@ impl Renderer for TemplateRenderer {
                 layout => Value::from_dyn_object(Arc::new(LayoutValue::of(&layout))),
                 image => Value::from_dyn_object(Arc::clone(&image)),
                 text => layout.text(),
-                vars => Value::from_iter(vars),
+                vars => Value::from_pairs(vars),
             })
             .map_err(|error| failure(name, source, error))?;
         Ok(RenderOutput::text(text, mime, extension))
@@ -385,8 +385,14 @@ fn prepare(
 ) {
     environment.set_undefined_behavior(UndefinedBehavior::Strict);
     environment.set_debug(true);
-    environment.set_keep_trailing_newline(true);
-    environment.set_auto_escape_callback(move |_| escape);
+    let syntax = environment
+        .syntax()
+        .to_builder()
+        .keep_trailing_newline(true)
+        .build()
+        .expect("the default delimiters are valid");
+    environment.set_syntax(syntax);
+    environment.set_auto_escape_callback(move |_| escape.clone());
     environment.set_formatter(write_value);
 
     environment.add_filter("xml_escape", xml_escape);
@@ -534,7 +540,7 @@ fn option_value(value: &Value) -> Result<OptionValue, Error> {
 /// thicket of `&#x2f;` to no end. Standing in for it also means standing in
 /// for its refusal to write a value that is not there, which is the whole of
 /// what strictness means at this point in a template.
-fn write_value(out: &mut Output, state: &State, value: &Value) -> Result<(), Error> {
+fn write_value(out: &mut Output, state: &mut State, value: &Value) -> Result<(), Error> {
     if value.is_undefined()
         && matches!(
             state.undefined_behavior(),
@@ -581,7 +587,7 @@ fn text_of(value: &Value) -> Cow<'_, str> {
 
 /// Something a template may or may not have been given.
 fn optional(value: Option<&str>) -> Value {
-    value.map_or_else(|| Value::from_serialize(None::<&str>), Value::from)
+    value.map_or_else(|| Value::from(Serde(None::<&str>)), Value::from)
 }
 
 /// The value escaped for XML, and marked as needing no further escaping.
@@ -661,7 +667,7 @@ fn as_number(value: Value) -> Result<f64, Error> {
 }
 
 /// An oriented box's rotation as an SVG or CSS `rotate(angle cx cy)`.
-fn rotate_transform(box_: ViaDeserialize<RotatedBox>, precision: Option<usize>) -> String {
+fn rotate_transform(box_: Serde<RotatedBox>, precision: Option<usize>) -> String {
     let precision = precision.unwrap_or(DEFAULT_PRECISION).min(MAX_PRECISION);
     format!(
         "rotate({} {} {})",
@@ -673,7 +679,7 @@ fn rotate_transform(box_: ViaDeserialize<RotatedBox>, precision: Option<usize>) 
 
 /// An oriented box's four corners as the `x,y` pairs an SVG `<polygon>`
 /// takes, starting at the corner that is the top left before rotation.
-fn points(box_: ViaDeserialize<RotatedBox>, precision: Option<usize>) -> String {
+fn points(box_: Serde<RotatedBox>, precision: Option<usize>) -> String {
     let precision = precision.unwrap_or(DEFAULT_PRECISION).min(MAX_PRECISION);
     box_.corners()
         .iter()
@@ -840,7 +846,7 @@ impl LayoutValue {
     /// asks for any part of it and remembered after that.
     fn fields(&self) -> &Value {
         self.fields
-            .get_or_init(|| Value::from_serialize(&*self.layout))
+            .get_or_init(|| Value::from(Serde(&*self.layout)))
     }
 }
 
