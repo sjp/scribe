@@ -9,6 +9,13 @@ updates:
       cargo:
         patterns:
           - "*"
+    # ocrs pins rten at 0.26, and its types must match ours. Lift this once
+    # an ocrs release moves to a newer rten.
+    ignore:
+      - dependency-name: "rten"
+        update-types: ["version-update:semver-minor", "version-update:semver-major"]
+      - dependency-name: "rten-imageproc"
+        update-types: ["version-update:semver-minor", "version-update:semver-major"]
 
   - package-ecosystem: github-actions
     directory: /
